@@ -40,14 +40,26 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Auth — entièrement public
                 .requestMatchers("/api/auth/**").permitAll()
+
+                // WebSocket — SockJS nécessite des requêtes HTTP initiales
+                .requestMatchers("/ws/**").permitAll()
+
+                // Annonces — lecture publique
                 .requestMatchers("/api/annonces/recherche").permitAll()
                 .requestMatchers("/api/annonces/{id}").permitAll()
                 .requestMatchers("/api/annonces").permitAll()
+
+                // Publications — GET public (le filtrage visibilité est dans le controller)
                 .requestMatchers("/api/publications").permitAll()
                 .requestMatchers("/api/publications/{id}/commentaires").permitAll()
+
+                // Rôles spécifiques
                 .requestMatchers("/api/annonces/mes-annonces/**").hasRole("PROPRIETAIRE")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // Tout le reste : authentifié
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
@@ -59,19 +71,17 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:3000"));
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        // CORRECTIF : Spring Security 6 n'a pas de constructeur DaoAuthenticationProvider(UserDetailsService)
-        // Il faut utiliser le constructeur vide + setUserDetailsService()
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());

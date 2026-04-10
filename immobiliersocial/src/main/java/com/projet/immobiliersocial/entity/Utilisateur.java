@@ -22,6 +22,7 @@ public class Utilisateur {
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String motDePasse;
 
     @Column(nullable = false)
@@ -31,17 +32,56 @@ public class Utilisateur {
     private String prenom;
 
     private String telephone;
-
     private String photo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role; // LOCATAIRE, PROPRIETAIRE, ADMIN
+    private Role role;
 
     @Column(nullable = false)
     @Builder.Default
     private boolean actif = true;
 
+    // ─── Vérification email ───────────────────────────────────────────────────
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailVerifie = false;
+
+    @Column(unique = true)
+    @JsonIgnore
+    private String tokenVerificationEmail;
+
+    @JsonIgnore
+    private LocalDateTime tokenVerificationEmailExpiration;
+
+    // ─── Réinitialisation mot de passe ────────────────────────────────────────
+    @Column(unique = true)
+    @JsonIgnore
+    private String tokenReinitialisationMdp;
+
+    @JsonIgnore
+    private LocalDateTime tokenReinitialisationMdpExpiration;
+
+    // ─── Préférences ─────────────────────────────────────────────────────────
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Theme theme = Theme.SYSTEME;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private VisibilitePublication visibiliteParDefaut = VisibilitePublication.PUBLIC;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean notificationsEmail = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean notificationsPush = true;
+
+    // ─── Dates ───────────────────────────────────────────────────────────────
     @Column(updatable = false)
     private LocalDateTime dateCreation;
 
@@ -50,7 +90,7 @@ public class Utilisateur {
         dateCreation = LocalDateTime.now();
     }
 
-    // Relations sociales
+    // ─── Relations ───────────────────────────────────────────────────────────
     @OneToMany(mappedBy = "auteur", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Publication> publications;

@@ -25,6 +25,11 @@ public class Publication {
     @ElementCollection
     private List<String> medias;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private VisibilitePublication visibilite = VisibilitePublication.PUBLIC;
+
     @Column(updatable = false)
     private LocalDateTime dateCreation;
 
@@ -41,7 +46,7 @@ public class Publication {
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @JoinColumn(name = "annonce_id")
-    private Annonce annonce; // Publication liée à une annonce (optionnel)
+    private Annonce annonce;
 
     @OneToMany(mappedBy = "publication", cascade = CascadeType.ALL)
     @JsonIgnore
