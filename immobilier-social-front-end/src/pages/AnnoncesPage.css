@@ -1,0 +1,143 @@
+.annonces-page { }
+
+.filters-bar {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.filter-actions { display: flex; gap: 10px; }
+
+.annonces-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.annonces-count {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.annonces-loading, .annonces-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.annonces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── Annonce Card ────────────────────────────── */
+.annonce-card {
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-slow);
+  overflow: hidden;
+}
+.annonce-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.annonce-card-img {
+  position: relative;
+  height: 190px;
+  background: var(--bg-alt);
+  overflow: hidden;
+}
+.annonce-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.annonce-card:hover .annonce-card-img img {
+  transform: scale(1.04);
+}
+.annonce-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  color: var(--text-muted);
+  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-alt) 100%);
+}
+.annonce-type-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+}
+
+.annonce-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 6px;
+}
+.annonce-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.annonce-card-location {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.annonce-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.annonce-card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  flex: 1;
+}
+.annonce-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.annonce-card-prix {
+  font-size: 17px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--primary);
+}
+
+@media (max-width: 600px) {
+  .annonces-grid { grid-template-columns: 1fr; }
+}
