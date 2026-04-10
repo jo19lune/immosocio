@@ -2,7 +2,6 @@ package com.projet.immobiliersocial.controller;
 
 import com.projet.immobiliersocial.entity.*;
 import com.projet.immobiliersocial.repository.*;
-import com.projet.immobiliersocial.websocket.NotificationWebSocketService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -21,7 +20,6 @@ public class NotificationController {
 
     private final NotificationRepository notificationRepository;
     private final UtilisateurRepository utilisateurRepository;
-    private final NotificationWebSocketService wsService;
 
     /**
      * GET /api/notifications?page=0&size=20

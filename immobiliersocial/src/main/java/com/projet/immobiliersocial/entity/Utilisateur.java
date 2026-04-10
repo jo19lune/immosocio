@@ -102,4 +102,12 @@ public class Utilisateur {
     @OneToMany(mappedBy = "locataire", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Reservation> reservations;
+
+    public Object getPhoto() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void setPhoto(String url) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

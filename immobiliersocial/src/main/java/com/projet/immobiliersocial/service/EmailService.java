@@ -16,7 +16,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${app.frontend.url:http://localhost:5173}")
+    @Value("${app.frontend.url:http://localhost:4200}")
     private String frontendUrl;
 
     @Value("${spring.mail.username:noreply@immobiliersocial.com}")
@@ -29,20 +29,20 @@ public class EmailService {
         String sujet = "Vérifiez votre adresse email — Immobilier Social";
         String corps = """
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #2563eb;">Bienvenue, %s !</h2>
-                <p>Merci de vous être inscrit sur <strong>Immobilier Social</strong>.</p>
-                <p>Cliquez sur le bouton ci-dessous pour vérifier votre adresse email :</p>
-                <a href="%s"
-                    style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;
-                            text-decoration:none;border-radius:6px;font-weight:bold;margin:16px 0;">
-                    Vérifier mon email
-                </a>
-                <p style="color:#6b7280;font-size:13px;">
-                    Ce lien expire dans <strong>24 heures</strong>.<br>
-                    Si vous n'avez pas créé de compte, ignorez cet email.
-                </p>
-                <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-                <p style="color:#9ca3af;font-size:12px;">Immobilier Social — Plateforme immobilière communautaire</p>
+              <h2 style="color: #2563eb;">Bienvenue, %s !</h2>
+              <p>Merci de vous être inscrit sur <strong>Immobilier Social</strong>.</p>
+              <p>Cliquez sur le bouton ci-dessous pour vérifier votre adresse email :</p>
+              <a href="%s"
+                 style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;
+                        text-decoration:none;border-radius:6px;font-weight:bold;margin:16px 0;">
+                Vérifier mon email
+              </a>
+              <p style="color:#6b7280;font-size:13px;">
+                Ce lien expire dans <strong>24 heures</strong>.<br>
+                Si vous n'avez pas créé de compte, ignorez cet email.
+              </p>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+              <p style="color:#9ca3af;font-size:12px;">Immobilier Social — Plateforme immobilière communautaire</p>
             </div>
             """.formatted(prenom, lien);
         envoyerHtml(destinataire, sujet, corps);
@@ -55,21 +55,21 @@ public class EmailService {
         String sujet = "Réinitialisation de votre mot de passe — Immobilier Social";
         String corps = """
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #dc2626;">Réinitialisation de mot de passe</h2>
-                <p>Bonjour <strong>%s</strong>,</p>
-                <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-                <a href="%s"
-                    style="display:inline-block;padding:12px 24px;background:#dc2626;color:#fff;
+              <h2 style="color: #dc2626;">Réinitialisation de mot de passe</h2>
+              <p>Bonjour <strong>%s</strong>,</p>
+              <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+              <a href="%s"
+                 style="display:inline-block;padding:12px 24px;background:#dc2626;color:#fff;
                         text-decoration:none;border-radius:6px;font-weight:bold;margin:16px 0;">
                 Réinitialiser mon mot de passe
-                </a>
-                <p style="color:#6b7280;font-size:13px;">
+              </a>
+              <p style="color:#6b7280;font-size:13px;">
                 Ce lien expire dans <strong>1 heure</strong>.<br>
                 Si vous n'avez pas fait cette demande, ignorez cet email.
                 Votre mot de passe reste inchangé.
-                </p>
-                <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-                <p style="color:#9ca3af;font-size:12px;">Immobilier Social — Plateforme immobilière communautaire</p>
+              </p>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+              <p style="color:#9ca3af;font-size:12px;">Immobilier Social — Plateforme immobilière communautaire</p>
             </div>
             """.formatted(prenom, lien);
         envoyerHtml(destinataire, sujet, corps);

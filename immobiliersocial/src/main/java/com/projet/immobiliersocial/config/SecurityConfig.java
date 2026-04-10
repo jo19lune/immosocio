@@ -40,26 +40,33 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Auth — entièrement public
+
+                // ── Auth — entièrement public ──────────────────────────────
                 .requestMatchers("/api/auth/**").permitAll()
 
-                // WebSocket — SockJS nécessite des requêtes HTTP initiales
+                // ── WebSocket — SockJS nécessite des requêtes HTTP initiales ─
                 .requestMatchers("/ws/**").permitAll()
 
-                // Annonces — lecture publique
+                // ── Annonces — lecture publique ────────────────────────────
                 .requestMatchers("/api/annonces/recherche").permitAll()
                 .requestMatchers("/api/annonces/{id}").permitAll()
                 .requestMatchers("/api/annonces").permitAll()
 
-                // Publications — GET public (le filtrage visibilité est dans le controller)
+                // ── Publications — GET public (filtrage visibilité dans controller)
                 .requestMatchers("/api/publications").permitAll()
                 .requestMatchers("/api/publications/{id}/commentaires").permitAll()
 
-                // Rôles spécifiques
+                // ── Upload — authentifié uniquement ───────────────────────
+                // (pas de permit public sur /api/upload)
+
+                // ── Messages — authentifié ─────────────────────────────────
+                // géré par @PreAuthorize dans MessageController
+
+                // ── Rôles spécifiques ──────────────────────────────────────
                 .requestMatchers("/api/annonces/mes-annonces/**").hasRole("PROPRIETAIRE")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                // Tout le reste : authentifié
+                // ── Tout le reste : authentifié ────────────────────────────
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
