@@ -3,6 +3,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { onNotification } from '../lib/websocket';
 import './MessagesPage.css';
 
 interface UserInfo {
@@ -45,6 +46,32 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Ref pour accéder à l'utilisateur actif dans le callback WebSocket sans stale closure
+  const activeUserRef = useRef<UserInfo | null>(null);
+  activeUserRef.current = activeUser;
+
+  // ── Réception en temps réel via WebSocket ────────────────────────────────
+  useEffect(() => {
+    const unsubscribe = onNotification((data: unknown) => {
+      const payload = data as { type?: string; message?: Message };
+      if (payload.type === 'NOUVEAU_MESSAGE' && payload.message) {
+        const msg = payload.message;
+        const isFromActiveConv =
+          activeUserRef.current?.id === msg.expediteur.id ||
+          activeUserRef.current?.id === msg.destinataire.id;
+        if (isFromActiveConv) {
+          setMessages((prev) => {
+            // Eviter les doublons (le message qu'on vient d'envoyer est déjà ajouté)
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+        }
+        // Rafraîchir la liste des conversations pour le badge non-lu
+        fetchConversations();
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     fetchConversations();

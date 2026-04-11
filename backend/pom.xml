@@ -88,18 +88,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Google Drive API -->
-		<dependency>
-			<groupId>com.google.apis</groupId>
-			<artifactId>google-api-services-drive</artifactId>
-			<version>v3-rev20250511-2.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.auth</groupId>
-			<artifactId>google-auth-library-oauth2-http</artifactId>
-			<version>1.26.0</version>
-		</dependency>
-
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

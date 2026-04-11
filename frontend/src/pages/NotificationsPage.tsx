@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
+import { onNotification } from '../lib/websocket';
 import './NotificationsPage.css';
 
 interface Notification {
@@ -32,6 +33,29 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications(0, true);
+  }, []);
+
+  // ── Réception en temps réel via WebSocket ──────────────────────────────────
+  useEffect(() => {
+    const unsubscribe = onNotification((data: unknown) => {
+      const payload = data as { type?: string; message?: string; id?: number };
+      // Insérer la notification reçue en tête de liste (non lue)
+      if (payload.type && payload.message) {
+        const fakeNotif: Notification = {
+          id: payload.id ?? Date.now(),
+          message: payload.message,
+          type: payload.type,
+          lue: false,
+          dateCreation: new Date().toISOString(),
+        };
+        setNotifications((prev) => {
+          // Eviter les doublons
+          if (prev.some((n) => n.id === fakeNotif.id)) return prev;
+          return [fakeNotif, ...prev];
+        });
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const fetchNotifications = async (p: number, reset = false) => {

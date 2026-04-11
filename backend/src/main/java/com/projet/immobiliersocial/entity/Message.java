@@ -28,7 +28,7 @@ public class Message {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String contenu;
 
-    /** URL Google Drive si le message contient une image */
+    /** URL d'une image jointe au message (stockage local). */
     private String mediaUrl;
 
     @Builder.Default

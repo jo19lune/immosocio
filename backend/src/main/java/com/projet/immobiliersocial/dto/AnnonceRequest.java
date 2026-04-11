@@ -45,6 +45,6 @@ public class AnnonceRequest {
     /** Type de logement : MAISON, APPARTEMENT ou STUDIO. */
     private TypeLogement typeLogement;
 
-    /** URLs des photos hébergées sur Google Drive. */
+    /** URLs des photos (stockage local). */
     private List<String> photos;
 }

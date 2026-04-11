@@ -44,6 +44,10 @@ public class SecurityConfig {
                 // ── Auth — entièrement public ──────────────────────────────
                 .requestMatchers("/api/auth/**").permitAll()
 
+                // ── Images locales — accès public sans JWT ──────────────────
+                .requestMatchers("/images/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+
                 // ── WebSocket — SockJS nécessite des requêtes HTTP initiales ─
                 .requestMatchers("/ws/**").permitAll()
 

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import api from '../lib/api';
+import { connectWebSocket, disconnectWebSocket } from '../lib/websocket';
 
 interface User {
   id: number;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Restaurer la session sauvegardée + connecter le WS
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -34,8 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
       api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+      connectWebSocket(savedToken);
     }
     setLoading(false);
+
+    // Déconnexion propre au démontage (rechargement de page)
+    return () => { disconnectWebSocket(); };
   }, []);
 
   const login = async (email: string, motDePasse: string) => {
@@ -46,9 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(userData));
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    // Ouvrir la connexion WebSocket après login
+    connectWebSocket(newToken);
   };
 
   const logout = () => {
+    // Fermer la connexion WebSocket avant de vider la session
+    disconnectWebSocket();
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
