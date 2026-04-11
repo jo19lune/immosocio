@@ -7,6 +7,7 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
@@ -48,6 +49,7 @@ public class GoogleDriveConfig {
      * GoogleDriveService l'injecte par TYPE (Drive), pas par nom.
      */
     @Bean(name = "googleDriveClient")
+    @ConditionalOnMissingBean(Drive.class)
     public Drive googleDriveClient() throws IOException, GeneralSecurityException {
         GoogleCredentials credentials = GoogleCredentials
                 .fromStream(credentialsResource.getInputStream())

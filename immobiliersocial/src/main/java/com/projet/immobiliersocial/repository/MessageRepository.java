@@ -15,13 +15,14 @@ import java.util.List;
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
     /**
-     * Messages d'une conversation entre deux utilisateurs (ordre chronologique).
+     * Messages d'une conversation entre deux utilisateurs, paginés.
+     * L'ORDER BY est retiré de la requête pour laisser le Pageable gérer
+     * le tri — sinon Hibernate 6 lève une erreur de double ORDER BY.
      */
     @Query("""
         SELECT m FROM Message m
         WHERE (m.expediteur = :u1 AND m.destinataire = :u2)
            OR (m.expediteur = :u2 AND m.destinataire = :u1)
-        ORDER BY m.dateEnvoi ASC
     """)
     Page<Message> findConversation(
             @Param("u1") Utilisateur u1,
@@ -29,27 +30,28 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             Pageable pageable);
 
     /**
-     * Liste des conversations récentes de l'utilisateur :
-     * retourne le dernier message de chaque interlocuteur distinct.
+     * Dernier message de chaque conversation de l'utilisateur.
+     * Requête JPQL avec sous-requête corrélée — compatible H2 et PostgreSQL.
      */
-    @Query(value = """
-        SELECT DISTINCT ON (
-            LEAST(m.expediteur_id, m.destinataire_id),
-            GREATEST(m.expediteur_id, m.destinataire_id)
-        ) m.*
-        FROM messages m
-        WHERE m.expediteur_id = :userId OR m.destinataire_id = :userId
-        ORDER BY
-            LEAST(m.expediteur_id, m.destinataire_id),
-            GREATEST(m.expediteur_id, m.destinataire_id),
-            m.date_envoi DESC
-    """, nativeQuery = true)
+    @Query("""
+        SELECT m FROM Message m
+        WHERE (m.expediteur.id = :userId OR m.destinataire.id = :userId)
+          AND m.dateEnvoi = (
+              SELECT MAX(m2.dateEnvoi) FROM Message m2
+              WHERE (
+                  (m2.expediteur.id = m.expediteur.id AND m2.destinataire.id = m.destinataire.id)
+                  OR
+                  (m2.expediteur.id = m.destinataire.id AND m2.destinataire.id = m.expediteur.id)
+              )
+          )
+        ORDER BY m.dateEnvoi DESC
+    """)
     List<Message> findDerniersMessages(@Param("userId") Long userId);
 
     /**
      * Nombre de messages non lus envoyés par un expéditeur précis.
      */
-    long countByDestinataireAndExpediteureAndLuFalse(
+    long countByDestinataireAndExpediteurAndLuFalse(
             Utilisateur destinataire, Utilisateur expediteur);
 
     /**

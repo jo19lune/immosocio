@@ -33,3 +33,9 @@ build/
 .vscode/
 
 /test
+-e
+# Variables d'environnement — ne pas committer
+.env
+*.env
+src/main/resources/friendly-plane-492912-j4-fd4d6b6c228c.json
+src/test/resources/test-credentials-placeholder.json

@@ -33,7 +33,6 @@ public class GoogleDriveService {
 
     @Value("${app.google.drive.folder-id}")
     private String folderId;
-    private String object;
 
     public GoogleDriveService(@Qualifier("googleDriveClient") Drive driveClient) {
         this.driveClient = driveClient;
@@ -85,8 +84,8 @@ public class GoogleDriveService {
      *
      * @param urlPublique URL de la forme https://drive.google.com/uc?export=view&id=FILE_ID
      */
-    public void supprimerImage(Object urlPublique) {
-        String fileId = extraireFileId(object);
+    public void supprimerImage(String urlPublique) {
+        String fileId = extraireFileId(urlPublique);
         if (fileId == null) {
             return;
         }

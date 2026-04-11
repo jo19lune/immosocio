@@ -103,11 +103,5 @@ public class Utilisateur {
     @JsonIgnore
     private List<Reservation> reservations;
 
-    public Object getPhoto() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
-    public void setPhoto(String url) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

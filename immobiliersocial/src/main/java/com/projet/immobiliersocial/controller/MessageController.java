@@ -2,11 +2,13 @@ package com.projet.immobiliersocial.controller;
 
 import com.projet.immobiliersocial.entity.Message;
 import com.projet.immobiliersocial.entity.Utilisateur;
+import com.projet.immobiliersocial.exception.ApiException;
 import com.projet.immobiliersocial.repository.MessageRepository;
 import com.projet.immobiliersocial.repository.UtilisateurRepository;
 import com.projet.immobiliersocial.websocket.NotificationWebSocketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,14 +19,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Contrôleur de messagerie privée.
+ * Contrôleur REST pour la messagerie privée entre utilisateurs.
  *
- * Endpoints :
- *   GET    /api/messages/conversations         → liste des conversations récentes
- *   GET    /api/messages/{userId}?page=&size=  → messages d'une conversation
- *   POST   /api/messages/{userId}              → envoyer un message
- *   PATCH  /api/messages/{userId}/lu           → marquer conversation comme lue
- *   GET    /api/messages/non-lus               → nombre de messages non lus
+ * <p>Tous les endpoints nécessitent une authentification.</p>
+ *
+ * <ul>
+ *   <li>GET   /api/messages/conversations          — liste des conversations récentes</li>
+ *   <li>GET   /api/messages/non-lus                — compteur de messages non lus</li>
+ *   <li>GET   /api/messages/{userId}               — messages d'une conversation (paginés)</li>
+ *   <li>POST  /api/messages/{userId}               — envoyer un message</li>
+ *   <li>PATCH /api/messages/{userId}/lu            — marquer la conversation comme lue</li>
+ * </ul>
  */
 @RestController
 @RequestMapping("/api/messages")
@@ -36,32 +41,43 @@ public class MessageController {
     private final UtilisateurRepository utilisateurRepository;
     private final NotificationWebSocketService wsService;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /api/messages/conversations
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── GET /api/messages/conversations ─────────────────────────────────────
+
+    /**
+     * Retourne le dernier message de chaque conversation de l'utilisateur connecté,
+     * triés par date d'envoi décroissante.
+     */
     @GetMapping("/conversations")
     public ResponseEntity<List<Message>> getConversations(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        Utilisateur moi = getUtilisateur(userDetails);
+        Utilisateur moi = resolveUtilisateur(userDetails);
         return ResponseEntity.ok(messageRepository.findDerniersMessages(moi.getId()));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /api/messages/non-lus
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── GET /api/messages/non-lus ────────────────────────────────────────────
+
+    /**
+     * Retourne le nombre total de messages non lus reçus par l'utilisateur connecté.
+     */
     @GetMapping("/non-lus")
     public ResponseEntity<Map<String, Long>> getNonLus(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        Utilisateur moi = getUtilisateur(userDetails);
+        Utilisateur moi = resolveUtilisateur(userDetails);
         long count = messageRepository.countByDestinataireAndLuFalse(moi);
         return ResponseEntity.ok(Map.of("nonLus", count));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /api/messages/{userId}?page=0&size=30
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── GET /api/messages/{userId} ───────────────────────────────────────────
+
+    /**
+     * Retourne les messages échangés avec un interlocuteur donné, paginés par date croissante.
+     * Marque automatiquement comme lus les messages reçus de cet interlocuteur.
+     *
+     * @param userId identifiant de l'interlocuteur
+     * @throws ApiException 404 si l'interlocuteur est introuvable
+     */
     @GetMapping("/{userId}")
     public ResponseEntity<Page<Message>> getConversation(
             @PathVariable Long userId,
@@ -69,41 +85,52 @@ public class MessageController {
             @RequestParam(defaultValue = "30") int size,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        Utilisateur moi = getUtilisateur(userDetails);
-        Utilisateur interlocuteur = utilisateurRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+        Utilisateur moi = resolveUtilisateur(userDetails);
+        Utilisateur interlocuteur = resolveUtilisateurParId(userId);
 
-        // Marquer les messages reçus de cet interlocuteur comme lus
+        // Marquer les messages reçus comme lus lors de la consultation
         messageRepository.marquerConversationLue(moi, interlocuteur);
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dateEnvoi").ascending());
         return ResponseEntity.ok(messageRepository.findConversation(moi, interlocuteur, pageable));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // POST /api/messages/{userId}
-    // Body : { "contenu": "...", "mediaUrl": "..." (optionnel) }
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── POST /api/messages/{userId} ──────────────────────────────────────────
+
+    /**
+     * Envoie un message à un autre utilisateur. Retourne HTTP 201 Created.
+     *
+     * <p>Le corps de la requête doit contenir {@code contenu} (obligatoire)
+     * et optionnellement {@code mediaUrl}.</p>
+     *
+     * <p>Une notification WebSocket est envoyée en temps réel au destinataire.</p>
+     *
+     * @param userId identifiant du destinataire
+     * @param body   {@code { "contenu": "...", "mediaUrl": "..." (optionnel) }}
+     * @throws ApiException 400 si le contenu est vide ou si l'utilisateur s'envoie un message,
+     *                      404 si le destinataire est introuvable
+     */
     @PostMapping("/{userId}")
-    public ResponseEntity<?> envoyerMessage(
+    public ResponseEntity<Message> envoyerMessage(
             @PathVariable Long userId,
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        if (body == null || body.get("contenu") == null || body.get("contenu").isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("erreur", "Le contenu du message est requis"));
+        String contenu = body != null ? body.get("contenu") : null;
+        if (contenu == null || contenu.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Le contenu du message est obligatoire");
         }
 
-        Utilisateur expediteur = getUtilisateur(userDetails);
-        Utilisateur destinataire = utilisateurRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Destinataire introuvable"));
+        Utilisateur expediteur = resolveUtilisateur(userDetails);
+        Utilisateur destinataire = resolveUtilisateurParId(userId);
 
         if (expediteur.getId().equals(destinataire.getId())) {
-            return ResponseEntity.badRequest().body(Map.of("erreur", "Vous ne pouvez pas vous envoyer un message"));
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "Vous ne pouvez pas vous envoyer un message à vous-même");
         }
 
         Message message = Message.builder()
-                .contenu(body.get("contenu"))
+                .contenu(contenu)
                 .mediaUrl(body.get("mediaUrl"))
                 .expediteur(expediteur)
                 .destinataire(destinataire)
@@ -111,7 +138,6 @@ public class MessageController {
 
         Message saved = messageRepository.save(message);
 
-        // Notification WebSocket temps réel au destinataire
         wsService.envoyerNotification(destinataire.getEmail(), Map.of(
                 "type", "NOUVEAU_MESSAGE",
                 "message", expediteur.getPrenom() + " " + expediteur.getNom() + " vous a envoyé un message",
@@ -119,28 +145,37 @@ public class MessageController {
                 "messageId", saved.getId()
         ));
 
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PATCH /api/messages/{userId}/lu
-    // ─────────────────────────────────────────────────────────────────────────
+    // ─── PATCH /api/messages/{userId}/lu ──────────────────────────────────────
+
+    /**
+     * Marque comme lus tous les messages reçus de l'interlocuteur spécifié.
+     *
+     * @param userId identifiant de l'interlocuteur dont on a reçu des messages
+     */
     @PatchMapping("/{userId}/lu")
     public ResponseEntity<Map<String, String>> marquerLu(
             @PathVariable Long userId,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        Utilisateur moi = getUtilisateur(userDetails);
-        Utilisateur interlocuteur = utilisateurRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
-
+        Utilisateur moi = resolveUtilisateur(userDetails);
+        Utilisateur interlocuteur = resolveUtilisateurParId(userId);
         messageRepository.marquerConversationLue(moi, interlocuteur);
         return ResponseEntity.ok(Map.of("message", "Conversation marquée comme lue"));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    private Utilisateur getUtilisateur(UserDetails userDetails) {
+    // ─── Helpers privés ───────────────────────────────────────────────────────
+
+    private Utilisateur resolveUtilisateur(UserDetails userDetails) {
         return utilisateurRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+    }
+
+    private Utilisateur resolveUtilisateurParId(Long id) {
+        return utilisateurRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,
+                        "Utilisateur introuvable (id=" + id + ")"));
     }
 }

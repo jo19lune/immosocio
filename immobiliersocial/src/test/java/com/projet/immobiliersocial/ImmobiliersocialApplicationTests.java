@@ -1,26 +1,27 @@
 package com.projet.immobiliersocial;
 
+import com.google.api.services.drive.Drive;
+import com.projet.immobiliersocial.service.GoogleDriveService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
 
 /**
  * Test de démarrage du contexte Spring.
  *
- * Google Drive est mocké via les propriétés de test pour éviter
- * l'erreur "credentials file not found" en CI/CD et en développement local.
+ * Google Drive et le service associé sont mockés pour éviter toute
+ * tentative de connexion réseau ou de lecture de credentials réels
+ * en CI/CD et en développement local.
  */
 @SpringBootTest
 @TestPropertySource(properties = {
-    // Désactive Google Drive en contexte de test
     "app.google.drive.credentials-path=classpath:test-credentials-placeholder.json",
     "app.google.drive.folder-id=test-folder-id",
     "app.google.drive.application-name=ImmobilierSocial-Test",
-    // Désactive l'envoi d'emails en test
     "spring.mail.host=localhost",
     "spring.mail.port=3025",
-    // Base de données H2 en mémoire pour les tests
-    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.datasource.username=sa",
     "spring.datasource.password=",
@@ -28,6 +29,20 @@ import org.springframework.test.context.TestPropertySource;
     "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 class ImmobiliersocialApplicationTests {
+
+    /**
+     * Mock du client Drive : empêche GoogleDriveConfig d'essayer de lire
+     * et de valider les credentials Google au démarrage du contexte de test.
+     */
+    @MockBean
+    private Drive googleDriveClient;
+
+    /**
+     * Mock du service Drive : évite tout appel réseau vers Google Drive
+     * pendant les tests.
+     */
+    @MockBean
+    private GoogleDriveService googleDriveService;
 
     @Test
     void contextLoads() {
