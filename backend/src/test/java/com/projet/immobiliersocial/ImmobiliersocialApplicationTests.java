@@ -26,7 +26,12 @@ import org.springframework.test.context.TestPropertySource;
     "spring.datasource.username=sa",
     "spring.datasource.password=",
     "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "FRONTEND_URL=http://localhost:4200",
+    "MAIL_USERNAME=noreply@immobiliersocial.com",
+    "MAIL_PASSWORD=dummy",
+    "PORT=8080",
+    "JWT_SECRET=superSecretKeyForTestEnvironmentsThatIsLongEnough"
 })
 class ImmobiliersocialApplicationTests {
 
