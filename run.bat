@@ -1,234 +1,215 @@
 @echo off
 setlocal enabledelayedexpansion
-title ImmobilierSocial - Lanceur
 
-:: ─── Couleurs ANSI (Windows 10+) ─────────────────────────────────────────────
-set "GREEN=[92m"
-set "YELLOW=[93m"
-set "RED=[91m"
-set "CYAN=[96m"
-set "BOLD=[1m"
-set "RESET=[0m"
+title ImmoSocial - Gestionnaire
 
-:: ─── Chemins ──────────────────────────────────────────────────────────────────
-set "ROOT=%~dp0"
-set "BACKEND_DIR=%ROOT%backend"
-set "FRONTEND_DIR=%ROOT%frontend"
+:: ------------------------------------------------------------
+::  CONFIGURATION
+:: ------------------------------------------------------------
+set "BACKEND_DIR=%~dp0backend"
+set "FRONTEND_DIR=%~dp0frontend"
+set "JAR_NAME=immobiliersocial-0.0.1-SNAPSHOT.jar"
+set "BACKEND_TITLE=ImmoSocial - Backend"
+set "FRONTEND_TITLE=ImmoSocial - Frontend"
 
-:: ─── URL de santé (retourne 2xx/4xx quand Spring est prêt) ───────────────────
-set "HEALTH_URL=http://localhost:8080/api/auth/login"
+:: ------------------------------------------------------------
+::  VERIFICATIONS INITIALES
+:: ------------------------------------------------------------
+if not exist "%BACKEND_DIR%" (
+    echo [ERREUR] Dossier backend introuvable : %BACKEND_DIR%
+    pause
+    exit /b 1
+)
+if not exist "%BACKEND_DIR%\mvnw.cmd" (
+    echo [ERREUR] mvnw.cmd introuvable dans %BACKEND_DIR%
+    pause
+    exit /b 1
+)
+if not exist "%FRONTEND_DIR%\package.json" (
+    echo [ERREUR] package.json introuvable dans %FRONTEND_DIR%
+    pause
+    exit /b 1
+)
+where node >nul 2>&1
+if errorlevel 1 (
+    echo [ERREUR] Node.js non installe.
+    pause
+    exit /b 1
+)
+where java >nul 2>&1
+if errorlevel 1 (
+    echo [ERREUR] Java non installe.
+    pause
+    exit /b 1
+)
 
-:: ─── Fichiers PID temporaires ─────────────────────────────────────────────────
-set "B_PID=%TEMP%\immosocial_backend.pid"
-set "F_PID=%TEMP%\immosocial_frontend.pid"
+:: ------------------------------------------------------------
+::  FONCTIONS (placées APRÈS le flux principal pour éviter les retours intempestifs)
+:: ------------------------------------------------------------
+goto :MAIN
 
-:: ─── Logs ─────────────────────────────────────────────────────────────────────
-set "B_LOG=%ROOT%backend.log"
-set "F_LOG=%ROOT%frontend.log"
-
-:: ─────────────────────────────────────────────────────────────────────────────
-::  DÉMARRAGE AUTOMATIQUE
-:: ─────────────────────────────────────────────────────────────────────────────
+:SHOW_BANNER
 cls
-echo %CYAN%%BOLD%
-echo  ╔═══════════════════════════════════════════════╗
-echo  ║       ImmobilierSocial  —  Lanceur            ║
-echo  ║   Backend : http://localhost:8080             ║
-echo  ║   Frontend: http://localhost:5173             ║
-echo  ╚═══════════════════════════════════════════════╝
-echo %RESET%
-
-call :fn_start_backend
-call :fn_start_frontend
-
 echo.
-echo %GREEN%%BOLD% ✓ Application prête !%RESET%
-echo %GREEN%   Backend  → http://localhost:8080%RESET%
-echo %GREEN%   Frontend → http://localhost:5173%RESET%
+echo  =====================================================
+echo   IMMOBILIER SOCIAL - Plateforme Immobiliere Sociale
+echo   Backend  : Spring Boot  ^| http://localhost:8080
+echo   Frontend : React + Vite ^| http://localhost:5173
+echo  =====================================================
 echo.
+goto :EOF
 
-:: ─────────────────────────────────────────────────────────────────────────────
-::  BOUCLE INTERACTIVE
-:: ─────────────────────────────────────────────────────────────────────────────
-:menu
-echo %CYAN%──────────────────────────────────────────────────%RESET%
-echo  %YELLOW%b%RESET%   Redémarrer le  Backend
-echo  %YELLOW%f%RESET%   Redémarrer le  Frontend
-echo  %YELLOW%r%RESET%   Redémarrer les DEUX
-echo  %YELLOW%sb%RESET%  Arrêter le     Backend
-echo  %YELLOW%sf%RESET%  Arrêter le     Frontend
-echo  %YELLOW%lb%RESET%  Voir le log    Backend  (50 dernières lignes)
-echo  %YELLOW%lf%RESET%  Voir le log    Frontend (50 dernières lignes)
-echo  %YELLOW%q%RESET%   Quitter (arrête tout)
-echo %CYAN%──────────────────────────────────────────────────%RESET%
-set /p "CMD=  > "
+:BUILD_BACKEND
+echo [BUILD] Compilation du backend (clean package)...
+pushd "%BACKEND_DIR%"
+call mvnw.cmd clean package
+if errorlevel 1 (
+    echo [ERREUR] La compilation a echoue.
+    popd
+    pause
+    exit /b 1
+)
+popd
+if not exist "%BACKEND_DIR%\target\%JAR_NAME%" (
+    echo [ERREUR] JAR introuvable : %BACKEND_DIR%\target\%JAR_NAME%
+    pause
+    exit /b 1
+)
+echo [BUILD] Backend compile avec succes.
+goto :EOF
 
-if /i "!CMD!"=="b"  goto :do_restart_backend
-if /i "!CMD!"=="f"  goto :do_restart_frontend
-if /i "!CMD!"=="r"  goto :do_restart_all
-if /i "!CMD!"=="sb" goto :do_stop_backend
-if /i "!CMD!"=="sf" goto :do_stop_frontend
-if /i "!CMD!"=="lb" goto :do_log_backend
-if /i "!CMD!"=="lf" goto :do_log_frontend
-if /i "!CMD!"=="q"  goto :do_quit
-
-echo %RED% Commande inconnue : "!CMD!" — tapez b, f, r, sb, sf, lb, lf ou q%RESET%
-goto :menu
-
-:do_restart_backend
-    call :fn_stop_backend
-    call :fn_start_backend
-    goto :menu
-
-:do_restart_frontend
-    call :fn_stop_frontend
-    call :fn_start_frontend
-    goto :menu
-
-:do_restart_all
-    call :fn_stop_backend
-    call :fn_stop_frontend
-    call :fn_start_backend
-    call :fn_start_frontend
-    goto :menu
-
-:do_stop_backend
-    call :fn_stop_backend
-    goto :menu
-
-:do_stop_frontend
-    call :fn_stop_frontend
-    goto :menu
-
-:do_log_backend
-    echo.
-    echo %CYAN%═══ backend.log (50 dernières lignes) ══════════════%RESET%
-    if exist "%B_LOG%" ( powershell -command "Get-Content '%B_LOG%' -Tail 50" ) else ( echo %RED% Fichier introuvable%RESET% )
-    echo %CYAN%═══════════════════════════════════════════════════%RESET%
-    echo.
-    goto :menu
-
-:do_log_frontend
-    echo.
-    echo %CYAN%═══ frontend.log (50 dernières lignes) ═════════════%RESET%
-    if exist "%F_LOG%" ( powershell -command "Get-Content '%F_LOG%' -Tail 50" ) else ( echo %RED% Fichier introuvable%RESET% )
-    echo %CYAN%═══════════════════════════════════════════════════%RESET%
-    echo.
-    goto :menu
-
-:do_quit
-    call :fn_stop_backend
-    call :fn_stop_frontend
-    echo %GREEN% Au revoir !%RESET%
-    exit /b 0
-
-
-:: ═════════════════════════════════════════════════════════════════════════════
-::  FONCTIONS
-:: ═════════════════════════════════════════════════════════════════════════════
-
-:: ─── Démarrer le Backend ─────────────────────────────────────────────────────
-:fn_start_backend
-    echo %CYAN%[BACKEND] Démarrage...%RESET%
-
-    :: Tuer l'ancien processus si PID connu
-    call :fn_kill_pid "%B_PID%"
-
-    :: Lancer mvnw dans une fenêtre séparée (minimisée)
-    cd /d "%BACKEND_DIR%"
-    start /min "ImmobilierSocial-Backend" cmd /c "mvnw.cmd spring-boot:run > "%B_LOG%" 2>&1"
-    cd /d "%ROOT%"
-
-    :: Attendre que Spring Boot réponde (poll HTTP, max 120 s)
-    echo %YELLOW%[BACKEND] Attente du démarrage de Spring Boot (max 120 s)...%RESET%
-    set "RETRY=0"
-
-:_backend_poll
-    if !RETRY! GEQ 60 (
-    echo %RED%[BACKEND] ✗ Timeout ! Consultez backend.log pour diagnostiquer.%RESET%
-    goto :eof
+:INSTALL_FRONTEND
+if not exist "%FRONTEND_DIR%\node_modules" (
+    echo [NPM] Installation des dependances...
+    pushd "%FRONTEND_DIR%"
+    call npm install
+    if errorlevel 1 (
+        echo [ERREUR] npm install a echoue.
+        popd
+        pause
+        exit /b 1
     )
-    :: Attendre 2 s entre chaque tentative
-    timeout /t 2 /nobreak >nul
+    popd
+    echo [NPM] Dependances installees.
+)
+goto :EOF
 
-    :: curl silencieux — on teste juste que le port répond (2xx ou 4xx = Spring est prêt)
-    for /f %%H in ('curl -s -o NUL -w "%%{http_code}" "%HEALTH_URL%" 2^>nul') do set "HTTP_CODE=%%H"
-    if "!HTTP_CODE!"=="" ( set "HTTP_CODE=000" )
+:START_BACKEND
+echo [BACKEND] Demarrage...
+pushd "%BACKEND_DIR%"
+start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && java -jar target\!JAR_NAME!"
+popd
+echo [BACKEND] Lance dans une nouvelle fenetre.
+goto :EOF
 
-    :: Accepter tout code >= 200 (Spring répond = serveur démarré)
-    if !HTTP_CODE! GEQ 200 (
-    echo %GREEN%[BACKEND] ✓ Prêt  (HTTP !HTTP_CODE!)  →  http://localhost:8080%RESET%
+:START_FRONTEND
+echo [FRONTEND] Demarrage...
+pushd "%FRONTEND_DIR%"
+start "%FRONTEND_TITLE%" cmd /k "title %FRONTEND_TITLE% && npm run dev"
+popd
+echo [FRONTEND] Lance dans une nouvelle fenetre.
+goto :EOF
 
-    :: Stocker le PID java le plus récent
-    for /f "tokens=2" %%P in ('tasklist /fi "imagename eq java.exe" /fo list 2^>nul ^| findstr /i "PID"') do (
-        echo %%P> "%B_PID%"
-    )
-    goto :eof
-    )
+:STOP_BACKEND
+echo [BACKEND] Arret en cours...
+taskkill /FI "WINDOWTITLE eq %BACKEND_TITLE%" /T /F >nul 2>&1
+if errorlevel 1 ( echo [BACKEND] Aucune fenetre trouvee. ) else ( echo [BACKEND] Fenetre fermee. )
+goto :EOF
 
-    set /a "RETRY+=1"
-    set /a "ELAPSED=RETRY*2"
-    echo %YELLOW%[BACKEND]   ... !ELAPSED! s (HTTP !HTTP_CODE!)%RESET%
-    goto :_backend_poll
+:STOP_FRONTEND
+echo [FRONTEND] Arret en cours...
+taskkill /FI "WINDOWTITLE eq %FRONTEND_TITLE%" /T /F >nul 2>&1
+if errorlevel 1 ( echo [FRONTEND] Aucune fenetre trouvee. ) else ( echo [FRONTEND] Fenetre fermee. )
+goto :EOF
 
+:START_ALL
+call :INSTALL_FRONTEND
+call :BUILD_BACKEND
+call :START_BACKEND
+timeout /t 5 /nobreak > nul
+call :START_FRONTEND
+echo Tous les serveurs ont ete lances.
+goto :EOF
 
-:: ─── Démarrer le Frontend ────────────────────────────────────────────────────
-:fn_start_frontend
-    echo %CYAN%[FRONTEND] Démarrage...%RESET%
+:STOP_ALL
+call :STOP_BACKEND
+call :STOP_FRONTEND
+echo Tous les serveurs ont ete arretes.
+goto :EOF
 
-    call :fn_kill_pid "%F_PID%"
+:RESTART_ALL
+call :STOP_ALL
+timeout /t 2 /nobreak > nul
+call :START_ALL
+goto :EOF
 
-    cd /d "%FRONTEND_DIR%"
+:RESTART_BACKEND
+call :STOP_BACKEND
+timeout /t 2 /nobreak > nul
+call :BUILD_BACKEND
+call :START_BACKEND
+goto :EOF
 
-    :: Installer les dépendances si node_modules absent
-    if not exist "node_modules" (
-        echo %YELLOW%[FRONTEND] Installation des dépendances npm...%RESET%
-        call npm install
-    )
+:RESTART_FRONTEND
+call :STOP_FRONTEND
+timeout /t 2 /nobreak > nul
+call :START_FRONTEND
+goto :EOF
 
-    start /min "ImmobilierSocial-Frontend" cmd /c "npm run dev > "%F_LOG%" 2>&1"
-    cd /d "%ROOT%"
+:OPEN_BROWSER
+start "" "http://localhost:5173"
+goto :EOF
 
-    :: Attendre quelques secondes que Vite démarre
-    timeout /t 4 /nobreak >nul
+:: ------------------------------------------------------------
+::  FLUX PRINCIPAL (démarrage automatique puis menu)
+:: ------------------------------------------------------------
+:MAIN
+call :SHOW_BANNER
+echo [OK] Java et Node.js detectes.
+echo.
+echo *** DEMARRAGE AUTOMATIQUE ***
+call :START_ALL
+echo.
+set /p OPEN_BROWSER="Ouvrir http://localhost:5173 dans le navigateur ? [O/n] : "
+if /i not "!OPEN_BROWSER!"=="n" start "" "http://localhost:5173"
+echo.
+echo =====================================================
+echo  Le gestionnaire reste actif.
+echo  Vous pouvez gerer les serveurs via le menu.
+echo =====================================================
+echo.
+pause
 
-    :: Stocker le PID node
-    for /f "tokens=2" %%P in ('tasklist /fi "imagename eq node.exe" /fo list 2^>nul ^| findstr /i "PID"') do (
-    echo %%P> "%F_PID%"
-    )
+:: ------------------------------------------------------------
+::  MENU INTERACTIF
+:: ------------------------------------------------------------
+:MENU_LOOP
+call :SHOW_BANNER
+echo Que souhaitez-vous faire ?
+echo.
+echo  [1] Demarrer tous les serveurs
+echo  [2] Arreter tous les serveurs
+echo  [3] Redemarrer tous les serveurs
+echo  [4] Redemarrer le backend uniquement
+echo  [5] Redemarrer le frontend uniquement
+echo  [6] Ouvrir le navigateur (http://localhost:5173)
+echo  [7] Quitter ce gestionnaire
+echo.
+set "CHOICE="
+set /p CHOICE="Votre choix [1-7] : "
+if "%CHOICE%"=="1" call :START_ALL
+if "%CHOICE%"=="2" call :STOP_ALL
+if "%CHOICE%"=="3" call :RESTART_ALL
+if "%CHOICE%"=="4" call :RESTART_BACKEND
+if "%CHOICE%"=="5" call :RESTART_FRONTEND
+if "%CHOICE%"=="6" call :OPEN_BROWSER
+if "%CHOICE%"=="7" goto :QUIT
+echo.
+echo Appuyez sur une touche pour revenir au menu...
+pause > nul
+goto :MENU_LOOP
 
-    echo %GREEN%[FRONTEND] ✓ Prêt  →  http://localhost:5173%RESET%
-    goto :eof
-
-
-:: ─── Arrêter le Backend ──────────────────────────────────────────────────────
-:fn_stop_backend
-    echo %RED%[BACKEND] Arrêt...%RESET%
-    call :fn_kill_pid "%B_PID%"
-    :: Tuer tous les java.exe par sécurité (mvnw fork aussi un processus java)
-    taskkill /fi "imagename eq java.exe" /F >nul 2>&1
-    if exist "%B_PID%" del "%B_PID%" >nul 2>&1
-    echo %RED%[BACKEND] ✓ Arrêté%RESET%
-    goto :eof
-
-
-:: ─── Arrêter le Frontend ─────────────────────────────────────────────────────
-:fn_stop_frontend
-    echo %RED%[FRONTEND] Arrêt...%RESET%
-    call :fn_kill_pid "%F_PID%"
-    taskkill /fi "imagename eq node.exe" /F >nul 2>&1
-    if exist "%F_PID%" del "%F_PID%" >nul 2>&1
-    echo %RED%[FRONTEND] ✓ Arrêté%RESET%
-    goto :eof
-
-
-:: ─── Tuer un PID depuis un fichier ───────────────────────────────────────────
-:fn_kill_pid
-    if exist "%~1" (
-    set /p "_PID="<"%~1"
-    if defined _PID (
-        taskkill /PID !_PID! /F >nul 2>&1
-        )
-        del "%~1" >nul 2>&1
-    )
-    goto :eof
+:QUIT
+echo Au revoir !
+timeout /t 2 > nul
+exit /b 0
