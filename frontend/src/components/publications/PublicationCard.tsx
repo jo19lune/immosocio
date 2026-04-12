@@ -21,14 +21,16 @@ interface Publication {
   likeCount?: number;
   commentCount?: number;
   liked?: boolean;
+  annonce?: any;
 }
 
 interface Props {
   publication: Publication;
   onDelete?: (id: number) => void;
+  onUpdate?: (pub: Publication) => void;
 }
 
-export default function PublicationCard({ publication, onDelete }: Props) {
+export default function PublicationCard({ publication, onDelete, onUpdate }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [likeCount, setLikeCount] = useState(publication.likeCount || 0);
@@ -39,6 +41,12 @@ export default function PublicationCard({ publication, onDelete }: Props) {
   const [commentCount, setCommentCount] = useState(publication.commentCount || 0);
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
+
+  // ── Édition inline
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(publication.contenu);
+  const [currentContenu, setCurrentContenu] = useState(publication.contenu);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const avatarUrl = (auteur: Auteur) =>
     auteur.photo ||
@@ -94,6 +102,7 @@ export default function PublicationCard({ publication, onDelete }: Props) {
   };
 
   const canDelete = user && (user.id === publication.auteur.id || user.role === 'ADMIN');
+  const canEdit = user && user.id === publication.auteur.id;
 
   const handleDelete = async () => {
     if (!window.confirm('Supprimer cette publication ?')) return;
@@ -101,6 +110,28 @@ export default function PublicationCard({ publication, onDelete }: Props) {
       await api.delete(`/publications/${publication.id}`);
       onDelete?.(publication.id);
     } catch { /* silencieux */ }
+  };
+
+  const startEdit = () => {
+    setEditText(currentContenu);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => setEditing(false);
+
+  const saveEdit = async () => {
+    if (!editText.trim()) return;
+    setSavingEdit(true);
+    try {
+      const { data } = await api.put(`/publications/${publication.id}`, { contenu: editText });
+      setCurrentContenu(data.contenu);
+      onUpdate?.({ ...publication, contenu: data.contenu });
+      setEditing(false);
+    } catch {
+      alert('Erreur lors de la modification.');
+    } finally {
+      setSavingEdit(false);
+    }
   };
 
   return (
@@ -127,14 +158,43 @@ export default function PublicationCard({ publication, onDelete }: Props) {
             </div>
           </div>
         </Link>
-        {canDelete && (
-          <button className="pub-delete-btn" onClick={handleDelete} title="Supprimer">✕</button>
-        )}
+        <div className="pub-header-actions">
+          {canEdit && !editing && (
+            <button className="pub-edit-btn" onClick={startEdit} title="Modifier">✏️</button>
+          )}
+          {canDelete && (
+            <button className="pub-delete-btn" onClick={handleDelete} title="Supprimer">✕</button>
+          )}
+        </div>
       </div>
 
-      {/* Contenu */}
+      {/* Contenu / Édition inline */}
       <div className="pub-content">
-        <p>{publication.contenu}</p>
+        {editing ? (
+          <div className="pub-edit-area">
+            <textarea
+              className="form-input pub-edit-textarea"
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={4}
+              autoFocus
+            />
+            <div className="pub-edit-actions">
+              <button className="btn btn-ghost btn-sm" onClick={cancelEdit} disabled={savingEdit}>
+                Annuler
+              </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={saveEdit}
+                disabled={savingEdit || !editText.trim()}
+              >
+                {savingEdit ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p>{currentContenu}</p>
+        )}
       </div>
 
       {/* Médias */}
@@ -143,6 +203,24 @@ export default function PublicationCard({ publication, onDelete }: Props) {
           {publication.medias.slice(0, 4).map((url, i) => (
             <img key={i} src={url} alt="" className="pub-media-img" />
           ))}
+        </div>
+      )}
+
+      {/* Annonce intégrée */}
+      {publication.annonce && (
+        <div className="pub-embedded-annonce" onClick={() => navigate('/annonces')}>
+          <div className="pub-embedded-img">
+            {publication.annonce.photos && publication.annonce.photos.length > 0 ? (
+              <img src={publication.annonce.photos[0]} alt="" />
+            ) : (
+              <div className="pub-embedded-placeholder">🏠</div>
+            )}
+          </div>
+          <div className="pub-embedded-body">
+            <h4>{publication.annonce.titre}</h4>
+            <p>📍 {publication.annonce.ville}</p>
+            <strong>{Number(publication.annonce.prix).toLocaleString('fr-FR')} Ar</strong>
+          </div>
         </div>
       )}
 

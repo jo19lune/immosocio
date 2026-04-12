@@ -110,6 +110,39 @@ public class PublicationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    // ─── PUT /api/publications/{id} ──────────────────────────────────────────
+
+    /**
+     * Modifie le contenu d'une publication. Seul l'auteur peut modifier sa publication.
+     *
+     * @param id   identifiant de la publication
+     * @param body {@code { "contenu": "..." }}
+     * @throws ApiException 404 si introuvable, 403 si pas l'auteur
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Publication> modifier(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Publication publication = publicationRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Publication introuvable"));
+
+        if (!publication.getAuteur().getEmail().equals(userDetails.getUsername())) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "Vous n'êtes pas autorisé à modifier cette publication");
+        }
+
+        String contenu = body != null ? body.get("contenu") : null;
+        if (contenu == null || contenu.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Le contenu ne peut pas être vide");
+        }
+
+        publication.setContenu(contenu);
+        return ResponseEntity.ok(publicationRepository.save(publication));
+    }
+
     // ─── DELETE /api/publications/{id} ───────────────────────────────────────
 
     /**

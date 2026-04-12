@@ -7,6 +7,9 @@ import PublicFeedPage from './pages/PublicFeedPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AnnoncesPage from './pages/AnnoncesPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 // Pages membres
 import FeedPage from './pages/FeedPage';
@@ -14,6 +17,9 @@ import MessagesPage from './pages/MessagesPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilPage from './pages/ProfilPage';
+import CreateAnnoncePage from './pages/CreateAnnoncePage';
+import MesAnnoncesPage from './pages/MesAnnoncesPage';
+import EditAnnoncePage from './pages/EditAnnoncePage';
 
 // Guard routes privées
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -48,6 +54,15 @@ function AppRoutes() {
       <Route path="/register" element={
         <PublicRoute><RegisterPage /></PublicRoute>
       } />
+      <Route path="/mot-de-passe-oublie" element={
+        <PublicRoute><ForgotPasswordPage /></PublicRoute>
+      } />
+      <Route path="/auth/reset-password" element={
+        <PublicRoute><ResetPasswordPage /></PublicRoute>
+      } />
+      <Route path="/auth/verify-email" element={
+        <PublicRoute><VerifyEmailPage /></PublicRoute>
+      } />
 
       {/* ── Pages membres ────────────────────────────── */}
       <Route path="/feed" element={
@@ -67,6 +82,15 @@ function AppRoutes() {
       } />
       <Route path="/profil/:userId" element={
         <PrivateRoute><ProfilPage /></PrivateRoute>
+      } />
+      <Route path="/mes-annonces" element={
+        <PrivateRoute><MesAnnoncesPage /></PrivateRoute>
+      } />
+      <Route path="/mes-annonces/nouvelle" element={
+        <PrivateRoute><CreateAnnoncePage /></PrivateRoute>
+      } />
+      <Route path="/mes-annonces/:id/modifier" element={
+        <PrivateRoute><EditAnnoncePage /></PrivateRoute>
       } />
 
       {/* ── Fallback ─────────────────────────────────── */}
