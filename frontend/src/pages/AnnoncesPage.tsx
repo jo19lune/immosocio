@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
@@ -172,7 +172,20 @@ export default function AnnoncesPage() {
 
 function AnnonceCard({ annonce }: { annonce: Annonce }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const imgUrl = annonce.photos?.[0];
+
+  const handleShare = async () => {
+    if (!user) { navigate('/login'); return; }
+    const contenu = window.prompt("Ajoutez un texte à votre partage :", "Découvrez cette excellente annonce !");
+    if (contenu === null) return;
+    try {
+      await api.post('/publications', { contenu, annonceId: annonce.id, visibilite: 'PUBLIC' });
+      alert("Annonce partagée avec succès dans le fil d'actualité !");
+    } catch {
+      alert("Erreur lors du partage de l'annonce.");
+    }
+  };
 
   return (
     <div className="annonce-card card">
@@ -206,13 +219,18 @@ function AnnonceCard({ annonce }: { annonce: Annonce }) {
           <span className="annonce-card-prix">
             {Number(annonce.prix).toLocaleString('fr-FR')} Ar
           </span>
-          {user ? (
-            <Link to={`/messages/${annonce.proprietaire.id}`} className="btn btn-primary btn-sm">
-              Contacter
-            </Link>
-          ) : (
-            <Link to="/login" className="btn btn-ghost btn-sm">Contacter</Link>
-          )}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleShare} className="btn btn-ghost btn-sm" title="Partager l'annonce" style={{ padding: '4px 8px', fontSize: '12px' }}>
+              🔗 Partager
+            </button>
+            {user ? (
+              <Link to={`/messages/${annonce.proprietaire.id}`} className="btn btn-primary btn-sm">
+                Contacter
+              </Link>
+            ) : (
+              <Link to="/login" className="btn btn-ghost btn-sm">Contacter</Link>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ interface Publication {
   likeCount?: number;
   commentCount?: number;
   liked?: boolean;
+  annonce?: any;
 }
 
 interface Props {
@@ -143,6 +144,24 @@ export default function PublicationCard({ publication, onDelete }: Props) {
           {publication.medias.slice(0, 4).map((url, i) => (
             <img key={i} src={url} alt="" className="pub-media-img" />
           ))}
+        </div>
+      )}
+
+      {/* Annonce intégrée */}
+      {publication.annonce && (
+        <div className="pub-embedded-annonce" onClick={() => navigate('/annonces')}>
+          <div className="pub-embedded-img">
+            {publication.annonce.photos && publication.annonce.photos.length > 0 ? (
+              <img src={publication.annonce.photos[0]} alt="" />
+            ) : (
+              <div className="pub-embedded-placeholder">🏠</div>
+            )}
+          </div>
+          <div className="pub-embedded-body">
+            <h4>{publication.annonce.titre}</h4>
+            <p>📍 {publication.annonce.ville}</p>
+            <strong>{Number(publication.annonce.prix).toLocaleString('fr-FR')} Ar</strong>
+          </div>
         </div>
       )}
 
