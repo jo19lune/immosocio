@@ -18,6 +18,8 @@ import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilPage from './pages/ProfilPage';
 import CreateAnnoncePage from './pages/CreateAnnoncePage';
+import MesAnnoncesPage from './pages/MesAnnoncesPage';
+import EditAnnoncePage from './pages/EditAnnoncePage';
 
 // Guard routes privées
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -81,8 +83,14 @@ function AppRoutes() {
       <Route path="/profil/:userId" element={
         <PrivateRoute><ProfilPage /></PrivateRoute>
       } />
+      <Route path="/mes-annonces" element={
+        <PrivateRoute><MesAnnoncesPage /></PrivateRoute>
+      } />
       <Route path="/mes-annonces/nouvelle" element={
         <PrivateRoute><CreateAnnoncePage /></PrivateRoute>
+      } />
+      <Route path="/mes-annonces/:id/modifier" element={
+        <PrivateRoute><EditAnnoncePage /></PrivateRoute>
       } />
 
       {/* ── Fallback ─────────────────────────────────── */}

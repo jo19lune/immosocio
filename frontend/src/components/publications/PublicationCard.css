@@ -121,6 +121,50 @@
   color: var(--danger);
 }
 
+.pub-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pub-edit-btn {
+  font-size: 13px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+.pub-edit-btn:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.pub-edit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pub-edit-textarea {
+  resize: vertical;
+  min-height: 80px;
+  border-radius: var(--radius) !important;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.pub-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+
 .pub-content {
   padding: 12px 16px;
 }

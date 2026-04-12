@@ -34,6 +34,10 @@ export default function FeedPage() {
     setPublications((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const handleUpdate = (updated: any) => {
+    setPublications((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+  };
+
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
@@ -60,7 +64,7 @@ export default function FeedPage() {
         )}
 
         {publications.map((pub) => (
-          <PublicationCard key={pub.id} publication={pub} onDelete={handleDelete} />
+          <PublicationCard key={pub.id} publication={pub} onDelete={handleDelete} onUpdate={handleUpdate} />
         ))}
 
         {hasMore && !loading && (

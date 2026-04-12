@@ -38,6 +38,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navItems: NavItem[] = [
     { path: '/feed', icon: '🏠', label: 'Fil d\'actualité' },
     { path: '/annonces', icon: '🏘️', label: 'Annonces' },
+    ...(user?.role === 'PROPRIETAIRE'
+      ? [{ path: '/mes-annonces', icon: '📋', label: 'Mes annonces' }]
+      : []),
     { path: '/messages', icon: '💬', label: 'Messages', badge: unreadMessages },
     { path: '/notifications', icon: '🔔', label: 'Notifications', badge: unreadNotifs },
     { path: '/parametres', icon: '⚙️', label: 'Paramètres' },
