@@ -76,51 +76,51 @@ echo %RED% Commande inconnue : "!CMD!" — tapez b, f, r, sb, sf, lb, lf ou q%RE
 goto :menu
 
 :do_restart_backend
-  call :fn_stop_backend
-  call :fn_start_backend
-  goto :menu
+    call :fn_stop_backend
+    call :fn_start_backend
+    goto :menu
 
 :do_restart_frontend
-  call :fn_stop_frontend
-  call :fn_start_frontend
-  goto :menu
+    call :fn_stop_frontend
+    call :fn_start_frontend
+    goto :menu
 
 :do_restart_all
-  call :fn_stop_backend
-  call :fn_stop_frontend
-  call :fn_start_backend
-  call :fn_start_frontend
-  goto :menu
+    call :fn_stop_backend
+    call :fn_stop_frontend
+    call :fn_start_backend
+    call :fn_start_frontend
+    goto :menu
 
 :do_stop_backend
-  call :fn_stop_backend
-  goto :menu
+    call :fn_stop_backend
+    goto :menu
 
 :do_stop_frontend
-  call :fn_stop_frontend
-  goto :menu
+    call :fn_stop_frontend
+    goto :menu
 
 :do_log_backend
-  echo.
-  echo %CYAN%═══ backend.log (50 dernières lignes) ══════════════%RESET%
-  if exist "%B_LOG%" ( powershell -command "Get-Content '%B_LOG%' -Tail 50" ) else ( echo %RED% Fichier introuvable%RESET% )
-  echo %CYAN%═══════════════════════════════════════════════════%RESET%
-  echo.
-  goto :menu
+    echo.
+    echo %CYAN%═══ backend.log (50 dernières lignes) ══════════════%RESET%
+    if exist "%B_LOG%" ( powershell -command "Get-Content '%B_LOG%' -Tail 50" ) else ( echo %RED% Fichier introuvable%RESET% )
+    echo %CYAN%═══════════════════════════════════════════════════%RESET%
+    echo.
+    goto :menu
 
 :do_log_frontend
-  echo.
-  echo %CYAN%═══ frontend.log (50 dernières lignes) ═════════════%RESET%
-  if exist "%F_LOG%" ( powershell -command "Get-Content '%F_LOG%' -Tail 50" ) else ( echo %RED% Fichier introuvable%RESET% )
-  echo %CYAN%═══════════════════════════════════════════════════%RESET%
-  echo.
-  goto :menu
+    echo.
+    echo %CYAN%═══ frontend.log (50 dernières lignes) ═════════════%RESET%
+    if exist "%F_LOG%" ( powershell -command "Get-Content '%F_LOG%' -Tail 50" ) else ( echo %RED% Fichier introuvable%RESET% )
+    echo %CYAN%═══════════════════════════════════════════════════%RESET%
+    echo.
+    goto :menu
 
 :do_quit
-  call :fn_stop_backend
-  call :fn_stop_frontend
-  echo %GREEN% Au revoir !%RESET%
-  exit /b 0
+    call :fn_stop_backend
+    call :fn_stop_frontend
+    echo %GREEN% Au revoir !%RESET%
+    exit /b 0
 
 
 :: ═════════════════════════════════════════════════════════════════════════════
@@ -129,106 +129,106 @@ goto :menu
 
 :: ─── Démarrer le Backend ─────────────────────────────────────────────────────
 :fn_start_backend
-  echo %CYAN%[BACKEND] Démarrage...%RESET%
+    echo %CYAN%[BACKEND] Démarrage...%RESET%
 
-  :: Tuer l'ancien processus si PID connu
-  call :fn_kill_pid "%B_PID%"
+    :: Tuer l'ancien processus si PID connu
+    call :fn_kill_pid "%B_PID%"
 
-  :: Lancer mvnw dans une fenêtre séparée (minimisée)
-  cd /d "%BACKEND_DIR%"
-  start /min "ImmobilierSocial-Backend" cmd /c "mvnw.cmd spring-boot:run > "%B_LOG%" 2>&1"
-  cd /d "%ROOT%"
+    :: Lancer mvnw dans une fenêtre séparée (minimisée)
+    cd /d "%BACKEND_DIR%"
+    start /min "ImmobilierSocial-Backend" cmd /c "mvnw.cmd spring-boot:run > "%B_LOG%" 2>&1"
+    cd /d "%ROOT%"
 
-  :: Attendre que Spring Boot réponde (poll HTTP, max 120 s)
-  echo %YELLOW%[BACKEND] Attente du démarrage de Spring Boot (max 120 s)...%RESET%
-  set "RETRY=0"
+    :: Attendre que Spring Boot réponde (poll HTTP, max 120 s)
+    echo %YELLOW%[BACKEND] Attente du démarrage de Spring Boot (max 120 s)...%RESET%
+    set "RETRY=0"
 
 :_backend_poll
-  if !RETRY! GEQ 60 (
+    if !RETRY! GEQ 60 (
     echo %RED%[BACKEND] ✗ Timeout ! Consultez backend.log pour diagnostiquer.%RESET%
     goto :eof
-  )
-  :: Attendre 2 s entre chaque tentative
-  timeout /t 2 /nobreak >nul
+    )
+    :: Attendre 2 s entre chaque tentative
+    timeout /t 2 /nobreak >nul
 
-  :: curl silencieux — on teste juste que le port répond (2xx ou 4xx = Spring est prêt)
-  for /f %%H in ('curl -s -o NUL -w "%%{http_code}" "%HEALTH_URL%" 2^>nul') do set "HTTP_CODE=%%H"
-  if "!HTTP_CODE!"=="" ( set "HTTP_CODE=000" )
+    :: curl silencieux — on teste juste que le port répond (2xx ou 4xx = Spring est prêt)
+    for /f %%H in ('curl -s -o NUL -w "%%{http_code}" "%HEALTH_URL%" 2^>nul') do set "HTTP_CODE=%%H"
+    if "!HTTP_CODE!"=="" ( set "HTTP_CODE=000" )
 
-  :: Accepter tout code >= 200 (Spring répond = serveur démarré)
-  if !HTTP_CODE! GEQ 200 (
+    :: Accepter tout code >= 200 (Spring répond = serveur démarré)
+    if !HTTP_CODE! GEQ 200 (
     echo %GREEN%[BACKEND] ✓ Prêt  (HTTP !HTTP_CODE!)  →  http://localhost:8080%RESET%
 
     :: Stocker le PID java le plus récent
     for /f "tokens=2" %%P in ('tasklist /fi "imagename eq java.exe" /fo list 2^>nul ^| findstr /i "PID"') do (
-      echo %%P> "%B_PID%"
+        echo %%P> "%B_PID%"
     )
     goto :eof
-  )
+    )
 
-  set /a "RETRY+=1"
-  set /a "ELAPSED=RETRY*2"
-  echo %YELLOW%[BACKEND]   ... !ELAPSED! s (HTTP !HTTP_CODE!)%RESET%
-  goto :_backend_poll
+    set /a "RETRY+=1"
+    set /a "ELAPSED=RETRY*2"
+    echo %YELLOW%[BACKEND]   ... !ELAPSED! s (HTTP !HTTP_CODE!)%RESET%
+    goto :_backend_poll
 
 
 :: ─── Démarrer le Frontend ────────────────────────────────────────────────────
 :fn_start_frontend
-  echo %CYAN%[FRONTEND] Démarrage...%RESET%
+    echo %CYAN%[FRONTEND] Démarrage...%RESET%
 
-  call :fn_kill_pid "%F_PID%"
+    call :fn_kill_pid "%F_PID%"
 
-  cd /d "%FRONTEND_DIR%"
+    cd /d "%FRONTEND_DIR%"
 
-  :: Installer les dépendances si node_modules absent
-  if not exist "node_modules" (
-    echo %YELLOW%[FRONTEND] Installation des dépendances npm...%RESET%
-    call npm install
-  )
+    :: Installer les dépendances si node_modules absent
+    if not exist "node_modules" (
+        echo %YELLOW%[FRONTEND] Installation des dépendances npm...%RESET%
+        call npm install
+    )
 
-  start /min "ImmobilierSocial-Frontend" cmd /c "npm run dev > "%F_LOG%" 2>&1"
-  cd /d "%ROOT%"
+    start /min "ImmobilierSocial-Frontend" cmd /c "npm run dev > "%F_LOG%" 2>&1"
+    cd /d "%ROOT%"
 
-  :: Attendre quelques secondes que Vite démarre
-  timeout /t 4 /nobreak >nul
+    :: Attendre quelques secondes que Vite démarre
+    timeout /t 4 /nobreak >nul
 
-  :: Stocker le PID node
-  for /f "tokens=2" %%P in ('tasklist /fi "imagename eq node.exe" /fo list 2^>nul ^| findstr /i "PID"') do (
+    :: Stocker le PID node
+    for /f "tokens=2" %%P in ('tasklist /fi "imagename eq node.exe" /fo list 2^>nul ^| findstr /i "PID"') do (
     echo %%P> "%F_PID%"
-  )
+    )
 
-  echo %GREEN%[FRONTEND] ✓ Prêt  →  http://localhost:5173%RESET%
-  goto :eof
+    echo %GREEN%[FRONTEND] ✓ Prêt  →  http://localhost:5173%RESET%
+    goto :eof
 
 
 :: ─── Arrêter le Backend ──────────────────────────────────────────────────────
 :fn_stop_backend
-  echo %RED%[BACKEND] Arrêt...%RESET%
-  call :fn_kill_pid "%B_PID%"
-  :: Tuer tous les java.exe par sécurité (mvnw fork aussi un processus java)
-  taskkill /fi "imagename eq java.exe" /F >nul 2>&1
-  if exist "%B_PID%" del "%B_PID%" >nul 2>&1
-  echo %RED%[BACKEND] ✓ Arrêté%RESET%
-  goto :eof
+    echo %RED%[BACKEND] Arrêt...%RESET%
+    call :fn_kill_pid "%B_PID%"
+    :: Tuer tous les java.exe par sécurité (mvnw fork aussi un processus java)
+    taskkill /fi "imagename eq java.exe" /F >nul 2>&1
+    if exist "%B_PID%" del "%B_PID%" >nul 2>&1
+    echo %RED%[BACKEND] ✓ Arrêté%RESET%
+    goto :eof
 
 
 :: ─── Arrêter le Frontend ─────────────────────────────────────────────────────
 :fn_stop_frontend
-  echo %RED%[FRONTEND] Arrêt...%RESET%
-  call :fn_kill_pid "%F_PID%"
-  taskkill /fi "imagename eq node.exe" /F >nul 2>&1
-  if exist "%F_PID%" del "%F_PID%" >nul 2>&1
-  echo %RED%[FRONTEND] ✓ Arrêté%RESET%
-  goto :eof
+    echo %RED%[FRONTEND] Arrêt...%RESET%
+    call :fn_kill_pid "%F_PID%"
+    taskkill /fi "imagename eq node.exe" /F >nul 2>&1
+    if exist "%F_PID%" del "%F_PID%" >nul 2>&1
+    echo %RED%[FRONTEND] ✓ Arrêté%RESET%
+    goto :eof
 
 
 :: ─── Tuer un PID depuis un fichier ───────────────────────────────────────────
 :fn_kill_pid
-  if exist "%~1" (
+    if exist "%~1" (
     set /p "_PID="<"%~1"
     if defined _PID (
-      taskkill /PID !_PID! /F >nul 2>&1
+        taskkill /PID !_PID! /F >nul 2>&1
+        )
+        del "%~1" >nul 2>&1
     )
-    del "%~1" >nul 2>&1
-  )
-  goto :eof
+    goto :eof
