@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
+import Logo from '../Logo';
 import './AppLayout.css';
 
 interface NavItem {
@@ -64,8 +65,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         {/* Logo */}
         <div className="sidebar-logo">
-          <span className="logo-icon">🏡</span>
-          <span className="logo-text">ImmoSocial</span>
+          <Logo size={32} />
         </div>
 
         {/* Profil rapide */}
@@ -113,7 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <button className="topbar-menu" onClick={() => setSidebarOpen(!sidebarOpen)}>
             ☰
           </button>
-          <span className="topbar-logo">🏡 ImmoSocial</span>
+          <Logo size={26} />
           <div className="topbar-actions">
             <Link to="/messages" className="topbar-icon-btn">
               💬

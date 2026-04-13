@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../contexts/AuthContext';
 import api, { uploadImage } from '../lib/api';
+import { applyTheme } from '../lib/theme';
 import './NotificationsSettings.css';
 
 export default function SettingsPage() {
@@ -17,7 +18,8 @@ export default function SettingsPage() {
     prenom: user?.prenom || '',
     telephone: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [loadingParams, setLoadingParams] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [success, setSuccess] = useState('');
   const [pwdForm, setPwdForm] = useState({ ancien: '', nouveau: '', confirm: '' });
@@ -29,19 +31,58 @@ export default function SettingsPage() {
     `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.prenom || '') + '+' + (user?.nom || ''))}&background=3B6CF8&color=fff&bold=true&size=80`;
 
   useEffect(() => {
-    api.get('/parametres').then(({ data }) => setParams(data)).catch(() => {});
+    api.get('/parametres').then(({ data }) => {
+      setParams({
+        theme: data.theme || 'SYSTEME',
+        visibiliteParDefaut: data.visibiliteParDefaut || 'PUBLIC',
+        notificationsEmail: data.notificationsEmail ?? true,
+        notificationsPush: data.notificationsPush ?? true,
+      });
+      // Appliquer le thème sauvegardé au chargement
+      applyTheme(data.theme || 'SYSTEME');
+    }).catch(() => {});
   }, []);
 
-  const saveParams = async () => {
-    setLoading(true);
-    try {
-      await api.put('/parametres', params);
-      setSuccess('Préférences enregistrées !');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch { /* silencieux */ }
-    finally { setLoading(false); }
+  const showSuccess = (msg: string) => {
+    setSuccess(msg);
+    setTimeout(() => setSuccess(''), 3000);
   };
 
+  // ── Sauvegarder les paramètres ──────────────────────────────────────────
+  const saveParams = async () => {
+    setLoadingParams(true);
+    try {
+      await api.put('/parametres', params);
+      applyTheme(params.theme);
+      showSuccess('Préférences enregistrées !');
+    } catch { /* silencieux */ }
+    finally { setLoadingParams(false); }
+  };
+
+  // ── Sauvegarder le profil (nom / prénom / téléphone) ────────────────────
+  const saveProfile = async () => {
+    if (!profile.prenom.trim() || !profile.nom.trim()) {
+      showSuccess('Le prénom et le nom ne peuvent pas être vides.');
+      return;
+    }
+    setLoadingProfile(true);
+    try {
+      const { data } = await api.put('/auth/profile', {
+        nom: profile.nom.trim(),
+        prenom: profile.prenom.trim(),
+        telephone: profile.telephone.trim() || null,
+      });
+      // Mettre à jour le contexte d'authentification (nom, prénom dans la sidebar)
+      updateUser({ nom: data.nom, prenom: data.prenom });
+      showSuccess('Profil mis à jour !');
+    } catch {
+      showSuccess('Erreur lors de la mise à jour du profil.');
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  // ── Upload avatar ────────────────────────────────────────────────────────
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -49,8 +90,7 @@ export default function SettingsPage() {
     try {
       const url = await uploadImage(file, 'profil');
       updateUser({ photo: url });
-      setSuccess('Photo de profil mise à jour !');
-      setTimeout(() => setSuccess(''), 3000);
+      showSuccess('Photo de profil mise à jour !');
     } catch {
       alert('Erreur lors de l\'upload de la photo.');
     } finally {
@@ -58,6 +98,7 @@ export default function SettingsPage() {
     }
   };
 
+  // ── Changer mot de passe ─────────────────────────────────────────────────
   const handlePwdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwdError('');
@@ -78,7 +119,7 @@ export default function SettingsPage() {
       setPwdForm({ ancien: '', nouveau: '', confirm: '' });
       setTimeout(() => setPwdSuccess(''), 4000);
     } catch (err: any) {
-      setPwdError(err.response?.data || 'Erreur lors du changement de mot de passe.');
+      setPwdError(err.response?.data?.message || err.response?.data || 'Erreur lors du changement de mot de passe.');
     }
   };
 
@@ -89,7 +130,7 @@ export default function SettingsPage() {
 
         {success && <div className="settings-success">✓ {success}</div>}
 
-        {/* Profil */}
+        {/* ── Profil ──────────────────────────────────────────────────────── */}
         <div className="settings-section">
           <div className="settings-section-title">Mon profil</div>
           <div className="profile-section" style={{ border: 'none', borderRadius: 0, marginBottom: 0 }}>
@@ -121,11 +162,21 @@ export default function SettingsPage() {
                 <input className="form-input" value={profile.nom}
                   onChange={(e) => setProfile(p => ({ ...p, nom: e.target.value }))} />
               </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                <label className="form-label">Téléphone</label>
+                <input className="form-input" placeholder="+261 XX XXX XX" value={profile.telephone}
+                  onChange={(e) => setProfile(p => ({ ...p, telephone: e.target.value }))} />
+              </div>
             </div>
+          </div>
+          <div className="settings-save-row">
+            <button className="btn btn-primary" onClick={saveProfile} disabled={loadingProfile}>
+              {loadingProfile ? <span className="spinner" style={{ width: 16, height: 16 }} /> : '👤 Sauvegarder le profil'}
+            </button>
           </div>
         </div>
 
-        {/* Préférences */}
+        {/* ── Préférences ─────────────────────────────────────────────────── */}
         <div className="settings-section">
           <div className="settings-section-title">Préférences</div>
 
@@ -135,7 +186,11 @@ export default function SettingsPage() {
               <div className="settings-row-desc">Apparence de l'interface</div>
             </div>
             <select className="settings-select" value={params.theme}
-              onChange={(e) => setParams(p => ({ ...p, theme: e.target.value }))}>
+              onChange={(e) => {
+                const t = e.target.value;
+                setParams(p => ({ ...p, theme: t }));
+                applyTheme(t); // Aperçu instantané
+              }}>
               <option value="CLAIR">☀️ Clair</option>
               <option value="SOMBRE">🌙 Sombre</option>
               <option value="SYSTEME">🖥️ Système</option>
@@ -179,13 +234,13 @@ export default function SettingsPage() {
           </div>
 
           <div className="settings-save-row">
-            <button className="btn btn-primary" onClick={saveParams} disabled={loading}>
-              {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : '💾 Enregistrer'}
+            <button className="btn btn-primary" onClick={saveParams} disabled={loadingParams}>
+              {loadingParams ? <span className="spinner" style={{ width: 16, height: 16 }} /> : '💾 Enregistrer les préférences'}
             </button>
           </div>
         </div>
 
-        {/* Mot de passe */}
+        {/* ── Sécurité ─────────────────────────────────────────────────────── */}
         <div className="settings-section">
           <div className="settings-section-title">Sécurité</div>
           <form onSubmit={handlePwdSubmit}>

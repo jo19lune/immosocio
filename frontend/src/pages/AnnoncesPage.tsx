@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
@@ -33,14 +33,19 @@ const typeLabels: Record<string, string> = {
 
 export default function AnnoncesPage() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+
+  // Local form state for filters
   const [filters, setFilters] = useState({
-    ville: '', type: '', prixMin: '', prixMax: '',
+    ville: searchParams.get('ville') || '',
+    type: searchParams.get('type') || '',
+    prixMin: searchParams.get('prixMin') || '',
+    prixMax: searchParams.get('prixMax') || '',
   });
-  const [applied, setApplied] = useState(filters);
 
   const Wrapper = user ? AppLayout : ({ children }: any) => (
     <div>
@@ -49,46 +54,58 @@ export default function AnnoncesPage() {
     </div>
   );
 
+  // Re-fetch when URL parameters change
   useEffect(() => {
-    fetchAnnonces(0, true, applied);
-  }, [applied]);
+    fetchAnnonces(0, true);
+  }, [searchParams]);
 
-  const fetchAnnonces = async (p: number, reset = false, f = applied) => {
+  const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(p), size: '12',
-        ...(f.ville && { ville: f.ville }),
-        ...(f.type && { type: f.type }),
-        ...(f.prixMin && { prixMin: f.prixMin }),
-        ...(f.prixMax && { prixMax: f.prixMax }),
-      });
-      const endpoint = (f.ville || f.type || f.prixMin || f.prixMax)
-        ? `/annonces/recherche?${params}`
-        : `/annonces?${params}`;
+      const queryParams = new URLSearchParams(searchParams);
+      queryParams.set('page', String(p));
+      queryParams.set('size', '12');
+
+      const isSearch = Array.from(searchParams.keys()).some(k => ['ville', 'type', 'prixMin', 'prixMax'].includes(k) && searchParams.get(k));
+      const endpoint = isSearch ? `/annonces/recherche?${queryParams}` : `/annonces?${queryParams}`;
+
       const { data } = await api.get(endpoint);
       const items = data.content || [];
+
       setAnnonces((prev) => reset ? items : [...prev, ...items]);
       setHasMore(!data.last);
       setPage(p);
-    } catch { /* silencieux */ }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error("Erreur chargement annonces", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setApplied(filters);
+    const newParams: Record<string, string> = {};
+    if (filters.ville) newParams.ville = filters.ville;
+    if (filters.type) newParams.type = filters.type;
+    if (filters.prixMin) newParams.prixMin = filters.prixMin;
+    if (filters.prixMax) newParams.prixMax = filters.prixMax;
+    setSearchParams(newParams);
   };
 
   const resetFilters = () => {
     const empty = { ville: '', type: '', prixMin: '', prixMax: '' };
     setFilters(empty);
-    setApplied(empty);
+    setSearchParams({});
   };
 
   return (
     <Wrapper>
-      <div className="annonces-page">
+      <div className="annonces-page fade-in">
+        <header className="page-header">
+           <h1 className="page-title">Découvrez nos annonces</h1>
+           <p className="page-subtitle">Le logement de vos rêves n'est qu'à quelques clics.</p>
+        </header>
+
         {/* Filtres */}
         <form className="filters-bar card" onSubmit={handleSearch}>
           <div className="filter-grid">
@@ -127,7 +144,7 @@ export default function AnnoncesPage() {
         {/* Résultats */}
         <div className="annonces-header">
           <h2 className="annonces-count">
-            {loading ? 'Chargement…' : `${annonces.length} annonce${annonces.length !== 1 ? 's' : ''}`}
+            {loading && annonces.length === 0 ? 'Chargement…' : `${annonces.length} annonce${annonces.length !== 1 ? 's' : ''} trouvée${annonces.length !== 1 ? 's' : ''}`}
           </h2>
           {user?.role === 'PROPRIETAIRE' && (
             <Link to="/mes-annonces/nouvelle" className="btn btn-accent btn-sm">
@@ -158,7 +175,7 @@ export default function AnnoncesPage() {
         </div>
 
         {hasMore && !loading && (
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
             <button className="btn btn-ghost btn-lg"
               onClick={() => fetchAnnonces(page + 1, false)}>
               Voir plus d'annonces

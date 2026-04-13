@@ -5,6 +5,15 @@ const api = axios.create({
   timeout: 15000,
 });
 
+// Intercepteur requête — attache automatiquement le token JWT si présent
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Intercepteur réponse — déconnexion automatique si token expiré
 api.interceptors.response.use(
   (res) => res,

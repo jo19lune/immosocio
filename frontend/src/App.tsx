@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { initTheme } from './lib/theme';
 
 // Pages publiques
 import PublicFeedPage from './pages/PublicFeedPage';
@@ -100,6 +101,10 @@ function AppRoutes() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initTheme();
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>

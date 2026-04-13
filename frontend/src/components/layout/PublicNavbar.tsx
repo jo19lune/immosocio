@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Logo from '../Logo';
 import './PublicNavbar.css';
 
 export default function PublicNavbar() {
@@ -10,10 +11,8 @@ export default function PublicNavbar() {
     <nav className="public-nav">
       <div className="public-nav-inner">
         <Link to="/" className="public-nav-logo">
-          <span>🏡</span>
-          <span className="logo-text">ImmoSocial</span>
+          <Logo size={30} />
         </Link>
-
         <div className={`public-nav-links ${menuOpen ? 'open' : ''}`}>
           <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>Accueil</Link>
           <Link to="/annonces" className="nav-link" onClick={() => setMenuOpen(false)}>Annonces</Link>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import PublicationCard from '../components/publications/PublicationCard';
+import Logo from '../components/Logo';
 import api from '../lib/api';
 import './PublicFeedPage.css';
 
@@ -48,7 +49,10 @@ export default function PublicFeedPage() {
       {/* Hero */}
       <section className="hero-section">
         <div className="hero-content">
-          <div className="hero-badge">🏡 Plateforme Immobilière Sociale</div>
+          <div className="hero-badge">
+            <Logo size={20} showText={false} />
+            <span>Plateforme Immobilière Sociale</span>
+          </div>
           <h1 className="hero-title">
             Trouvez votre logement,<br />
             <span className="hero-title-accent">partagez votre expérience</span>

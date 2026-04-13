@@ -36,19 +36,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-.logo-icon {
-  font-size: 26px;
-}
-
-.logo-text {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
 
 .sidebar-profile {
   display: flex;
@@ -193,15 +180,6 @@
 }
 .topbar-menu:hover { background: var(--bg); }
 
-.topbar-logo {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
 
 .topbar-actions {
   display: flex;

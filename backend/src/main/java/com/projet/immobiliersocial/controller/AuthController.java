@@ -1,6 +1,8 @@
 package com.projet.immobiliersocial.controller;
 
 import com.projet.immobiliersocial.dto.*;
+import com.projet.immobiliersocial.dto.ProfileUpdateRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.projet.immobiliersocial.entity.Role;
 import com.projet.immobiliersocial.entity.Utilisateur;
 import com.projet.immobiliersocial.exception.ApiException;
@@ -274,6 +276,47 @@ public class AuthController {
         utilisateurRepository.save(user);
 
         return ResponseEntity.ok("Mot de passe modifié avec succès.");
+    }
+
+    // ─── PUT /api/auth/profile — AUTHENTIFIÉ ─────────────────────────────────
+
+    /**
+     * Met à jour le profil de l'utilisateur connecté (nom, prénom, téléphone).
+     * Mise à jour partielle : les champs null sont ignorés.
+     *
+     * @param request champs à mettre à jour
+     * @return les données de profil mises à jour
+     */
+    @PutMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> mettreAJourProfil(
+            @RequestBody ProfileUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Utilisateur user = utilisateurRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        if (request.getNom() != null && !request.getNom().isBlank()) {
+            user.setNom(request.getNom());
+        }
+        if (request.getPrenom() != null && !request.getPrenom().isBlank()) {
+            user.setPrenom(request.getPrenom());
+        }
+        if (request.getTelephone() != null) {
+            user.setTelephone(request.getTelephone());
+        }
+
+        utilisateurRepository.save(user);
+
+        return ResponseEntity.ok(new AuthResponse(
+                null,
+                user.getId(),
+                user.getEmail(),
+                user.getNom(),
+                user.getPrenom(),
+                user.getRole().name(),
+                user.isEmailVerifie()
+        ));
     }
 
     // ─── DTO interne pour les réponses d'erreur simples ───────────────────────
