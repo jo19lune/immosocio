@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api, { uploadImage } from '../lib/api';
+import settingsLineSvg from '../assets/settings_1_line.svg';
+import closeLineSvg from '../assets/close_line.svg';
+import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
 import './CreateAnnoncePage.css';
 
 export default function EditAnnoncePage() {
@@ -100,7 +103,9 @@ export default function EditAnnoncePage() {
     <AppLayout>
       <div className="create-annonce-container">
         <div className="card create-annonce-card">
-          <h2 style={{ marginBottom: '24px' }}>✏️ Modifier l'annonce</h2>
+          <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src={settingsLineSvg} alt="" width={24} height={24} /> Modifier l'annonce
+          </h2>
           {error && <div className="auth-error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="create-annonce-form">
@@ -167,7 +172,9 @@ export default function EditAnnoncePage() {
                 {photos.map((url, idx) => (
                   <div key={idx} className="photo-preview">
                     <img src={url} alt="Aperçu" className="preview-img" />
-                    <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>✕</button>
+                    <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>
+                      <img src={closeLineSvg} alt="" width={12} height={12} style={{ filter: 'brightness(0) invert(1)' }} />
+                    </button>
                   </div>
                 ))}
                 {photos.length < 10 && (
@@ -181,8 +188,10 @@ export default function EditAnnoncePage() {
 
             <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button type="button" className="btn btn-ghost" onClick={() => navigate('/mes-annonces')} disabled={submitting}>Annuler</button>
-              <button type="submit" className="btn btn-primary" disabled={submitting || uploading}>
-                {submitting ? 'Enregistrement...' : '💾 Enregistrer les modifications'}
+              <button type="submit" className="btn btn-primary" disabled={submitting || uploading} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                {submitting ? 'Enregistrement...' : (
+                  <><img src={sendPlaneFillSvg} alt="" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} /> Enregistrer les modifications</>
+                )}
               </button>
             </div>
           </form>

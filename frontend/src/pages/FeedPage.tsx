@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import { AnnonceCard } from './AnnoncesPage';
 import api from '../lib/api';
+import announcementLineSvg from '../assets/announcement_line.svg';
 import './FeedPage.css';
 
 export default function FeedPage() {
@@ -45,7 +46,7 @@ export default function FeedPage() {
 
         {!loading && annonces.length === 0 && (
           <div className="feed-empty card">
-            <span style={{ fontSize: 48 }}>📭</span>
+            <img src={announcementLineSvg} alt="Fil vide" width={52} height={52} style={{ opacity: 0.35, marginBottom: 8 }} />
             <p>Aucune annonce pour le moment. Soyez le premier à en publier !</p>
           </div>
         )}

@@ -1,11 +1,16 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
+
+// L'URL de l'API est configurée dans .env (VITE_API_URL).
+// Par défaut : http://localhost:8080/api
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: API_BASE_URL,
   timeout: 15000,
 });
 
-// Intercepteur requête — attache automatiquement le token JWT si présent
+// ── Intercepteur requête — attache automatiquement le token JWT si présent ──
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -14,9 +19,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-import toast from 'react-hot-toast';
-
-// Intercepteur réponse — déconnexion automatique si token expiré
+// ── Intercepteur réponse — déconnexion automatique si token expiré ──────────
 api.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -36,8 +39,11 @@ api.interceptors.response.use(
   }
 );
 
-// Helper upload d'image vers Google Drive via backend
-export async function uploadImage(file: File, type: 'publication' | 'profil' | 'annonce' = 'publication'): Promise<string> {
+// ── Helper upload d'image vers le backend ────────────────────────────────────
+export async function uploadImage(
+  file: File,
+  type: 'publication' | 'profil' | 'annonce' = 'publication'
+): Promise<string> {
   const form = new FormData();
   form.append('file', file);
   const { data } = await api.post(`/upload/image?type=${type}`, form, {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import Logo from '../components/Logo';
 import './AuthPages.css';
 
 export default function LoginPage() {
@@ -39,7 +40,7 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-left">
         <div className="auth-brand">
-          <span className="auth-brand-icon">🏡</span>
+          <Logo size={36} showText={false} />
           <span className="auth-brand-name">ImmoSocial</span>
         </div>
         <h1 className="auth-tagline">La plateforme<br />immobilière<br /><span>qui vous connecte</span></h1>

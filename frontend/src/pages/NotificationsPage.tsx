@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
 import { onNotification } from '../lib/websocket';
+import thumbUpFillSvg from '../assets/thumb_up_fill.svg';
+import commentFillSvg from '../assets/comment_fill.svg';
+import messengerFillSvg from '../assets/messenger_fill.svg';
+import announcementFillSvg from '../assets/announcement_fill.svg';
+import notificationFillSvg from '../assets/notification_fill.svg';
+import notificationLineSvg from '../assets/notification_line.svg';
+import settingsLineSvg from '../assets/settings_1_line.svg';
+import closeLineSvg from '../assets/close_line.svg';
 import './NotificationsPage.css';
 
 interface Notification {
@@ -13,16 +21,16 @@ interface Notification {
 }
 
 const typeIcons: Record<string, string> = {
-  NOUVEAU_LIKE: '❤️',
-  NOUVEAU_COMMENTAIRE: '💬',
-  NOUVEAU_MESSAGE: '✉️',
-  RESERVATION_CONFIRMEE: '✅',
-  RESERVATION_ANNULEE: '❌',
-  NOUVELLE_ANNONCE: '🏠',
-  SYSTEME: '🔔',
-  VERIFICATION_EMAIL: '📧',
-  REINITIALISATION_MDP: '🔑',
-  MESSAGE: '✉️',
+  NOUVEAU_LIKE: thumbUpFillSvg,
+  NOUVEAU_COMMENTAIRE: commentFillSvg,
+  NOUVEAU_MESSAGE: messengerFillSvg,
+  RESERVATION_CONFIRMEE: announcementFillSvg,
+  RESERVATION_ANNULEE: closeLineSvg, // I'll need to import closeLineSvg too
+  NOUVELLE_ANNONCE: announcementFillSvg,
+  SYSTEME: notificationFillSvg,
+  VERIFICATION_EMAIL: messengerFillSvg,
+  REINITIALISATION_MDP: settingsLineSvg, // I'll need to import settingsLineSvg too
+  MESSAGE: messengerFillSvg,
 };
 
 export default function NotificationsPage() {
@@ -117,7 +125,7 @@ export default function NotificationsPage() {
 
         {!loading && notifications.length === 0 && (
           <div className="notifs-empty card">
-            <span style={{ fontSize: 56 }}>🔔</span>
+            <img src={notificationLineSvg} alt="" width={56} height={56} style={{ opacity: 0.3, marginBottom: 12 }} />
             <h3>Aucune notification</h3>
             <p>Vous serez notifié des likes, commentaires et messages.</p>
           </div>
@@ -131,7 +139,7 @@ export default function NotificationsPage() {
               onClick={() => !notif.lue && markRead(notif.id)}
             >
               <div className="notif-icon">
-                {typeIcons[notif.type] || '🔔'}
+                <img src={typeIcons[notif.type] || notificationFillSvg} alt="" width={20} height={20} />
               </div>
               <div className="notif-body">
                 <p className="notif-message">{notif.message}</p>

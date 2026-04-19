@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api, { uploadImage } from '../lib/api';
+import closeLineSvg from '../assets/close_line.svg';
+import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
+import announcementLineSvg from '../assets/announcement_line.svg';
 import './CreateAnnoncePage.css';
 
 export default function CreateAnnoncePage() {
@@ -61,7 +64,9 @@ export default function CreateAnnoncePage() {
     <AppLayout>
       <div className="create-annonce-container">
         <div className="card create-annonce-card">
-          <h2 style={{ marginBottom: '24px' }}>Publier une annonce</h2>
+          <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src={announcementLineSvg} alt="" width={24} height={24} /> Publier une annonce
+          </h2>
           {error && <div className="auth-error">{error}</div>}
           
           <form onSubmit={handleSubmit} className="create-annonce-form">
@@ -128,7 +133,9 @@ export default function CreateAnnoncePage() {
                  {photos.map((url, idx) => (
                    <div key={idx} className="photo-preview">
                      <img src={url} alt="Aperçu" title="Aperçu" className="preview-img" />
-                     <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>✕</button>
+                     <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>
+                        <img src={closeLineSvg} alt="" width={12} height={12} style={{ filter: 'brightness(0) invert(1)' }} />
+                      </button>
                    </div>
                  ))}
                  {photos.length < 10 && (
@@ -142,8 +149,10 @@ export default function CreateAnnoncePage() {
 
             <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button type="button" className="btn btn-ghost" onClick={() => navigate('/annonces')} disabled={submitting}>Annuler</button>
-              <button type="submit" className="btn btn-primary" disabled={submitting || uploading}>
-                {submitting ? 'Validation...' : 'Publier l\'annonce'}
+              <button type="submit" className="btn btn-primary" disabled={submitting || uploading} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                {submitting ? 'Validation...' : (
+                  <><img src={sendPlaneFillSvg} alt="" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} /> Publier l'annonce</>
+                )}
               </button>
             </div>
           </form>

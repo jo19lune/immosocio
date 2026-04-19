@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../lib/api';
+import Logo from '../components/Logo';
+import homeLineSvg from '../assets/home_1_line.svg';
+import userLineSvg from '../assets/user_1_line.svg';
 import './AuthPages.css';
 
 type Role = 'LOCATAIRE' | 'PROPRIETAIRE';
@@ -86,7 +89,7 @@ export default function RegisterPage() {
     <div className="auth-page">
       <div className="auth-left">
         <div className="auth-brand">
-          <span className="auth-brand-icon">🏡</span>
+          <Logo size={36} showText={false} />
           <span className="auth-brand-name">ImmoSocial</span>
         </div>
         <h1 className="auth-tagline">Rejoignez<br />la communauté<br /><span>immobilière</span></h1>
@@ -98,7 +101,7 @@ export default function RegisterPage() {
             className={`role-card ${form.role === 'LOCATAIRE' ? 'active' : ''}`}
             onClick={() => setForm((f) => ({ ...f, role: 'LOCATAIRE' }))}
           >
-            <span>🔑</span>
+            <img src={userLineSvg} alt="" width={24} height={24} />
             <div>
               <strong>Locataire</strong>
               <p>Je cherche un logement</p>
@@ -108,7 +111,7 @@ export default function RegisterPage() {
             className={`role-card ${form.role === 'PROPRIETAIRE' ? 'active' : ''}`}
             onClick={() => setForm((f) => ({ ...f, role: 'PROPRIETAIRE' }))}
           >
-            <span>🏠</span>
+            <img src={homeLineSvg} alt="" width={24} height={24} />
             <div>
               <strong>Propriétaire</strong>
               <p>Je propose un logement</p>
@@ -164,11 +167,13 @@ export default function RegisterPage() {
               <div className="role-toggle">
                 <button type="button" className={`role-btn ${form.role === 'LOCATAIRE' ? 'active' : ''}`}
                   onClick={() => setForm((f) => ({ ...f, role: 'LOCATAIRE' }))}>
-                  🔑 Locataire
+                  <img src={userLineSvg} alt="" width={16} height={16} style={{ marginRight: 6, filter: form.role === 'LOCATAIRE' ? 'brightness(0) invert(1)' : 'none' }} />
+                  Locataire
                 </button>
                 <button type="button" className={`role-btn ${form.role === 'PROPRIETAIRE' ? 'active' : ''}`}
                   onClick={() => setForm((f) => ({ ...f, role: 'PROPRIETAIRE' }))}>
-                  🏠 Propriétaire
+                  <img src={homeLineSvg} alt="" width={16} height={16} style={{ marginRight: 6, filter: form.role === 'PROPRIETAIRE' ? 'brightness(0) invert(1)' : 'none' }} />
+                  Propriétaire
                 </button>
               </div>
             </div>

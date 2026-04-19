@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
+import settingsLineSvg from '../../assets/settings_1_line.svg';
+import closeLineSvg from '../../assets/close_line.svg';
+import homeLineSvg from '../../assets/home_1_line.svg';
+import thumbUpFillSvg from '../../assets/thumb_up_fill.svg';
+import thumbUpLineSvg from '../../assets/thumb_up_line.svg';
+import commentLineSvg from '../../assets/comment_line.svg';
+import sendPlaneFillSvg from '../../assets/send_plane_fill.svg';
 import './PublicationCard.css';
 
 interface Auteur {
@@ -160,10 +167,14 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
         </Link>
         <div className="pub-header-actions">
           {canEdit && !editing && (
-            <button className="pub-edit-btn" onClick={startEdit} title="Modifier">✏️</button>
+            <button className="pub-edit-btn" onClick={startEdit} title="Modifier">
+              <img src={settingsLineSvg} alt="" width={16} height={16} />
+            </button>
           )}
           {canDelete && (
-            <button className="pub-delete-btn" onClick={handleDelete} title="Supprimer">✕</button>
+            <button className="pub-delete-btn" onClick={handleDelete} title="Supprimer">
+              <img src={closeLineSvg} alt="" width={16} height={16} style={{ filter: 'brightness(0) invert(1)' }} />
+            </button>
           )}
         </div>
       </div>
@@ -213,7 +224,9 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
             {publication.annonce.photos && publication.annonce.photos.length > 0 ? (
               <img src={publication.annonce.photos[0]} alt="" />
             ) : (
-              <div className="pub-embedded-placeholder">🏠</div>
+              <div className="pub-embedded-placeholder">
+                <img src={homeLineSvg} alt="" width={32} height={32} style={{ opacity: 0.3 }} />
+              </div>
             )}
           </div>
           <div className="pub-embedded-body">
@@ -230,12 +243,13 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
           className={`pub-action-btn ${liked ? 'liked' : ''}`}
           onClick={handleLike}
           disabled={loadingLike}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
-          <span>{liked ? '❤️' : '🤍'}</span>
+          <img src={liked ? thumbUpFillSvg : thumbUpLineSvg} alt="" width={18} height={18} style={{ filter: liked ? 'none' : 'grayscale(1) opacity(0.7)' }} />
           <span>{likeCount > 0 ? likeCount : ''} J'aime</span>
         </button>
-        <button className="pub-action-btn" onClick={toggleComments}>
-          <span>💬</span>
+        <button className="pub-action-btn" onClick={toggleComments} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <img src={commentLineSvg} alt="" width={18} height={18} style={{ filter: 'grayscale(1) opacity(0.7)' }} />
           <span>{commentCount > 0 ? commentCount : ''} Commenter</span>
         </button>
       </div>
@@ -280,7 +294,7 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
                 onChange={(e) => setCommentText(e.target.value)}
               />
               <button type="submit" className="btn btn-primary btn-sm" disabled={!commentText.trim()}>
-                ➤
+                <img src={sendPlaneFillSvg} alt="Envoyer" width={16} height={16} style={{ filter: 'brightness(0) invert(1)' }} />
               </button>
             </form>
           ) : (

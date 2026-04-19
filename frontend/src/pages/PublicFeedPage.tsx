@@ -4,6 +4,7 @@ import PublicNavbar from '../components/layout/PublicNavbar';
 import { AnnonceCard } from './AnnoncesPage';
 import Logo from '../components/Logo';
 import api from '../lib/api';
+import announcementLineSvg from '../assets/announcement_line.svg';
 import './PublicFeedPage.css';
 
 export default function PublicFeedPage() {
@@ -76,7 +77,7 @@ export default function PublicFeedPage() {
 
           {!loading && annoncesFeed.length === 0 && (
             <div className="feed-empty card">
-              <span style={{ fontSize: 48 }}>📭</span>
+              <img src={announcementLineSvg} alt="Aucune annonce" width={52} height={52} style={{ opacity: 0.4, marginBottom: 8 }} />
               <p>Aucune annonce pour le moment.</p>
             </div>
           )}

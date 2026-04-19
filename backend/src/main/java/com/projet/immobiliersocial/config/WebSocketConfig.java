@@ -15,11 +15,13 @@ import org.springframework.web.socket.config.annotation.*;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketAuthChannelInterceptor authChannelInterceptor;
+    private final AppProperties appProperties;
 
     @Override
     public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
+        String[] origins = appProperties.getUrls().toArray(String[]::new);
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOriginPatterns(origins)
                 .withSockJS()
                 // Augmenter le délai de disconnect (ms) — utile sur réseau lent
                 .setDisconnectDelay(30_000)

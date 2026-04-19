@@ -4,6 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
+import homeLineSvg          from '../assets/home_1_line.svg';
+import announcementLineSvg  from '../assets/announcement_line.svg';
+import shareForwardLineSvg  from '../assets/share_forward_line.svg';
 import './AnnoncesPage.css';
 
 interface Annonce {
@@ -25,11 +28,11 @@ interface Annonce {
 }
 
 const typeLabels: Record<string, string> = {
-  MAISON: '🏠 Maison',
-  APPARTEMENT: '🏢 Appartement',
-  STUDIO: '🏪 Studio',
-  VILLA: '🏡 Villa',
-  CHAMBRE: '🛏️ Chambre',
+  MAISON:       'Maison',
+  APPARTEMENT:  'Appartement',
+  STUDIO:       'Studio',
+  VILLA:        'Villa',
+  CHAMBRE:      'Chambre',
 };
 
 export default function AnnoncesPage() {
@@ -163,7 +166,7 @@ export default function AnnoncesPage() {
 
         {!loading && annonces.length === 0 && (
           <div className="annonces-empty card">
-            <span style={{ fontSize: 48 }}>🏚️</span>
+            <img src={homeLineSvg} alt="Aucune annonce" width={56} height={56} style={{ opacity: 0.35, marginBottom: 12 }} />
             <p>Aucune annonce ne correspond à votre recherche.</p>
             <button className="btn btn-ghost" onClick={resetFilters}>Effacer les filtres</button>
           </div>
@@ -224,7 +227,9 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
         {imgUrl ? (
           <img src={imgUrl} alt={annonce.titre} />
         ) : (
-          <div className="annonce-img-placeholder">🏠</div>
+          <div className="annonce-img-placeholder">
+            <img src={homeLineSvg} alt="" width={40} height={40} style={{ opacity: 0.35 }} />
+          </div>
         )}
         <span className="annonce-type-badge">
           {typeLabels[annonce.typeLogement] || annonce.typeLogement}
@@ -257,8 +262,8 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
             {Number(annonce.prix).toLocaleString('fr-FR')} Ar
           </span>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handleShare} className="btn btn-ghost btn-sm" title="Partager l'annonce" style={{ padding: '4px 8px', fontSize: '12px' }}>
-              🔗 Partager
+            <button onClick={handleShare} className="btn btn-ghost btn-sm" title="Partager l'annonce" style={{ padding: '4px 8px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <img src={shareForwardLineSvg} alt="" width={14} height={14} /> Partager
             </button>
             {user ? (
               <Link to={`/messages/${annonce.proprietaire.id}`} className="btn btn-primary btn-sm">
@@ -269,7 +274,7 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
             )}
             {isIndisponible && (
               <button onClick={handleSuivre} className="btn btn-accent btn-sm">
-                ⭐ Suivre
+                <img src={announcementLineSvg} alt="" width={13} height={13} style={{ marginRight: 2 }} /> Suivre
               </button>
             )}
             {!isIndisponible && user && user.role === 'LOCATAIRE' && (
