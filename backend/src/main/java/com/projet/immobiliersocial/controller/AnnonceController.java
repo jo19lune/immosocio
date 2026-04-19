@@ -96,7 +96,7 @@ public class AnnonceController {
      * Annonces appartenant au propriétaire actuellement connecté.
      */
     @GetMapping("/mes-annonces")
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Page<Annonce>> mesAnnonces(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -117,7 +117,7 @@ public class AnnonceController {
      * @throws ApiException 404 si l'utilisateur connecté est introuvable
      */
     @PostMapping
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Annonce> creerAnnonce(
             @Valid @RequestBody AnnonceRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -150,7 +150,7 @@ public class AnnonceController {
      * @throws ApiException 404 si introuvable, 403 si l'utilisateur n'est pas propriétaire
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Annonce> modifierAnnonce(
             @PathVariable Long id,
             @Valid @RequestBody AnnonceRequest request,
@@ -182,7 +182,7 @@ public class AnnonceController {
      * @throws ApiException 404 si introuvable, 403 si accès non autorisé
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','ADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Void> supprimerAnnonce(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -191,7 +191,7 @@ public class AnnonceController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
 
         boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPERADMIN"));
 
         if (!isAdmin) {
             verifierProprietaire(annonce.getProprietaire().getEmail(), userDetails.getUsername());

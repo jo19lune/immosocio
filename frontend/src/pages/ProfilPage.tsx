@@ -8,7 +8,7 @@ import './ProfilPage.css';
 
 export default function ProfilPage() {
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, switchRole } = useAuth();
   const navigate = useNavigate();
   const [profil, setProfil] = useState<any>(null);
   const [publications, setPublications] = useState<any[]>([]);
@@ -80,9 +80,16 @@ export default function ProfilPage() {
             </div>
             <div className="profil-actions">
               {isOwnProfile ? (
-                <button className="btn btn-ghost" onClick={() => navigate('/parametres')}>
-                  ✏️ Modifier le profil
-                </button>
+                <>
+                  <button className="btn btn-ghost" onClick={() => navigate('/parametres')}>
+                    ✏️ Modifier le profil
+                  </button>
+                  {user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN' && (
+                    <button className="btn btn-secondary" onClick={() => switchRole()} style={{ marginLeft: 8 }}>
+                      🔄 Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Propriétaire'}
+                    </button>
+                  )}
+                </>
               ) : user ? (
                 <button className="btn btn-primary"
                   onClick={() => navigate(`/messages/${userId}`)}>

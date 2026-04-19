@@ -14,6 +14,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+import toast from 'react-hot-toast';
+
 // Intercepteur réponse — déconnexion automatique si token expiré
 api.interceptors.response.use(
   (res) => res,
@@ -23,6 +25,12 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       delete api.defaults.headers.common['Authorization'];
       window.location.href = '/login';
+    } else if (error.response?.data?.erreur) {
+      toast.error(error.response.data.erreur);
+    } else if (error.response?.data?.message) {
+      toast.error(error.response.data.message);
+    } else if (error.message !== 'canceled') {
+      toast.error("Une erreur inattendue s'est produite");
     }
     return Promise.reject(error);
   }

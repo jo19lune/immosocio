@@ -21,6 +21,7 @@ import ProfilPage from './pages/ProfilPage';
 import CreateAnnoncePage from './pages/CreateAnnoncePage';
 import MesAnnoncesPage from './pages/MesAnnoncesPage';
 import EditAnnoncePage from './pages/EditAnnoncePage';
+import SuperadminDashboard from './pages/SuperadminDashboard';
 
 // Guard routes privées
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -93,12 +94,17 @@ function AppRoutes() {
       <Route path="/mes-annonces/:id/modifier" element={
         <PrivateRoute><EditAnnoncePage /></PrivateRoute>
       } />
+      <Route path="/admin/dashboard" element={
+        <PrivateRoute><SuperadminDashboard /></PrivateRoute>
+      } />
 
       {/* ── Fallback ─────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
   useEffect(() => {
@@ -107,6 +113,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

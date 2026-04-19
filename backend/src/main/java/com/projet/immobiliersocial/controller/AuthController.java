@@ -319,6 +319,39 @@ public class AuthController {
         ));
     }
 
+    // ─── POST /api/auth/switch-role — AUTHENTIFIÉ ────────────────────────────
+
+    /**
+     * Bascule le rôle de l'utilisateur entre LOCATAIRE et PROPRIETAIRE.
+     *
+     * @return un nouveau token avec le rôle mis à jour
+     */
+    @PostMapping("/switch-role")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> switchRole(@AuthenticationPrincipal UserDetails userDetails) {
+        Utilisateur user = utilisateurRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        if (user.getRole() == Role.LOCATAIRE) {
+            user.setRole(Role.PROPRIETAIRE);
+        } else if (user.getRole() == Role.PROPRIETAIRE) {
+            user.setRole(Role.LOCATAIRE);
+        } else {
+            return ResponseEntity.badRequest().body(new ErreurSimple("Ce rôle ne peut pas être basculé"));
+        }
+
+        utilisateurRepository.save(user);
+
+        UserDetails updatedUserDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String newToken = jwtUtils.generateToken(updatedUserDetails);
+
+        return ResponseEntity.ok(new AuthResponse(
+                newToken, user.getId(), user.getEmail(),
+                user.getNom(), user.getPrenom(),
+                user.getRole().name(), user.isEmailVerifie()
+        ));
+    }
+
     // ─── DTO interne pour les réponses d'erreur simples ───────────────────────
 
     /**

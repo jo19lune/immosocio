@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import './AuthPages.css';
 
@@ -10,17 +11,25 @@ export default function LoginPage() {
   const [motDePasse, setMotDePasse] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [showPwd, setShowPwd] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     setLoading(true);
     try {
       await login(email, motDePasse);
       navigate('/feed');
     } catch (err: any) {
-      setError(err.response?.data || 'Email ou mot de passe incorrect.');
+      if (err.response?.data?.champs) {
+        setFieldErrors(err.response.data.champs);
+      } else if (err.response?.data?.erreur) {
+        setError(err.response.data.erreur);
+      } else {
+        setError('Email ou mot de passe incorrect.');
+      }
     } finally {
       setLoading(false);
     }
@@ -50,7 +59,12 @@ export default function LoginPage() {
       </div>
 
       <div className="auth-right">
-        <div className="auth-card card">
+        <motion.div 
+          className="auth-card card"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
           <h2 className="auth-title">Connexion</h2>
           <p className="auth-desc">Accédez à votre espace personnel</p>
 
@@ -61,13 +75,14 @@ export default function LoginPage() {
               <label className="form-label">Email</label>
               <input
                 type="email"
-                className="form-input"
+                className={`form-input ${fieldErrors.email ? 'input-error' : ''}`}
                 placeholder="vous@exemple.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
               />
+              {fieldErrors.email && <span className="error-text">{fieldErrors.email}</span>}
             </div>
 
             <div className="form-group">
@@ -75,7 +90,7 @@ export default function LoginPage() {
               <div className="password-field">
                 <input
                   type={showPwd ? 'text' : 'password'}
-                  className="form-input"
+                  className={`form-input ${fieldErrors.motDePasse ? 'input-error' : ''}`}
                   placeholder="••••••••"
                   value={motDePasse}
                   onChange={(e) => setMotDePasse(e.target.value)}
@@ -89,6 +104,7 @@ export default function LoginPage() {
                   {showPwd ? '🙈' : '👁️'}
                 </button>
               </div>
+              {fieldErrors.motDePasse && <span className="error-text">{fieldErrors.motDePasse}</span>}
             </div>
 
             <div className="auth-forgot">
@@ -117,7 +133,7 @@ export default function LoginPage() {
           <p className="auth-public-link">
             <Link to="/">← Continuer sans compte</Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

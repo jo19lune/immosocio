@@ -45,6 +45,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { path: '/messages', icon: '💬', label: 'Messages', badge: unreadMessages },
     { path: '/notifications', icon: '🔔', label: 'Notifications', badge: unreadNotifs },
     { path: '/parametres', icon: '⚙️', label: 'Paramètres' },
+    ...(user?.role === 'SUPERADMIN' || user?.role === 'ADMIN'
+      ? [{ path: '/admin/dashboard', icon: '🛡️', label: 'Administration' }]
+      : []),
   ];
 
   const handleLogout = () => {

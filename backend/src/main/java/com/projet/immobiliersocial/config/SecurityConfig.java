@@ -67,8 +67,8 @@ public class SecurityConfig {
                 // géré par @PreAuthorize dans MessageController
 
                 // ── Rôles spécifiques ──────────────────────────────────────
-                .requestMatchers("/api/annonces/mes-annonces/**").hasRole("PROPRIETAIRE")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/annonces/mes-annonces/**").hasAnyRole("PROPRIETAIRE", "LOCATAIRE", "SUPERADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
 
                 // ── Tout le reste : authentifié ────────────────────────────
                 .anyRequest().authenticated()

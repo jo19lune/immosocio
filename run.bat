@@ -97,7 +97,7 @@ goto :EOF
 :START_BACKEND
 echo [BACKEND] Demarrage...
 pushd "%BACKEND_DIR%"
-start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && java -jar target\!JAR_NAME!"
+start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && mvnw.cmd spring-boot:run"
 popd
 echo [BACKEND] Lance dans une nouvelle fenetre.
 goto :EOF
@@ -112,19 +112,18 @@ goto :EOF
 
 :STOP_BACKEND
 echo [BACKEND] Arret en cours...
-taskkill /FI "WINDOWTITLE eq %BACKEND_TITLE%" /T /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq %BACKEND_TITLE%*" /T /F >nul 2>&1
 if errorlevel 1 ( echo [BACKEND] Aucune fenetre trouvee. ) else ( echo [BACKEND] Fenetre fermee. )
 goto :EOF
 
 :STOP_FRONTEND
 echo [FRONTEND] Arret en cours...
-taskkill /FI "WINDOWTITLE eq %FRONTEND_TITLE%" /T /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq %FRONTEND_TITLE%*" /T /F >nul 2>&1
 if errorlevel 1 ( echo [FRONTEND] Aucune fenetre trouvee. ) else ( echo [FRONTEND] Fenetre fermee. )
 goto :EOF
 
 :START_ALL
 call :INSTALL_FRONTEND
-call :BUILD_BACKEND
 call :START_BACKEND
 timeout /t 5 /nobreak > nul
 call :START_FRONTEND
@@ -146,7 +145,6 @@ goto :EOF
 :RESTART_BACKEND
 call :STOP_BACKEND
 timeout /t 2 /nobreak > nul
-call :BUILD_BACKEND
 call :START_BACKEND
 goto :EOF
 

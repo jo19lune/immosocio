@@ -52,7 +52,7 @@ public class ReservationController {
      *                      409 si l'annonce n'est plus disponible
      */
     @PostMapping
-    @PreAuthorize("hasRole('LOCATAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Reservation> creerReservation(
             @Valid @RequestBody ReservationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -101,7 +101,7 @@ public class ReservationController {
      * Retourne les réservations du locataire connecté, paginées.
      */
     @GetMapping("/mes-reservations")
-    @PreAuthorize("hasRole('LOCATAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Page<Reservation>> mesReservations(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -118,7 +118,7 @@ public class ReservationController {
      * Retourne les demandes de réservation reçues par le propriétaire connecté, paginées.
      */
     @GetMapping("/demandes")
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Page<Reservation>> demandesReservation(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -138,7 +138,7 @@ public class ReservationController {
      * @throws ApiException 404 si introuvable, 403 si non autorisé, 409 si déjà traitée
      */
     @PatchMapping("/{id}/confirmer")
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Reservation> confirmer(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -164,7 +164,7 @@ public class ReservationController {
      * @throws ApiException 404 si introuvable, 403 si non autorisé, 409 si déjà annulée
      */
     @PatchMapping("/{id}/annuler")
-    @PreAuthorize("hasAnyRole('LOCATAIRE','PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Reservation> annuler(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
