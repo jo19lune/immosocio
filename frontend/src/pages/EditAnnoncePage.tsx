@@ -83,7 +83,11 @@ export default function EditAnnoncePage() {
       });
       navigate('/mes-annonces');
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data || 'Erreur lors de la modification.');
+      const errorData = err.response?.data;
+      const errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : (errorData?.message || errorData?.erreur || 'Erreur lors de la modification.');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

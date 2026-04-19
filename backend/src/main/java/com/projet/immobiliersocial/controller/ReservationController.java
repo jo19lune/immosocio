@@ -92,7 +92,7 @@ public class ReservationController {
         // mais pour simplifier, on déduit la quantité de suite.
         annonce.setQuantiteDisponible(annonce.getQuantiteDisponible() - quantite);
         if (annonce.getQuantiteDisponible() == 0) {
-            annonce.setStatut(StatutAnnonce.INDISPONIBLE);
+            annonce.setStatut(StatutAnnonce.SUSPENDU);
         }
         annonceRepository.save(annonce);
 

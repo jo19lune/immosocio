@@ -57,7 +57,11 @@ export default function CreateReservationPage() {
       alert("Réservation effectuée avec succès !");
       navigate('/annonces');
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data || 'Erreur lors de la réservation.');
+      const errorData = err.response?.data;
+      const errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : (errorData?.message || errorData?.erreur || 'Erreur lors de la réservation.');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

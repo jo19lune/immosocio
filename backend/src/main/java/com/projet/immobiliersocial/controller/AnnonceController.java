@@ -149,8 +149,8 @@ public class AnnonceController {
                 .proprietaire(proprietaire)
                 .build();
 
-        if (annonce.getQuantiteDisponible() <= 0) {
-            annonce.setStatut(StatutAnnonce.INDISPONIBLE);
+        if (annonce.getQuantiteDisponible() == 0) {
+            annonce.setStatut(StatutAnnonce.SUSPENDU);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(annonceRepository.save(annonce));
@@ -190,7 +190,7 @@ public class AnnonceController {
         if (request.getQuantiteDisponible() != null) {
             annonce.setQuantiteDisponible(request.getQuantiteDisponible());
             if (annonce.getQuantiteDisponible() <= 0) {
-                annonce.setStatut(StatutAnnonce.INDISPONIBLE);
+                annonce.setStatut(StatutAnnonce.SUSPENDU);
             } else {
                 annonce.setStatut(StatutAnnonce.DISPONIBLE);
             }

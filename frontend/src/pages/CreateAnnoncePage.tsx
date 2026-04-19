@@ -54,7 +54,11 @@ export default function CreateAnnoncePage() {
       });
       navigate('/annonces');
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data || 'Erreur lors de la création de l\'annonce.');
+      const errorData = err.response?.data;
+      const errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : (errorData?.message || errorData?.erreur || 'Erreur lors de la création de l\'annonce.');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }

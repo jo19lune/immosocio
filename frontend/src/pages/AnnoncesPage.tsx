@@ -219,7 +219,7 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
     }
   };
 
-  const isIndisponible = annonce.statut === 'INDISPONIBLE' || annonce.quantiteDisponible <= 0;
+  const isIndisponible = annonce.statut !== 'DISPONIBLE' || annonce.quantiteDisponible <= 0;
 
   return (
     <div className="annonce-card card">
@@ -236,7 +236,7 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
         </span>
         {isIndisponible && (
           <span className="badge badge-danger" style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}>
-            N'est plus disponible pour l'instant
+            {annonce.statut}
           </span>
         )}
       </div>

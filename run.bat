@@ -105,7 +105,7 @@ goto :EOF
 :START_FRONTEND
 echo [FRONTEND] Demarrage...
 pushd "%FRONTEND_DIR%"
-start "%FRONTEND_TITLE%" cmd /k "title %FRONTEND_TITLE% && npm run dev"
+start "%FRONTEND_TITLE%" cmd /k "title %FRONTEND_TITLE% && npm run dev -- --host"
 popd
 echo [FRONTEND] Lance dans une nouvelle fenetre.
 goto :EOF

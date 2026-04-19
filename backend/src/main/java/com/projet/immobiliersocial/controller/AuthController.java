@@ -87,7 +87,8 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(
                 token, user.getId(), user.getEmail(),
                 user.getNom(), user.getPrenom(),
-                user.getRole().name(), user.isEmailVerifie()
+                user.getRole().name(), user.getPhoto(),
+                user.getTelephone(), user.isEmailVerifie()
         ));
     }
 
@@ -316,6 +317,8 @@ public class AuthController {
                 user.getNom(),
                 user.getPrenom(),
                 user.getRole().name(),
+                user.getPhoto(),
+                user.getTelephone(),
                 user.isEmailVerifie()
         ));
     }
@@ -349,7 +352,8 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(
                 newToken, user.getId(), user.getEmail(),
                 user.getNom(), user.getPrenom(),
-                user.getRole().name(), user.isEmailVerifie()
+                user.getRole().name(), user.getPhoto(),
+                user.getTelephone(), user.isEmailVerifie()
         ));
     }
 

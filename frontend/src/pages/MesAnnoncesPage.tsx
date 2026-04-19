@@ -115,6 +115,11 @@ export default function MesAnnoncesPage() {
                   <span className="ma-card-badge">
                     {typeLabels[a.typeLogement] || a.typeLogement}
                   </span>
+                  {a.statut !== 'DISPONIBLE' && (
+                    <span className="badge badge-danger" style={{ position: 'absolute', top: 4, left: 4 }}>
+                      {a.statut}
+                    </span>
+                  )}
                 </div>
 
                 <div className="ma-card-body">

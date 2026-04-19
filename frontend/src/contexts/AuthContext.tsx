@@ -10,6 +10,7 @@ interface User {
   prenom: string;
   role: string;
   photo?: string;
+  telephone?: string;
   emailVerifie: boolean;
 }
 

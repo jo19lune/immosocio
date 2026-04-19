@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState({
     nom: user?.nom || '',
     prenom: user?.prenom || '',
-    telephone: '',
+    telephone: user?.telephone || '',
   });
   const [loadingParams, setLoadingParams] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
@@ -72,8 +72,13 @@ export default function SettingsPage() {
         prenom: profile.prenom.trim(),
         telephone: profile.telephone.trim() || null,
       });
-      // Mettre à jour le contexte d'authentification (nom, prénom dans la sidebar)
-      updateUser({ nom: data.nom, prenom: data.prenom });
+      // Mettre à jour le contexte d'authentification (nom, prénom, tél, photo)
+      updateUser({ 
+        nom: data.nom, 
+        prenom: data.prenom, 
+        telephone: data.telephone, 
+        photo: data.photo 
+      });
       showSuccess('Profil mis à jour !');
     } catch {
       showSuccess('Erreur lors de la mise à jour du profil.');

@@ -95,7 +95,7 @@ public class MessageController {
         // Marquer les messages reçus comme lus lors de la consultation
         messageRepository.marquerConversationLue(moi, interlocuteur);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("dateEnvoi").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("dateEnvoi").descending());
         return ResponseEntity.ok(messageRepository.findConversation(moi, interlocuteur, pageable));
     }
 
