@@ -3,6 +3,9 @@ import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../contexts/AuthContext';
 import api, { uploadImage } from '../lib/api';
 import { applyTheme } from '../lib/theme';
+import lightModeSvg from '../assets/light_mode.svg';
+import darkModeSvg from '../assets/dark_mode.svg';
+import systemModeSvg from '../assets/system_mode.svg';
 import './NotificationsSettings.css';
 
 export default function SettingsPage() {
@@ -190,16 +193,32 @@ export default function SettingsPage() {
               <div className="settings-row-label">Thème</div>
               <div className="settings-row-desc">Apparence de l'interface</div>
             </div>
-            <select className="settings-select" value={params.theme}
-              onChange={(e) => {
-                const t = e.target.value;
-                setParams(p => ({ ...p, theme: t }));
-                applyTheme(t); // Aperçu instantané
-              }}>
-              <option value="CLAIR">☀️ Clair</option>
-              <option value="SOMBRE">🌙 Sombre</option>
-              <option value="SYSTEME">🖥️ Système</option>
-            </select>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                className={`btn btn-ghost btn-sm ${params.theme === 'CLAIR' ? 'active' : ''}`}
+                onClick={() => { setParams(p => ({ ...p, theme: 'CLAIR' })); applyTheme('CLAIR'); }}
+                style={{ flex: 1, flexDirection: 'column', padding: '12px', height: 'auto' }}
+              >
+                <img src={lightModeSvg} alt="" width={24} height={24} />
+                <span style={{ marginTop: 4 }}>Clair</span>
+              </button>
+              <button 
+                className={`btn btn-ghost btn-sm ${params.theme === 'SOMBRE' ? 'active' : ''}`}
+                onClick={() => { setParams(p => ({ ...p, theme: 'SOMBRE' })); applyTheme('SOMBRE'); }}
+                style={{ flex: 1, flexDirection: 'column', padding: '12px', height: 'auto' }}
+              >
+                <img src={darkModeSvg} alt="" width={24} height={24} />
+                <span style={{ marginTop: 4 }}>Sombre</span>
+              </button>
+              <button 
+                className={`btn btn-ghost btn-sm ${params.theme === 'SYSTEME' ? 'active' : ''}`}
+                onClick={() => { setParams(p => ({ ...p, theme: 'SYSTEME' })); applyTheme('SYSTEME'); }}
+                style={{ flex: 1, flexDirection: 'column', padding: '12px', height: 'auto' }}
+              >
+                <img src={systemModeSvg} alt="" width={24} height={24} />
+                <span style={{ marginTop: 4 }}>Système</span>
+              </button>
+            </div>
           </div>
 
           <div className="settings-row">

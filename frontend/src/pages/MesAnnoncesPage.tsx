@@ -6,6 +6,7 @@ import homeLineSvg from '../assets/home_1_line.svg';
 import announcementLineSvg from '../assets/announcement_line.svg';
 import settingsLineSvg from '../assets/settings_1_line.svg';
 import closeLineSvg from '../assets/close_line.svg';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import './MesAnnoncesPage.css';
 
 interface Annonce {
@@ -38,10 +39,6 @@ export default function MesAnnoncesPage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchMesAnnonces();
-  }, []);
-
   const fetchMesAnnonces = async () => {
     setLoading(true);
     try {
@@ -53,6 +50,12 @@ export default function MesAnnoncesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMesAnnonces();
+  }, []);
+
+  useAutoRefresh(fetchMesAnnonces);
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Supprimer définitivement cette annonce ?')) return;

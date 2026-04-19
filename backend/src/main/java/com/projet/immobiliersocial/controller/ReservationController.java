@@ -77,9 +77,12 @@ public class ReservationController {
 
         // Vérification de la quantité
         Integer quantite = request.getQuantite() != null ? request.getQuantite() : 1;
+        if (quantite < 1) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La quantité minimale à réserver est de 1.");
+        }
         if (annonce.getQuantiteDisponible() < quantite) {
             throw new ApiException(HttpStatus.CONFLICT,
-                    "Pas assez de quantité disponible pour cette annonce.");
+                    "Pas assez de quantité disponible (Maximum disponible : " + annonce.getQuantiteDisponible() + ").");
         }
 
         // Vérification que l'annonce est encore disponible
@@ -112,8 +115,35 @@ public class ReservationController {
                 .statut(StatutReservation.EN_ATTENTE)
                 .build();
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(reservationRepository.save(reservation));
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // Notifier le propriétaire de la nouvelle demande
+        Notification notifProprio = Notification.builder()
+                .destinataire(annonce.getProprietaire())
+                .message("Nouvelle demande de r\u00e9servation pour votre annonce \u00ab" + annonce.getTitre() + "\u00bb.")
+                .type(TypeNotification.RESERVATION_CONFIRMEE) // On peut utiliser un type spécifique si existant
+                .build();
+        notificationRepository.save(notifProprio);
+        wsService.envoyerNotification(annonce.getProprietaire().getEmail(), java.util.Map.of(
+                "type", "NOUVELLE_RESERVATION",
+                "message", notifProprio.getMessage(),
+                "annonceId", annonce.getId()
+        ));
+
+        // Notifier le locataire du succès de sa demande
+        Notification notifLocataire = Notification.builder()
+                .destinataire(locataire)
+                .message("Votre demande de r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb a bien \u00e9t\u00e9 transmise.")
+                .type(TypeNotification.RESERVATION_CONFIRMEE)
+                .build();
+        notificationRepository.save(notifLocataire);
+        wsService.envoyerNotification(locataire.getEmail(), java.util.Map.of(
+                "type", "RESERVATION_CREEE",
+                "message", notifLocataire.getMessage(),
+                "annonceId", annonce.getId()
+        ));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation);
     }
 
     // ─── GET /api/reservations/mes-reservations ───────────────────────────────
@@ -256,6 +286,24 @@ public class ReservationController {
                 ));
             }
         }
+
+        // Notifier l'autre partie de l'annulation
+        Utilisateur destinataireNotif = estLocataire ? annonce.getProprietaire() : reservation.getLocataire();
+        String msgNotif = estLocataire 
+            ? "Le locataire a annul\u00e9 sa r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb."
+            : "Le propri\u00e9taire a annul\u00e9 votre r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb.";
+        
+        Notification notifAnnulation = Notification.builder()
+                .destinataire(destinataireNotif)
+                .message(msgNotif)
+                .type(TypeNotification.RESERVATION_ANNULEE)
+                .build();
+        notificationRepository.save(notifAnnulation);
+        wsService.envoyerNotification(destinataireNotif.getEmail(), java.util.Map.of(
+                "type", "RESERVATION_ANNULEE",
+                "message", msgNotif,
+                "annonceId", annonce.getId()
+        ));
 
         return ResponseEntity.ok(saved);
     }

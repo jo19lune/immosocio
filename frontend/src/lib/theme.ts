@@ -13,6 +13,7 @@ export function applyTheme(theme: string) {
     if (prefersDark) root.setAttribute('data-theme', 'dark');
     else root.removeAttribute('data-theme');
   }
+  localStorage.setItem('theme', theme);
 }
 
 /**

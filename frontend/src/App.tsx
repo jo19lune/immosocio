@@ -23,6 +23,8 @@ import MesAnnoncesPage from './pages/MesAnnoncesPage';
 import EditAnnoncePage from './pages/EditAnnoncePage';
 import SuperadminDashboard from './pages/SuperadminDashboard';
 import CreateReservationPage from './pages/CreateReservationPage';
+import MyReservationsPage from './pages/MyReservationsPage';
+import ReservationDemandsPage from './pages/ReservationDemandsPage';
 
 // Guard routes privées
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -97,6 +99,12 @@ function AppRoutes() {
       } />
       <Route path="/reservations/nouvelle" element={
         <PrivateRoute><CreateReservationPage /></PrivateRoute>
+      } />
+      <Route path="/mes-reservations" element={
+        <PrivateRoute><MyReservationsPage /></PrivateRoute>
+      } />
+      <Route path="/demandes-reservations" element={
+        <PrivateRoute><ReservationDemandsPage /></PrivateRoute>
       } />
       <Route path="/admin/dashboard" element={
         <PrivateRoute><SuperadminDashboard /></PrivateRoute>

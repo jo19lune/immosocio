@@ -4,9 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import shareForwardLineSvg  from '../assets/share_forward_line.svg';
+import thumbUpLineSvg       from '../assets/thumb_up_line.svg';
+import thumbUpFillSvg       from '../assets/thumb_up_fill.svg';
 import homeLineSvg          from '../assets/home_1_line.svg';
 import announcementLineSvg  from '../assets/announcement_line.svg';
-import shareForwardLineSvg  from '../assets/share_forward_line.svg';
 import './AnnoncesPage.css';
 
 interface Annonce {
@@ -24,6 +27,7 @@ interface Annonce {
   statut: string;
   quantiteDisponible: number;
   dateCreation: string;
+  suivi: boolean;
   proprietaire: { id: number; nom: string; prenom: string; photo?: string };
 }
 
@@ -58,11 +62,6 @@ export default function AnnoncesPage() {
     </div>
   );
 
-  // Re-fetch when URL parameters change
-  useEffect(() => {
-    fetchAnnonces(0, true);
-  }, [searchParams]);
-
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
     try {
@@ -85,6 +84,15 @@ export default function AnnoncesPage() {
       setLoading(false);
     }
   };
+
+  // Re-fetch when URL parameters change
+  useEffect(() => {
+    fetchAnnonces(0, true);
+  }, [searchParams]);
+
+  useAutoRefresh(() => {
+    fetchAnnonces(0, true);
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +182,7 @@ export default function AnnoncesPage() {
 
         <div className="annonces-grid">
           {annonces.map((a) => (
-            <AnnonceCard key={a.id} annonce={a} />
+            <AnnonceCard key={a.id} annonce={a} onToggleSuivre={() => fetchAnnonces(0, true)} />
           ))}
         </div>
 
@@ -211,8 +219,7 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
   const handleSuivre = async () => {
     if (!user) { navigate('/login'); return; }
     try {
-      const { data } = await api.post(`/annonces/${annonce.id}/suivre`);
-      alert(data.message);
+      await api.post(`/annonces/${annonce.id}/suivre`);
       if (onToggleSuivre) onToggleSuivre();
     } catch {
       alert("Erreur lors de l'action suivre.");

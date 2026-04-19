@@ -15,8 +15,10 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
 
     Page<Annonce> findByProprietaire(Utilisateur proprietaire, Pageable pageable);
 
+    Page<Annonce> findByStatutIn(java.util.Collection<StatutAnnonce> statuts, Pageable pageable);
+
     @Query("""
-        SELECT a FROM Annonce a WHERE a.statut = com.projet.immobiliersocial.entity.StatutAnnonce.DISPONIBLE
+        SELECT a FROM Annonce a WHERE a.statut IN :statuts
         AND (:ville IS NULL OR LOWER(a.ville) LIKE LOWER(CONCAT('%', :ville, '%')))
         AND (:type IS NULL OR a.typeLogement = :type)
         AND (:prixMin IS NULL OR a.prix >= :prixMin)
@@ -27,6 +29,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
         @Param("type") TypeLogement type,
         @Param("prixMin") BigDecimal prixMin,
         @Param("prixMax") BigDecimal prixMax,
+        @Param("statuts") java.util.Collection<StatutAnnonce> statuts,
         Pageable pageable
     );
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { onNotification } from '../../lib/websocket';
 import api from '../../lib/api';
 import Logo from '../Logo';
 import './AppLayout.css';
@@ -19,6 +20,8 @@ import settingsFillSvg    from '../../assets/settings_1_fill.svg';
 import menuLineSvg        from '../../assets/menu_line.svg';
 import userLineSvg        from '../../assets/user_1_line.svg';
 import closeLineSvg       from '../../assets/close_line.svg';
+import checkFillSvg       from '../../assets/checkbox_circle_fill.svg';
+import timeLineSvg        from '../../assets/time_line.svg';
 
 interface NavItem {
   path: string;
@@ -62,15 +65,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
     fetchCounts();
     const id = setInterval(fetchCounts, 30000);
-    return () => clearInterval(id);
+    
+    // Refresh auto sur notification WebSocket
+    const unsub = onNotification((data) => {
+      fetchCounts();
+      // On peut aussi émettre un événement global pour que les pages se rafraîchissent
+      window.dispatchEvent(new CustomEvent('ws-refresh', { detail: data }));
+    });
+
+    return () => {
+      clearInterval(id);
+      unsub();
+    };
   }, []);
 
   const navItems: NavItem[] = [
     { path: '/feed',          iconLine: homeLineSvg,         iconFill: homeFillSvg,         label: "Fil d'actualité" },
     { path: '/annonces',      iconLine: announcementLineSvg,  iconFill: announcementFillSvg,  label: 'Annonces' },
     ...(user?.role === 'PROPRIETAIRE'
-      ? [{ path: '/mes-annonces', iconLine: announcementLineSvg, iconFill: announcementFillSvg, label: 'Mes annonces' }]
+      ? [
+          { path: '/mes-annonces', iconLine: announcementLineSvg, iconFill: announcementFillSvg, label: 'Mes annonces' },
+          { path: '/demandes-reservations', iconLine: checkFillSvg, iconFill: checkFillSvg, label: 'Demandes reçues' }
+        ]
       : []),
+    { path: '/mes-reservations', iconLine: timeLineSvg, iconFill: timeLineSvg, label: 'Mes réservations' },
     { path: '/messages',      iconLine: messengerLineSvg,    iconFill: messengerFillSvg,    label: 'Messages',       badge: unreadMessages },
     { path: '/notifications', iconLine: notifLineSvg,        iconFill: notifFillSvg,        label: 'Notifications',  badge: unreadNotifs  },
     { path: '/parametres',    iconLine: settingsLineSvg,      iconFill: settingsFillSvg,     label: 'Paramètres'      },

@@ -3,6 +3,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { AnnonceCard } from './AnnoncesPage';
 import api from '../lib/api';
 import announcementLineSvg from '../assets/announcement_line.svg';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import './FeedPage.css';
 
 export default function FeedPage() {
@@ -10,10 +11,6 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-
-  useEffect(() => {
-    fetchAnnonces(0, true);
-  }, []);
 
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
@@ -25,6 +22,14 @@ export default function FeedPage() {
     } catch { /* silencieux */ }
     finally { setLoading(false); }
   };
+
+  const fetchPosts = () => fetchAnnonces(0, true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  useAutoRefresh(fetchPosts);
 
   const loadMore = () => {
     const next = page + 1;

@@ -41,8 +41,12 @@ export default function CreateReservationPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (form.quantite > annonce.quantiteDisponible) {
-       setError(`Vous ne pouvez pas réserver plus de ${annonce.quantiteDisponible} unité(s).`);
+    if (form.quantite < 1) {
+       setError("La quantité minimale à réserver est de 1.");
+       return;
+    }
+    if (form.quantite > (annonce?.quantiteDisponible || 0)) {
+       setError(`Vous ne pouvez pas réserver plus de ${annonce?.quantiteDisponible || 0} unité(s).`);
        return;
     }
     setSubmitting(true);

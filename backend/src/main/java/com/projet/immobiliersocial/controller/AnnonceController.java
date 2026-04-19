@@ -1,5 +1,9 @@
 package com.projet.immobiliersocial.controller;
 
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+
 import com.projet.immobiliersocial.dto.AnnonceRequest;
 import com.projet.immobiliersocial.entity.*;
 import com.projet.immobiliersocial.exception.ApiException;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.List;
 
 /**
  * Contrôleur REST pour la gestion des annonces immobilières.
@@ -58,7 +63,7 @@ public class AnnonceController {
 
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-            return ResponseEntity.ok(annonceRepository.findByStatut(StatutAnnonce.DISPONIBLE, pageable));
+            return ResponseEntity.ok(annonceRepository.findByStatutIn(List.of(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU), pageable));
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des annonces", e);
             throw e;
@@ -82,8 +87,27 @@ public class AnnonceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
+        Specification<Annonce> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(root.get("statut").in(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU));
+            
+            if (ville != null && !ville.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("ville")), "%" + ville.toLowerCase() + "%"));
+            }
+            if (type != null) {
+                predicates.add(cb.equal(root.get("typeLogement"), type));
+            }
+            if (prixMin != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("prix"), prixMin));
+            }
+            if (prixMax != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("prix"), prixMax));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-        return ResponseEntity.ok(annonceRepository.rechercher(ville, type, prixMin, prixMax, pageable));
+        return ResponseEntity.ok(annonceRepository.findAll(spec, pageable));
     }
 
     /**
