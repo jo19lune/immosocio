@@ -44,6 +44,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -102,10 +103,10 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        // Empêcher l'auto-attribution du rôle ADMIN
-        if (Role.ADMIN.equals(request.getRole())) {
+        // Empêcher l'auto-attribution des rôles privilégiés
+        if (Role.ADMIN.equals(request.getRole()) || Role.SUPERADMIN.equals(request.getRole())) {
             return ResponseEntity.badRequest()
-                    .body(new ErreurSimple("Le rôle ADMIN ne peut pas être attribué à l'inscription"));
+                    .body(new ErreurSimple("Les rôles ADMIN et SUPERADMIN ne peuvent pas être attribués à l'inscription"));
         }
 
         if (utilisateurRepository.existsByEmail(request.getEmail())) {

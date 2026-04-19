@@ -16,7 +16,7 @@ public interface AnnonceRepository extends JpaRepository<Annonce, Long> {
     Page<Annonce> findByProprietaire(Utilisateur proprietaire, Pageable pageable);
 
     @Query("""
-        SELECT a FROM Annonce a WHERE a.statut = 'DISPONIBLE'
+        SELECT a FROM Annonce a WHERE a.statut = com.projet.immobiliersocial.entity.StatutAnnonce.DISPONIBLE
         AND (:ville IS NULL OR LOWER(a.ville) LIKE LOWER(CONCAT('%', :ville, '%')))
         AND (:type IS NULL OR a.typeLogement = :type)
         AND (:prixMin IS NULL OR a.prix >= :prixMin)

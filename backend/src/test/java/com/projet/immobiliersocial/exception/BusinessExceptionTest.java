@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests unitaires pour {@link BusinessException}.
  */
+@SuppressWarnings("null")
 class BusinessExceptionTest {
 
     @Test

@@ -19,6 +19,7 @@ interface Annonce {
   typeLogement: string;
   photos: string[];
   statut: string;
+  quantiteDisponible: number;
   dateCreation: string;
   proprietaire: { id: number; nom: string; prenom: string; photo?: string };
 }
@@ -187,7 +188,7 @@ export default function AnnoncesPage() {
   );
 }
 
-function AnnonceCard({ annonce }: { annonce: Annonce }) {
+export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onToggleSuivre?: () => void }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const imgUrl = annonce.photos?.[0];
@@ -204,6 +205,19 @@ function AnnonceCard({ annonce }: { annonce: Annonce }) {
     }
   };
 
+  const handleSuivre = async () => {
+    if (!user) { navigate('/login'); return; }
+    try {
+      const { data } = await api.post(`/annonces/${annonce.id}/suivre`);
+      alert(data.message);
+      if (onToggleSuivre) onToggleSuivre();
+    } catch {
+      alert("Erreur lors de l'action suivre.");
+    }
+  };
+
+  const isIndisponible = annonce.statut === 'INDISPONIBLE' || annonce.quantiteDisponible <= 0;
+
   return (
     <div className="annonce-card card">
       <div className="annonce-card-img">
@@ -215,6 +229,11 @@ function AnnonceCard({ annonce }: { annonce: Annonce }) {
         <span className="annonce-type-badge">
           {typeLabels[annonce.typeLogement] || annonce.typeLogement}
         </span>
+        {isIndisponible && (
+          <span className="badge badge-danger" style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}>
+            N'est plus disponible pour l'instant
+          </span>
+        )}
       </div>
 
       <div className="annonce-card-body">
@@ -228,6 +247,7 @@ function AnnonceCard({ annonce }: { annonce: Annonce }) {
           {annonce.superficie && (
             <span>📐 {annonce.superficie} m²</span>
           )}
+          <span>📦 {annonce.quantiteDisponible} dispo</span>
         </div>
 
         <p className="annonce-card-desc">{annonce.description?.slice(0, 90)}{annonce.description?.length > 90 ? '…' : ''}</p>
@@ -246,6 +266,16 @@ function AnnonceCard({ annonce }: { annonce: Annonce }) {
               </Link>
             ) : (
               <Link to="/login" className="btn btn-ghost btn-sm">Contacter</Link>
+            )}
+            {isIndisponible && (
+              <button onClick={handleSuivre} className="btn btn-accent btn-sm">
+                ⭐ Suivre
+              </button>
+            )}
+            {!isIndisponible && user && user.role === 'LOCATAIRE' && (
+               <Link to={`/reservations/nouvelle?annonceId=${annonce.id}`} className="btn btn-primary btn-sm" style={{backgroundColor: 'var(--success)'}}>
+                 Réserver
+               </Link>
             )}
           </div>
         </div>

@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+@SuppressWarnings("null")
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
     Page<Reservation> findByLocataire(Utilisateur locataire, Pageable pageable);

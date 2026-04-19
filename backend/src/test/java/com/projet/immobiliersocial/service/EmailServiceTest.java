@@ -4,7 +4,6 @@ import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,6 +16,7 @@ import static org.mockito.Mockito.*;
  * Tests unitaires pour {@link EmailService}.
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class EmailServiceTest {
 
     @Mock

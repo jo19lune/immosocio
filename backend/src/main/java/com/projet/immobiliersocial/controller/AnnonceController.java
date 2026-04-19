@@ -7,6 +7,7 @@ import com.projet.immobiliersocial.repository.AnnonceRepository;
 import com.projet.immobiliersocial.repository.UtilisateurRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 /**
  * Contrôleur REST pour la gestion des annonces immobilières.
@@ -34,6 +36,8 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/api/annonces")
 @RequiredArgsConstructor
+@Slf4j
+@SuppressWarnings("null")
 public class AnnonceController {
 
     private final AnnonceRepository annonceRepository;
@@ -52,8 +56,13 @@ public class AnnonceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-        return ResponseEntity.ok(annonceRepository.findByStatut(StatutAnnonce.DISPONIBLE, pageable));
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
+            return ResponseEntity.ok(annonceRepository.findByStatut(StatutAnnonce.DISPONIBLE, pageable));
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des annonces", e);
+            throw e;
+        }
     }
 
     /**
@@ -135,9 +144,14 @@ public class AnnonceController {
                 .superficie(request.getSuperficie())
                 .typeLogement(request.getTypeLogement())
                 .photos(request.getPhotos())
+                .quantiteDisponible(request.getQuantiteDisponible() != null ? request.getQuantiteDisponible() : 1)
                 .statut(StatutAnnonce.DISPONIBLE)
                 .proprietaire(proprietaire)
                 .build();
+
+        if (annonce.getQuantiteDisponible() <= 0) {
+            annonce.setStatut(StatutAnnonce.INDISPONIBLE);
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(annonceRepository.save(annonce));
     }
@@ -159,7 +173,9 @@ public class AnnonceController {
         Annonce annonce = annonceRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
 
-        verifierProprietaire(annonce.getProprietaire().getEmail(), userDetails.getUsername());
+        String ownerEmail = annonce.getProprietaire().getEmail();
+        String currentEmail = userDetails.getUsername();
+        verifierProprietaire(Objects.requireNonNull(ownerEmail), Objects.requireNonNull(currentEmail));
 
         annonce.setTitre(request.getTitre());
         annonce.setDescription(request.getDescription());
@@ -171,6 +187,14 @@ public class AnnonceController {
         annonce.setSuperficie(request.getSuperficie());
         annonce.setTypeLogement(request.getTypeLogement());
         annonce.setPhotos(request.getPhotos());
+        if (request.getQuantiteDisponible() != null) {
+            annonce.setQuantiteDisponible(request.getQuantiteDisponible());
+            if (annonce.getQuantiteDisponible() <= 0) {
+                annonce.setStatut(StatutAnnonce.INDISPONIBLE);
+            } else {
+                annonce.setStatut(StatutAnnonce.DISPONIBLE);
+            }
+        }
 
         return ResponseEntity.ok(annonceRepository.save(annonce));
     }
@@ -194,11 +218,43 @@ public class AnnonceController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPERADMIN"));
 
         if (!isAdmin) {
-            verifierProprietaire(annonce.getProprietaire().getEmail(), userDetails.getUsername());
+            String ownerEmail = annonce.getProprietaire().getEmail();
+            String currentEmail = userDetails.getUsername();
+            verifierProprietaire(Objects.requireNonNull(ownerEmail), Objects.requireNonNull(currentEmail));
         }
 
         annonceRepository.delete(annonce);
         return ResponseEntity.noContent().build();
+    }
+
+    // ─── Suivre une annonce ──────────────────────────────────────────────────
+
+    /**
+     * S'abonner ou se désabonner d'une annonce indisponible.
+     *
+     * @param id identifiant de l'annonce
+     */
+    @PostMapping("/{id}/suivre")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<java.util.Map<String, Object>> suivreAnnonce(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Annonce annonce = annonceRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
+
+        Utilisateur user = resolveUtilisateur(userDetails);
+
+        boolean isFollowing = annonce.getFollowers().contains(user);
+        if (isFollowing) {
+            annonce.getFollowers().remove(user);
+        } else {
+            annonce.getFollowers().add(user);
+        }
+
+        annonceRepository.save(annonce);
+
+        return ResponseEntity.ok(java.util.Map.of("suivi", !isFollowing, "message", !isFollowing ? "Vous suivez cette annonce" : "Vous ne suivez plus cette annonce"));
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────
@@ -209,7 +265,8 @@ public class AnnonceController {
      * @throws ApiException 404 si introuvable (ne devrait pas arriver si le JWT est valide)
      */
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
-        return utilisateurRepository.findByEmail(userDetails.getUsername())
+        String email = userDetails.getUsername();
+        return utilisateurRepository.findByEmail(Objects.requireNonNull(email))
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
     }
 

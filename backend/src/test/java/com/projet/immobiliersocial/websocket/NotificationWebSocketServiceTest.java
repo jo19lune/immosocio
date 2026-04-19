@@ -18,6 +18,7 @@ import static org.mockito.Mockito.*;
  * Tests unitaires pour {@link NotificationWebSocketService}.
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class NotificationWebSocketServiceTest {
 
     @Mock

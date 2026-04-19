@@ -23,6 +23,7 @@ import java.util.UUID;
  * Le chemin /images/** est servi par WebMvcConfig et autorisé sans JWT dans SecurityConfig.
  */
 @Service
+@SuppressWarnings("null")
 public class LocalFileStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(LocalFileStorageService.class);

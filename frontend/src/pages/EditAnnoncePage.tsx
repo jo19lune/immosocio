@@ -10,7 +10,7 @@ export default function EditAnnoncePage() {
 
   const [form, setForm] = useState({
     titre: '', description: '', adresse: '', ville: '', pays: 'Madagascar',
-    prix: '', nombrePieces: '', superficie: '', typeLogement: 'APPARTEMENT'
+    prix: '', nombrePieces: '', superficie: '', typeLogement: 'APPARTEMENT', quantiteDisponible: '1'
   });
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -33,6 +33,7 @@ export default function EditAnnoncePage() {
           nombrePieces: data.nombrePieces != null ? String(data.nombrePieces) : '',
           superficie: data.superficie != null ? String(data.superficie) : '',
           typeLogement: data.typeLogement || 'APPARTEMENT',
+          quantiteDisponible: data.quantiteDisponible != null ? String(data.quantiteDisponible) : '1',
         });
         setPhotos(data.photos || []);
       } catch {
@@ -74,6 +75,7 @@ export default function EditAnnoncePage() {
         prix: Number(form.prix),
         nombrePieces: form.nombrePieces ? parseInt(form.nombrePieces) : null,
         superficie: form.superficie ? parseFloat(form.superficie) : null,
+        quantiteDisponible: form.quantiteDisponible ? parseInt(form.quantiteDisponible) : 1,
         photos,
       });
       navigate('/mes-annonces');
@@ -152,6 +154,10 @@ export default function EditAnnoncePage() {
               <div className="form-group">
                 <label className="form-label">Superficie (m²)</label>
                 <input type="number" className="form-input" min={1} step="0.1" value={form.superficie} onChange={set('superficie')} placeholder="Ex: 50" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Quantité dispo.</label>
+                <input type="number" className="form-input" min={1} value={form.quantiteDisponible} onChange={set('quantiteDisponible')} placeholder="Ex: 1" />
               </div>
             </div>
 

@@ -33,6 +33,7 @@ public class ApiException extends RuntimeException {
     }
 
     /** @return le statut HTTP associé à cette exception */
+    @SuppressWarnings("null")
     public HttpStatus getStatut() {
         return statut;
     }

@@ -1,8 +1,10 @@
 package com.projet.immobiliersocial.controller;
 
 import com.projet.immobiliersocial.entity.Message;
+import com.projet.immobiliersocial.entity.Notification;
 import com.projet.immobiliersocial.entity.Utilisateur;
 import com.projet.immobiliersocial.exception.ApiException;
+import com.projet.immobiliersocial.repository.NotificationRepository;
 import com.projet.immobiliersocial.repository.MessageRepository;
 import com.projet.immobiliersocial.repository.UtilisateurRepository;
 import com.projet.immobiliersocial.websocket.NotificationWebSocketService;
@@ -35,10 +37,12 @@ import java.util.Map;
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@SuppressWarnings("null")
 public class MessageController {
 
     private final MessageRepository messageRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationWebSocketService wsService;
 
     // ─── GET /api/messages/conversations ─────────────────────────────────────
@@ -131,16 +135,24 @@ public class MessageController {
 
         Message message = Message.builder()
                 .contenu(contenu)
-                .mediaUrl(body.get("mediaUrl"))
+                .mediaUrl(body != null ? body.get("mediaUrl") : null)
                 .expediteur(expediteur)
                 .destinataire(destinataire)
                 .build();
 
         Message saved = messageRepository.save(message);
 
+        Notification notification = Notification.builder()
+                .destinataire(destinataire)
+                .message(expediteur.getPrenom() + " " + expediteur.getNom() + " vous a envoyé un message")
+                .type(com.projet.immobiliersocial.entity.TypeNotification.MESSAGE)
+                .build();
+        notification = notificationRepository.save(notification);
+
         wsService.envoyerNotification(destinataire.getEmail(), Map.of(
-                "type", "NOUVEAU_MESSAGE",
-                "message", expediteur.getPrenom() + " " + expediteur.getNom() + " vous a envoyé un message",
+                "type", "MESSAGE",
+                "message", notification.getMessage(),
+                "id", notification.getId(),
                 "expediteurId", expediteur.getId(),
                 "messageId", saved.getId()
         ));

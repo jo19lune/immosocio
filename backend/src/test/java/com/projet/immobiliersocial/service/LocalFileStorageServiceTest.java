@@ -12,12 +12,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+// unused import removed
 
 /**
  * Tests unitaires pour {@link LocalFileStorageService}.
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class LocalFileStorageServiceTest {
 
     @TempDir

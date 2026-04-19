@@ -62,7 +62,13 @@ export default function RegisterPage() {
     return (
       <div className="auth-page">
         <div className="auth-right" style={{ margin: 'auto' }}>
-          <div className="auth-card card" style={{ textAlign: 'center' }}>
+          <motion.div 
+            className="auth-card card" 
+            style={{ textAlign: 'center' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
             <h2 className="auth-title">Vérifiez votre email</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{success}</p>
@@ -70,7 +76,7 @@ export default function RegisterPage() {
               onClick={() => navigate('/login')}>
               Aller à la connexion
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
     );

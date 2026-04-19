@@ -1,45 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PublicNavbar from '../components/layout/PublicNavbar';
-import PublicationCard from '../components/publications/PublicationCard';
+import { AnnonceCard } from './AnnoncesPage';
 import Logo from '../components/Logo';
 import api from '../lib/api';
 import './PublicFeedPage.css';
 
 export default function PublicFeedPage() {
-  const [publications, setPublications] = useState<any[]>([]);
+  const [annoncesFeed, setAnnoncesFeed] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [annonces, setAnnonces] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchPublications(0, true);
-    fetchAnnonces();
+    fetchAnnoncesFeed(0, true);
   }, []);
 
-  const fetchPublications = async (p: number, reset = false) => {
+  const fetchAnnoncesFeed = async (p: number, reset = false) => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/publications?page=${p}&size=10`);
+      const { data } = await api.get(`/annonces?page=${p}&size=10`);
       const items = data.content || [];
-      setPublications((prev) => reset ? items : [...prev, ...items]);
+      setAnnoncesFeed((prev) => reset ? items : [...prev, ...items]);
       setHasMore(!data.last);
     } catch { /* silencieux */ }
     finally { setLoading(false); }
   };
 
-  const fetchAnnonces = async () => {
-    try {
-      const { data } = await api.get('/annonces?page=0&size=4');
-      setAnnonces(data.content || []);
-    } catch { /* silencieux */ }
-  };
-
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    fetchPublications(next);
+    fetchAnnoncesFeed(next);
   };
 
   return (
@@ -72,26 +63,28 @@ export default function PublicFeedPage() {
         {/* Feed public */}
         <div className="public-feed">
           <div className="feed-header">
-            <h2 className="feed-title">Publications récentes</h2>
+            <h2 className="feed-title">Dernières annonces</h2>
             <span className="badge badge-primary">Public</span>
           </div>
 
-          {loading && publications.length === 0 && (
+          {loading && annoncesFeed.length === 0 && (
             <div className="feed-loading">
               <div className="spinner" />
               <span>Chargement…</span>
             </div>
           )}
 
-          {!loading && publications.length === 0 && (
+          {!loading && annoncesFeed.length === 0 && (
             <div className="feed-empty card">
               <span style={{ fontSize: 48 }}>📭</span>
-              <p>Aucune publication pour le moment.</p>
+              <p>Aucune annonce pour le moment.</p>
             </div>
           )}
 
-          {publications.map((pub) => (
-            <PublicationCard key={pub.id} publication={pub} />
+          {annoncesFeed.map((annonce) => (
+            <div key={annonce.id} style={{ marginBottom: '24px' }}>
+              <AnnonceCard annonce={annonce} />
+            </div>
           ))}
 
           {hasMore && !loading && (
@@ -100,7 +93,7 @@ export default function PublicFeedPage() {
               Charger plus
             </button>
           )}
-          {loading && publications.length > 0 && (
+          {loading && annoncesFeed.length > 0 && (
             <div className="feed-loading"><div className="spinner" /></div>
           )}
         </div>
@@ -119,31 +112,7 @@ export default function PublicFeedPage() {
             </Link>
           </div>
 
-          {/* Annonces récentes */}
-          {annonces.length > 0 && (
-            <div className="sidebar-annonces card">
-              <h3 className="sidebar-section-title">Annonces récentes 🏘️</h3>
-              {annonces.map((a) => (
-                <Link key={a.id} to="/annonces" className="annonce-mini">
-                  <div className="annonce-mini-img">
-                    {a.photos?.[0] ? (
-                      <img src={a.photos[0]} alt={a.titre} />
-                    ) : (
-                      <span>🏠</span>
-                    )}
-                  </div>
-                  <div className="annonce-mini-info">
-                    <strong>{a.titre}</strong>
-                    <span>{a.ville} · {Number(a.prix).toLocaleString('fr-FR')} Ar</span>
-                  </div>
-                </Link>
-              ))}
-              <Link to="/annonces" className="btn btn-ghost btn-sm"
-                style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}>
-                Voir toutes les annonces
-              </Link>
-            </div>
-          )}
+          {/* Removed mini annonces from sidebar since they are in the feed now */}
         </aside>
       </div>
     </div>

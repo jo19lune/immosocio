@@ -23,6 +23,10 @@ public class ReservationRequest {
     @NotNull(message = "La date de fin est obligatoire")
     private LocalDate dateFin;
 
+    /** Nombre d'unités ou pièces réservées. */
+    @Min(value = 1, message = "La quantité doit être au moins 1")
+    private Integer quantite = 1;
+
     /** Message optionnel du locataire au propriétaire (max 500 caractères). */
     @Size(max = 500, message = "Le message ne peut pas dépasser 500 caractères")
     private String message;

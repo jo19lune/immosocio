@@ -11,6 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UtilisateurRepository utilisateurRepository;

@@ -12,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class EmailService {
 
     private final JavaMailSender mailSender;
@@ -72,6 +73,29 @@ public class EmailService {
               <p style="color:#9ca3af;font-size:12px;">Immobilier Social — Plateforme immobilière communautaire</p>
             </div>
             """.formatted(prenom, lien);
+        envoyerHtml(destinataire, sujet, corps);
+    }
+
+    // ─── Notification de disponibilité ────────────────────────────────────────
+
+    public void envoyerNotificationDisponibilite(String destinataire, String prenom, String titreAnnonce, Long annonceId) {
+        String lien = frontendUrl + "/annonces"; 
+        String sujet = "L'annonce que vous suivez est de nouveau disponible !";
+        String corps = """
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #059669;">Bonne nouvelle !</h2>
+              <p>Bonjour <strong>%s</strong>,</p>
+              <p>L'annonce <strong>"%s"</strong> est de nouveau disponible à la réservation.</p>
+              <p>Dépêchez-vous d'aller la consulter avant qu'elle ne soit de nouveau réservée !</p>
+              <a href="%s"
+                 style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;
+                        text-decoration:none;border-radius:6px;font-weight:bold;margin:16px 0;">
+                Voir l'annonce
+              </a>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+              <p style="color:#9ca3af;font-size:12px;">Immobilier Social — Plateforme immobilière communautaire</p>
+            </div>
+            """.formatted(prenom, titreAnnonce, lien);
         envoyerHtml(destinataire, sujet, corps);
     }
 

@@ -30,6 +30,7 @@ import java.util.Map;
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@SuppressWarnings("null")
 public class NotificationController {
 
     private final NotificationRepository notificationRepository;
