@@ -11,6 +11,7 @@ import AnnoncesPage from './pages/AnnoncesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import AnnonceDetailsPage from './pages/AnnonceDetailsPage';
 
 // Pages membres
 import FeedPage from './pages/FeedPage';
@@ -52,6 +53,7 @@ function AppRoutes() {
       {/* ── Pages publiques ─────────────────────────── */}
       <Route path="/" element={<PublicFeedPage />} />
       <Route path="/annonces" element={<AnnoncesPage />} />
+      <Route path="/annonces/:id" element={<AnnonceDetailsPage />} />
 
       <Route path="/login" element={
         <PublicRoute><LoginPage /></PublicRoute>

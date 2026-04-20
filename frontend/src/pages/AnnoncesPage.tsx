@@ -202,21 +202,24 @@ export default function AnnoncesPage() {
 export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onToggleSuivre?: () => void }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const imgUrl = annonce.photos?.[0];
+  const [currentImg, setCurrentImg] = useState(0);
+  const photos = (annonce.photos && annonce.photos.length > 0) ? annonce.photos : [];
 
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!user) { navigate('/login'); return; }
     const contenu = window.prompt("Ajoutez un texte à votre partage :", "Découvrez cette excellente annonce !");
     if (contenu === null) return;
     try {
       await api.post('/publications', { contenu, annonceId: annonce.id, visibilite: 'PUBLIC' });
-      alert("Annonce partagée avec succès dans le fil d'actualité !");
+      alert("Annonce partagée avec succès !");
     } catch {
-      alert("Erreur lors du partage de l'annonce.");
+      alert("Erreur lors du partage.");
     }
   };
 
-  const handleSuivre = async () => {
+  const handleSuivre = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!user) { navigate('/login'); return; }
     try {
       await api.post(`/annonces/${annonce.id}/suivre`);
@@ -226,13 +229,45 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
     }
   };
 
+  const nextImg = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImg((prev) => (prev + 1) % photos.length);
+  };
+
+  const prevImg = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImg((prev) => (prev - 1 + photos.length) % photos.length);
+  };
+
   const isIndisponible = annonce.statut !== 'DISPONIBLE' || annonce.quantiteDisponible <= 0;
 
   return (
-    <div className="annonce-card card">
+    <div className="annonce-card card" onClick={() => navigate(`/annonces/${annonce.id}`)} style={{ cursor: 'pointer' }}>
       <div className="annonce-card-img">
-        {imgUrl ? (
-          <img src={imgUrl} alt={annonce.titre} />
+        {photos.length > 0 ? (
+          <>
+            <img src={photos[currentImg]} alt={annonce.titre} className="fade-in" key={currentImg} />
+            {photos.length > 1 && (
+              <>
+                <button className="carousel-btn prev" onClick={prevImg}>‹</button>
+                <button className="carousel-btn next" onClick={nextImg}>›</button>
+                <div className="carousel-dots" onClick={e => e.stopPropagation()}>
+                  {photos.map((_, i) => (
+                    <span 
+                      key={i} 
+                      className={`dot ${i === currentImg ? 'active' : ''}`} 
+                      onClick={(e) => { e.stopPropagation(); setCurrentImg(i); }}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            <span className="photos-count">
+              <img src={homeLineSvg} alt="" width={12} style={{ filter: 'invert(1)', marginRight: 4 }} />
+              {photos.length}
+            </span>
+          </>
         ) : (
           <div className="annonce-img-placeholder">
             <img src={homeLineSvg} alt="" width={40} height={40} style={{ opacity: 0.35 }} />
@@ -242,50 +277,66 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
           {typeLabels[annonce.typeLogement] || annonce.typeLogement}
         </span>
         {isIndisponible && (
-          <span className="badge badge-danger" style={{ position: 'absolute', top: 8, left: 8, zIndex: 10 }}>
+          <span className="badge-overlay">
             {annonce.statut}
           </span>
         )}
       </div>
 
       <div className="annonce-card-body">
-        <h3 className="annonce-card-title">{annonce.titre}</h3>
-        <p className="annonce-card-location">📍 {annonce.ville}{annonce.pays ? `, ${annonce.pays}` : ''}</p>
+        <div className="annonce-card-header">
+          <h3 className="annonce-card-title">{annonce.titre}</h3>
+          <span className="annonce-card-prix">
+            {Number(annonce.prix).toLocaleString('fr-FR')} <small>Ar</small>
+          </span>
+        </div>
+        
+        <p className="annonce-card-location">
+          <img src={homeLineSvg} alt="" width={14} style={{ opacity: 0.5, marginRight: 4 }} />
+          {annonce.ville}{annonce.pays ? `, ${annonce.pays}` : ''}
+        </p>
 
         <div className="annonce-card-meta">
           {annonce.nombrePieces && (
-            <span>🛏 {annonce.nombrePieces} pièce{annonce.nombrePieces > 1 ? 's' : ''}</span>
+            <div className="meta-item">
+              <span className="meta-val">{annonce.nombrePieces}</span>
+              <span className="meta-label">Pièces</span>
+            </div>
           )}
           {annonce.superficie && (
-            <span>📐 {annonce.superficie} m²</span>
+            <div className="meta-item">
+              <span className="meta-val">{annonce.superficie}</span>
+              <span className="meta-label">m²</span>
+            </div>
           )}
-          <span>📦 {annonce.quantiteDisponible} dispo</span>
+          <div className="meta-item">
+            <span className="meta-val">{annonce.quantiteDisponible}</span>
+            <span className="meta-label">Dispo</span>
+          </div>
         </div>
 
-        <p className="annonce-card-desc">{annonce.description?.slice(0, 90)}{annonce.description?.length > 90 ? '…' : ''}</p>
+        <p className="annonce-card-desc">{annonce.description?.slice(0, 80)}{annonce.description?.length > 80 ? '…' : ''}</p>
 
         <div className="annonce-card-footer">
-          <span className="annonce-card-prix">
-            {Number(annonce.prix).toLocaleString('fr-FR')} Ar
-          </span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={handleShare} className="btn btn-ghost btn-sm" title="Partager l'annonce" style={{ padding: '4px 8px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <img src={shareForwardLineSvg} alt="" width={14} height={14} /> Partager
+          <div className="footer-actions">
+            <button onClick={handleShare} className="icon-btn" title="Partager">
+              <img src={shareForwardLineSvg} alt="" width={18} />
             </button>
+            <button onClick={handleSuivre} className={`icon-btn ${annonce.suivi ? 'active' : ''}`} title="Suivre">
+               <img src={annonce.suivi ? thumbUpFillSvg : thumbUpLineSvg} alt="" width={18} />
+            </button>
+          </div>
+          
+          <div className="footer-main-btn">
             {user ? (
-              <Link to={`/messages/${annonce.proprietaire.id}`} className="btn btn-primary btn-sm">
+              <Link to={`/messages/${annonce.proprietaire.id}`} className="btn btn-primary btn-sm" onClick={e => e.stopPropagation()}>
                 Contacter
               </Link>
             ) : (
-              <Link to="/login" className="btn btn-ghost btn-sm">Contacter</Link>
-            )}
-            {isIndisponible && (
-              <button onClick={handleSuivre} className="btn btn-accent btn-sm">
-                <img src={announcementLineSvg} alt="" width={13} height={13} style={{ marginRight: 2 }} /> Suivre
-              </button>
+              <Link to={`/annonces/${annonce.id}`} className="btn btn-ghost btn-sm" onClick={e => e.stopPropagation()}>Détails</Link>
             )}
             {!isIndisponible && user && user.role === 'LOCATAIRE' && (
-               <Link to={`/reservations/nouvelle?annonceId=${annonce.id}`} className="btn btn-primary btn-sm" style={{backgroundColor: 'var(--success)'}}>
+               <Link to={`/reservations/nouvelle?annonceId=${annonce.id}`} className="btn btn-primary btn-sm" style={{backgroundColor: 'var(--success)'}} onClick={e => e.stopPropagation()}>
                  Réserver
                </Link>
             )}

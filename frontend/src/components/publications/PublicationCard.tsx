@@ -160,7 +160,8 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
             <div className="pub-meta">
               <span>{formatDate(publication.dateCreation)}</span>
               <span className="pub-visibility">
-                {publication.visibilite === 'PUBLIC' ? '🌍 Public' : '👥 Membres'}
+                <img src={publication.visibilite === 'PUBLIC' ? homeLineSvg : settingsLineSvg} alt="" width={10} style={{ opacity: 0.6, marginRight: 4 }} />
+                {publication.visibilite === 'PUBLIC' ? 'Public' : 'Membres'}
               </span>
             </div>
           </div>
@@ -173,7 +174,7 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
           )}
           {canDelete && (
             <button className="pub-delete-btn" onClick={handleDelete} title="Supprimer">
-              <img src={closeLineSvg} alt="" width={16} height={16} style={{ filter: 'brightness(0) invert(1)' }} />
+              <img src={closeLineSvg} alt="" width={16} height={16} style={{ filter: 'grayscale(1) brightness(0.5)' }} />
             </button>
           )}
         </div>
@@ -219,7 +220,7 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
 
       {/* Annonce intégrée */}
       {publication.annonce && (
-        <div className="pub-embedded-annonce" onClick={() => navigate('/annonces')}>
+        <div className="pub-embedded-annonce" onClick={() => navigate(`/annonces/${publication.annonce.id}`)}>
           <div className="pub-embedded-img">
             {publication.annonce.photos && publication.annonce.photos.length > 0 ? (
               <img src={publication.annonce.photos[0]} alt="" />
@@ -243,13 +244,12 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
           className={`pub-action-btn ${liked ? 'liked' : ''}`}
           onClick={handleLike}
           disabled={loadingLike}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
-          <img src={liked ? thumbUpFillSvg : thumbUpLineSvg} alt="" width={18} height={18} style={{ filter: liked ? 'none' : 'grayscale(1) opacity(0.7)' }} />
+          <img src={liked ? thumbUpFillSvg : thumbUpLineSvg} alt="" width={20} height={20} className={liked ? 'bounce-in' : ''} />
           <span>{likeCount > 0 ? likeCount : ''} J'aime</span>
         </button>
-        <button className="pub-action-btn" onClick={toggleComments} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <img src={commentLineSvg} alt="" width={18} height={18} style={{ filter: 'grayscale(1) opacity(0.7)' }} />
+        <button className="pub-action-btn" onClick={toggleComments}>
+          <img src={commentLineSvg} alt="" width={20} height={20} />
           <span>{commentCount > 0 ? commentCount : ''} Commenter</span>
         </button>
       </div>

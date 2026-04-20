@@ -39,8 +39,8 @@ export default function FeedPage() {
 
   return (
     <AppLayout>
-      <div className="feed-page" style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '20px' }}>
-        <h1 style={{ marginBottom: '24px', fontSize: '28px', color: 'var(--text-primary)' }}>Nouveautés Immobilières</h1>
+      <div className="feed-page">
+        <h1 className="feed-title">Découvrir les nouveautés</h1>
 
         {loading && annonces.length === 0 && (
           <div className="feed-center">
@@ -51,14 +51,15 @@ export default function FeedPage() {
 
         {!loading && annonces.length === 0 && (
           <div className="feed-empty card">
-            <img src={announcementLineSvg} alt="Fil vide" width={52} height={52} style={{ opacity: 0.35, marginBottom: 8 }} />
+            <img src={announcementLineSvg} alt="Fil vide" width={64} height={64} />
+            <h3>Rien à voir ici</h3>
             <p>Aucune annonce pour le moment. Soyez le premier à en publier !</p>
           </div>
         )}
 
         {annonces.map((annonce) => (
-          <div key={annonce.id} style={{ marginBottom: '24px' }}>
-            <AnnonceCard annonce={annonce} />
+          <div key={annonce.id} className="feed-item-wrapper">
+            <AnnonceCard annonce={annonce} onToggleSuivre={fetchPosts} />
           </div>
         ))}
 

@@ -7,42 +7,43 @@
 }
 
 :root {
-  /* Palette principale */
-  --bg: #F8F9FC;
-  --bg-alt: #F0F2F9;
+  /* Palette principale - Social Blue & Premium Navy */
+  --bg: #F0F2F5; /* LinkedIn/FB style background */
+  --bg-alt: #E4E6EB;
   --surface: #FFFFFF;
-  --surface-2: #F1F4F9;
-  --border: #DDE2EF;
+  --surface-2: #F8FAFF;
+  --border: #DDE2E8;
   --border-focus: #09244B;
 
-  /* Couleurs primaires */
+  /* Couleurs primaires dynamiques */
   --primary: #09244B;
-  --primary-dark: #061833;
-  --primary-light: #E7EBF5;
+  --primary-rgb: 9, 36, 75;
+  --primary-light: #E7EEFB;
+  --secondary: #1877F2; /* Social Blue accent */
   --accent: #FF7A45;
   --accent-light: #FFF2ED;
 
-  /* Texte */
-  --text: #051429;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
+  /* Texte optimisé IHM */
+  --text: #1C1E21;
+  --text-secondary: #65676B;
+  --text-muted: #8A8D91;
   --text-inverse: #FFFFFF;
 
   /* États */
-  --success: #10B981;
-  --success-light: #ECFDF5;
+  --success: #42B72A;
+  --success-light: #E7F3E5;
   --warning: #F59E0B;
   --warning-light: #FFFBEB;
-  --danger: #EF4444;
-  --danger-light: #FEF2F2;
+  --danger: #F02849;
+  --danger-light: #FBE7EA;
 
-  /* Ombres */
-  --shadow-sm: 0 1px 3px rgba(9,36,75,0.08);
-  --shadow: 0 4px 12px rgba(9,36,75,0.08);
-  --shadow-lg: 0 12px 32px rgba(9,36,75,0.12);
-  --shadow-primary: 0 4px 16px rgba(9,36,75,0.15);
+  /* Ombres Social Media */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.12), 0 8px 8px rgba(0, 0, 0, 0.08);
+  --shadow-primary: 0 4px 16px rgba(9, 36, 75, 0.15);
 
-  /* Rayons */
+  /* Rayons Modernes */
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
@@ -50,16 +51,24 @@
   --radius-full: 9999px;
 
   /* Transitions */
-  --transition: 0.18s ease;
-  --transition-slow: 0.3s ease;
+  --transition: 0.2s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  --transition-slow: 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
 
   /* Typographie */
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Syne', sans-serif;
+  --font-body: 'Inter', 'DM Sans', sans-serif;
 
   /* Layout */
-  --sidebar-width: 260px;
-  --header-height: 64px;
+  --sidebar-width: 280px;
+  --header-height: 60px;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 html, body {
@@ -119,40 +128,57 @@ img {
   background: var(--text-muted);
 }
 
-/* ── Utilitaires ───────────────────────────── */
+/* ── HMI Components ─────────────────────────── */
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--primary-light);
+  border-top-color: var(--secondary);
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-body);
-  font-size: 14px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
-  transition: all var(--transition);
+  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
   white-space: nowrap;
+  user-select: none;
 }
+.btn:active { transform: scale(0.97); }
+.btn-lg { padding: 14px 28px; font-size: 16px; border-radius: var(--radius); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
 
 .btn-primary {
   background: var(--primary);
-  color: #fff;
-  box-shadow: var(--shadow-primary);
+  color: white;
+  box-shadow: 0 4px 14px rgba(9, 36, 75, 0.2);
 }
 .btn-primary:hover {
-  background: var(--primary-dark);
+  background: var(--secondary);
+  box-shadow: 0 6px 20px rgba(24, 119, 242, 0.3);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(59,108,248,0.35);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
 }
 .btn-ghost:hover {
-  background: var(--bg-alt);
-  border-color: var(--primary);
-  color: var(--primary);
+  background: var(--bg);
+  border-color: var(--text-muted);
+  color: var(--text);
 }
 
 .btn-accent {
