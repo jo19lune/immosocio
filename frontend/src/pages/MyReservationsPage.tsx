@@ -102,7 +102,10 @@ export default function MyReservationsPage() {
                 <div className="ma-card-body">
                   <div className="ma-card-info">
                     <h3 className="ma-card-title">{res.annonce.titre}</h3>
-                    <p className="ma-card-location">📍 {res.annonce.ville} | Du {new Date(res.dateDebut).toLocaleDateString()} au {new Date(res.dateFin).toLocaleDateString()}</p>
+                    <p className="ma-card-location">
+                      <img src={homeLineSvg} alt="" width={14} style={{ opacity: 0.5, marginRight: 6 }} />
+                      {res.annonce.ville} | Du {new Date(res.dateDebut).toLocaleDateString()} au {new Date(res.dateFin).toLocaleDateString()}
+                    </p>
                     <div className="ma-card-meta">
                       <span>📦 Quantité : {res.quantite}</span>
                       <span>💰 Total : {Number(res.prixTotal).toLocaleString('fr-FR')} Ar</span>

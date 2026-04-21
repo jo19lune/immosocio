@@ -1,0 +1,92 @@
+:root {
+  /* ─── GRADIENT PRINCIPAL ───────────────────────────────────────────────────── */
+  --gradient-bg: linear-gradient(135deg, #485563 0%, #29323c 100%);
+  --gradient-alt: linear-gradient(180deg, #29323c 0%, #485563 100%);
+  
+  /* ─── PALETTE 1: SOCIAL LIFESTYLE (Étudiants) - Indigo & Corail ────────────── */
+  --palette1-primary: #4F46E5;   /* Indigo Moderne */
+  --palette1-primary-light: #EEF2FF;
+  --palette1-accent: #F43F5E;    /* Rose Corail */
+  --palette1-accent-light: #FFE4EB;
+  --palette1-bg: #FFFFFF;
+  --palette1-surface: #F3F4F6;   /* Gris Clair */
+  --palette1-text: #1F2937;
+  --palette1-muted: #9CA3AF;
+
+  /* ─── PALETTE 2: ÉVASION & VOYAGE (Touristes) - Turquoise & Sable ──────────── */
+  --palette2-primary: #0891B2;   /* Turquoise Océan */
+  --palette2-primary-light: #E0F7FA;
+  --palette2-accent: #F59E0B;    /* Ambre */
+  --palette2-accent-light: #FFFBEB;
+  --palette2-bg: #F9FAFB;        /* Givre */
+  --palette2-surface: #FFFFFF;
+  --palette2-text: #111827;      /* Bleu Nuit */
+  --palette2-muted: #6B7280;
+
+  /* ─── PALETTE 3: COMMUNAUTÉ URBAINE (Colocation) - Menthe & Anthracite ────── */
+  --palette3-primary: #10B981;   /* Vert Menthe */
+  --palette3-primary-light: #D1FAE5;
+  --palette3-accent: #3B82F6;    /* Bleu Brillant */
+  --palette3-accent-secondary: #EC4899; /* Rose Vif */
+  --palette3-bg: #1F2937;        /* Dark Mode */
+  --palette3-surface: #111827;   /* Plus sombre */
+  --palette3-text: #F3F4F6;
+  --palette3-muted: #9CA3AF;
+
+  /* ─── COULEURS ACTIVES (Par défaut: Palette 1 Social Lifestyle) ────────────── */
+  --bg: #FFFFFF;
+  --bg-alt: #F3F4F6;
+  --surface: #FFFFFF;
+  --surface-2: #F3F4F6;
+  --border: #E5E7EB;
+  --border-focus: #4F46E5;
+
+  /* Couleurs primaires dynamiques */
+  --primary: #4F46E5;
+  --primary-rgb: 79, 70, 229;
+  --primary-light: #EEF2FF;
+  --primary-dark: #3730A3;
+  --secondary: #F43F5E;
+  --accent: #F43F5E;
+  --accent-light: #FFE4EB;
+
+  /* Texte optimisé */
+  --text: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --text-inverse: #FFFFFF;
+
+  /* États */
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FFFBEB;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+
+  /* Ombres Modernes */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+  --shadow-lg: 0 12px 28px rgba(79, 70, 229, 0.12), 0 8px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1);
+
+  /* Rayons Modernes */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* Transitions Fluides */
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Typographie Moderne */
+  --font-display: 'Inter', 'Syne', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* Layout */
+  --sidebar-width: 280px;
+  --header-height: 60px;
+}

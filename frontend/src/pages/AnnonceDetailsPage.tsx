@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
+import Lightbox from '../components/Lightbox';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import homeLineSvg from '../assets/home_1_line.svg';
 import messengerLineSvg from '../assets/messenger_line.svg';
 import shareForwardLineSvg from '../assets/share_forward_line.svg';
+import thumbUpLineSvg from '../assets/thumb_up_line.svg';
 import './AnnoncesPage.css';
 
 export default function AnnonceDetailsPage() {
@@ -16,6 +18,7 @@ export default function AnnonceDetailsPage() {
   const [annonce, setAnnonce] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [showLightbox, setShowLightbox] = useState(false);
 
   useEffect(() => {
     fetchAnnonce();
@@ -61,7 +64,11 @@ export default function AnnonceDetailsPage() {
           
           {/* Galerie Images */}
           <div className="annonce-gallery">
-            <div className="active-photo-wrapper card" style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden', marginBottom: '12px' }}>
+            <div 
+              className="active-photo-wrapper card" 
+              onClick={() => photos.length > 0 && setShowLightbox(true)}
+              style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden', marginBottom: '12px', cursor: 'zoom-in' }}
+            >
               {photos.length > 0 ? (
                 <img src={photos[activeImg]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
@@ -148,6 +155,16 @@ export default function AnnonceDetailsPage() {
         </div>
       </div>
       
+      {showLightbox && (
+        <Lightbox 
+          images={photos}
+          currentIndex={activeImg}
+          onClose={() => setShowLightbox(false)}
+          onNext={() => setActiveImg((prev) => (prev + 1) % photos.length)}
+          onPrev={() => setActiveImg((prev) => (prev - 1 + photos.length) % photos.length)}
+        />
+      )}
+
       <style>{`
         @media (max-width: 800px) {
           .annonce-details-grid { grid-template-columns: 1fr !important; }

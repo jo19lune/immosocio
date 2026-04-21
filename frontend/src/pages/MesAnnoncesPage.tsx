@@ -126,21 +126,30 @@ export default function MesAnnoncesPage() {
                 </div>
 
                 <div className="ma-card-body">
-                  <div className="ma-card-info">
-                    <h3 className="ma-card-title">{a.titre}</h3>
-                    <p className="ma-card-location">
-                      📍 {a.ville}{a.pays ? `, ${a.pays}` : ''}
-                    </p>
-                    <div className="ma-card-meta">
-                      {a.nombrePieces && (
-                        <span>🛏 {a.nombrePieces} pièce{a.nombrePieces > 1 ? 's' : ''}</span>
-                      )}
-                      {a.superficie && <span>📐 {a.superficie} m²</span>}
+                    <div className="ma-card-info">
+                      <h3 className="ma-card-title">{a.titre}</h3>
+                      <p className="ma-card-location">
+                        <img src={homeLineSvg} alt="" width={14} style={{ opacity: 0.5, marginRight: 6 }} />
+                        {a.ville}{a.pays ? `, ${a.pays}` : ''}
+                      </p>
+                      <div className="ma-card-meta">
+                        {a.nombrePieces && (
+                          <span>
+                            <img src={homeLineSvg} alt="" width={14} style={{ opacity: 0.5, marginRight: 4 }} />
+                            {a.nombrePieces} pièce{a.nombrePieces > 1 ? 's' : ''}
+                          </span>
+                        )}
+                        {a.superficie && (
+                          <span>
+                            <img src={homeLineSvg} alt="" width={14} style={{ opacity: 0.5, marginRight: 4 }} />
+                            {a.superficie} m²
+                          </span>
+                        )}
+                      </div>
+                      <p className="ma-card-prix">
+                        {Number(a.prix).toLocaleString('fr-FR')} Ar
+                      </p>
                     </div>
-                    <p className="ma-card-prix">
-                      {Number(a.prix).toLocaleString('fr-FR')} Ar
-                    </p>
-                  </div>
 
                   <div className="ma-card-actions">
                     <button
