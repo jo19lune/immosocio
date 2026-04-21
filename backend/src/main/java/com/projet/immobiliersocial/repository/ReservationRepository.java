@@ -30,8 +30,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END
         FROM Reservation r
         WHERE r.annonce.id = :annonceId
-          AND r.statut IN :statuts
-          AND NOT (r.dateFin < :debut OR r.dateDebut > :fin)
+        AND r.statut IN :statuts
+        AND NOT (r.dateFin < :debut OR r.dateDebut > :fin)
     """)
     boolean existsConflict(
         @Param("annonceId") Long annonceId,

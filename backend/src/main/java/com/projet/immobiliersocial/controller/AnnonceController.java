@@ -72,11 +72,14 @@ public class AnnonceController {
 
     /**
      * Recherche multicritère des annonces disponibles.
+     * Utilise des JPA Specifications pour contourner le bug Hibernate 6
+     * lié au IS NULL sur des paramètres de type enum dans les requêtes JPQL nommées.
      *
-     * @param ville   filtre partiel sur la ville (insensible à la casse, optionnel)
-     * @param type    type de logement (optionnel)
-     * @param prixMin prix minimum (optionnel)
-     * @param prixMax prix maximum (optionnel)
+     * @param ville      filtre partiel sur la ville (insensible à la casse, optionnel)
+     * @param type       type de logement (optionnel)
+     * @param prixMin    prix minimum (optionnel)
+     * @param prixMax    prix maximum (optionnel)
+     * @param superficie superficie minimale en m² (optionnel)
      */
     @GetMapping("/recherche")
     public ResponseEntity<Page<Annonce>> rechercher(
@@ -84,30 +87,60 @@ public class AnnonceController {
             @RequestParam(required = false) TypeLogement type,
             @RequestParam(required = false) BigDecimal prixMin,
             @RequestParam(required = false) BigDecimal prixMax,
+            @RequestParam(required = false) Double superficie,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
 
-        Specification<Annonce> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(root.get("statut").in(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU));
-            
-            if (ville != null && !ville.isEmpty()) {
-                predicates.add(cb.like(cb.lower(root.get("ville")), "%" + ville.toLowerCase() + "%"));
-            }
-            if (type != null) {
-                predicates.add(cb.equal(root.get("typeLogement"), type));
-            }
-            if (prixMin != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("prix"), prixMin));
-            }
-            if (prixMax != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("prix"), prixMax));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-        return ResponseEntity.ok(annonceRepository.findAll(spec, pageable));
+            // Construction dynamique via Specification — robuste avec Hibernate 6
+            Specification<Annonce> spec = (root, query, cb) -> {
+                List<Predicate> predicates = new ArrayList<>();
+
+                // Filtre statut : uniquement DISPONIBLE et SUSPENDU
+                predicates.add(root.get("statut").in(
+                    List.of(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU)
+                ));
+
+                // Filtre ville (LIKE insensible à la casse)
+                if (ville != null && !ville.isBlank()) {
+                    predicates.add(cb.like(
+                        cb.lower(root.get("ville")),
+                        "%" + ville.toLowerCase() + "%"
+                    ));
+                }
+
+                // Filtre type de logement (enum — pas de IS NULL JPQL)
+                if (type != null) {
+                    predicates.add(cb.equal(root.get("typeLogement"), type));
+                }
+
+                // Filtre prix minimum
+                if (prixMin != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("prix"), prixMin));
+                }
+
+                // Filtre prix maximum
+                if (prixMax != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("prix"), prixMax));
+                }
+
+                // Filtre superficie minimale
+                if (superficie != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("superficie"), superficie));
+                }
+
+                return cb.and(predicates.toArray(new Predicate[0]));
+            };
+
+            Page<Annonce> result = annonceRepository.findAll(spec, pageable);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("Erreur lors de la recherche d'annonces", e);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Erreur lors de la recherche : " + e.getMessage());
+        }
     }
 
     /**
@@ -118,9 +151,111 @@ public class AnnonceController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Annonce> getAnnonce(@PathVariable Long id) {
-        Annonce annonce = annonceRepository.findById(id)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
-        return ResponseEntity.ok(annonce);
+        try {
+            Annonce annonce = annonceRepository.findByIdWithDetails(id)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
+            return ResponseEntity.ok(annonce);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération de l'annonce {}", id, e);
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors de la récupération de l'annonce");
+        }
+    }
+
+    // ─── Segments d'utilisateurs ──────────────────────────────────────────────
+
+    /**
+     * Annonces adaptées aux étudiants : studios et petits apparts à prix réduit.
+     * Palette Social Lifestyle (Indigo & Corail)
+     */
+    @GetMapping("/segment/etudiants")
+    public ResponseEntity<Page<Annonce>> annoncesEtudiants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "600") BigDecimal prixMax) {
+
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("prix").ascending());
+            Page<Annonce> result = annonceRepository.findAnnoncesEtudiants(
+                prixMax,
+                List.of(StatutAnnonce.DISPONIBLE),
+                pageable
+            );
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des annonces pour étudiants", e);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Erreur lors de la recherche d'annonces");
+        }
+    }
+
+    /**
+     * Annonces adaptées aux touristes/vacanciers : hôtels et chambres meublées.
+     * Palette Évasion & Voyage (Turquoise & Sable)
+     */
+    @GetMapping("/segment/touristes")
+    public ResponseEntity<Page<Annonce>> annoncesTouristes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
+            Page<Annonce> result = annonceRepository.findAnnoncesTouristes(
+                List.of(StatutAnnonce.DISPONIBLE),
+                pageable
+            );
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des annonces pour touristes", e);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Erreur lors de la recherche d'annonces");
+        }
+    }
+
+    /**
+     * Annonces pour colocation : appartements avec plusieurs pièces.
+     * Palette Communauté Urbaine (Menthe & Anthracite)
+     */
+    @GetMapping("/segment/colocation")
+    public ResponseEntity<Page<Annonce>> annoncesColocation(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "3") Integer minPieces) {
+
+        try {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
+            Page<Annonce> result = annonceRepository.findAnnoncesColocation(
+                minPieces,
+                List.of(StatutAnnonce.DISPONIBLE),
+                pageable
+            );
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des annonces pour colocation", e);
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Erreur lors de la recherche d'annonces");
+        }
+    }
+
+    /**
+     * Annonces suivies par l'utilisateur connecté.
+     */
+    @GetMapping("/suivi/mes-suivis")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<Annonce>> mesSuivisAnnonces(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+
+        try {
+            Utilisateur user = resolveUtilisateur(userDetails);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
+            Page<Annonce> result = annonceRepository.findFollowedByUtilisateur(user, pageable);
+            return ResponseEntity.ok(result);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Erreur lors de la récupération des annonces suivies", e);
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors de la récupération des annonces suivies");
+        }
     }
 
     // ─── Annonces du propriétaire connecté ───────────────────────────────────
