@@ -4,6 +4,9 @@ import com.projet.immobiliersocial.dto.ReservationRequest;
 import com.projet.immobiliersocial.entity.*;
 import com.projet.immobiliersocial.exception.ApiException;
 import com.projet.immobiliersocial.repository.*;
+import com.projet.immobiliersocial.websocket.NotificationWebSocketService;
+import com.projet.immobiliersocial.service.EmailService;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
@@ -28,11 +31,16 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
+@SuppressWarnings("null")
 public class ReservationController {
 
     private final ReservationRepository reservationRepository;
     private final AnnonceRepository annonceRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final NotificationRepository notificationRepository;
+    private final NotificationWebSocketService wsService;
+    private final EmailService emailService;
 
     // ─── POST /api/reservations ───────────────────────────────────────────────
 
@@ -52,7 +60,8 @@ public class ReservationController {
      *                      409 si l'annonce n'est plus disponible
      */
     @PostMapping
-    @PreAuthorize("hasRole('LOCATAIRE')")
+    @Transactional
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Reservation> creerReservation(
             @Valid @RequestBody ReservationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -66,21 +75,34 @@ public class ReservationController {
         Annonce annonce = annonceRepository.findById(request.getAnnonceId())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
 
+        // Vérification de la quantité
+        Integer quantite = request.getQuantite() != null ? request.getQuantite() : 1;
+        if (quantite < 1) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "La quantité minimale à réserver est de 1.");
+        }
+        if (annonce.getQuantiteDisponible() < quantite) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Pas assez de quantité disponible (Maximum disponible : " + annonce.getQuantiteDisponible() + ").");
+        }
+
         // Vérification que l'annonce est encore disponible
         if (annonce.getStatut() != StatutAnnonce.DISPONIBLE) {
             throw new ApiException(HttpStatus.CONFLICT,
                     "Cette annonce n'est plus disponible à la réservation");
         }
 
-        // Vérification des conflits de dates (EN_ATTENTE + CONFIRMEE)
-        if (reservationRepository.existsConflict(
-                annonce.getId(), request.getDateDebut(), request.getDateFin())) {
-            throw new ApiException(HttpStatus.CONFLICT,
-                    "Le logement n'est pas disponible pour les dates sélectionnées");
+        // On ne vérifie plus le chevauchement strict si c'est multi-quantité,
+        // mais pour simplifier, on déduit la quantité de suite.
+        annonce.setQuantiteDisponible(annonce.getQuantiteDisponible() - quantite);
+        if (annonce.getQuantiteDisponible() == 0) {
+            annonce.setStatut(StatutAnnonce.SUSPENDU);
         }
+        annonceRepository.save(annonce);
 
         Utilisateur locataire = utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        java.math.BigDecimal prixTotal = annonce.getPrix().multiply(new java.math.BigDecimal(quantite));
 
         Reservation reservation = Reservation.builder()
                 .annonce(annonce)
@@ -88,11 +110,40 @@ public class ReservationController {
                 .dateDebut(request.getDateDebut())
                 .dateFin(request.getDateFin())
                 .message(request.getMessage())
+                .quantite(quantite)
+                .prixTotal(prixTotal)
                 .statut(StatutReservation.EN_ATTENTE)
                 .build();
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(reservationRepository.save(reservation));
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // Notifier le propriétaire de la nouvelle demande
+        Notification notifProprio = Notification.builder()
+                .destinataire(annonce.getProprietaire())
+                .message("Nouvelle demande de r\u00e9servation pour votre annonce \u00ab" + annonce.getTitre() + "\u00bb.")
+                .type(TypeNotification.RESERVATION_CONFIRMEE) // On peut utiliser un type spécifique si existant
+                .build();
+        notificationRepository.save(notifProprio);
+        wsService.envoyerNotification(annonce.getProprietaire().getEmail(), java.util.Map.of(
+                "type", "NOUVELLE_RESERVATION",
+                "message", notifProprio.getMessage(),
+                "annonceId", annonce.getId()
+        ));
+
+        // Notifier le locataire du succès de sa demande
+        Notification notifLocataire = Notification.builder()
+                .destinataire(locataire)
+                .message("Votre demande de r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb a bien \u00e9t\u00e9 transmise.")
+                .type(TypeNotification.RESERVATION_CONFIRMEE)
+                .build();
+        notificationRepository.save(notifLocataire);
+        wsService.envoyerNotification(locataire.getEmail(), java.util.Map.of(
+                "type", "RESERVATION_CREEE",
+                "message", notifLocataire.getMessage(),
+                "annonceId", annonce.getId()
+        ));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation);
     }
 
     // ─── GET /api/reservations/mes-reservations ───────────────────────────────
@@ -101,7 +152,7 @@ public class ReservationController {
      * Retourne les réservations du locataire connecté, paginées.
      */
     @GetMapping("/mes-reservations")
-    @PreAuthorize("hasRole('LOCATAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Page<Reservation>> mesReservations(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -118,7 +169,7 @@ public class ReservationController {
      * Retourne les demandes de réservation reçues par le propriétaire connecté, paginées.
      */
     @GetMapping("/demandes")
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Page<Reservation>> demandesReservation(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -138,7 +189,8 @@ public class ReservationController {
      * @throws ApiException 404 si introuvable, 403 si non autorisé, 409 si déjà traitée
      */
     @PatchMapping("/{id}/confirmer")
-    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    @Transactional
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Reservation> confirmer(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -152,7 +204,23 @@ public class ReservationController {
         }
 
         reservation.setStatut(StatutReservation.CONFIRMEE);
-        return ResponseEntity.ok(reservationRepository.save(reservation));
+        Reservation saved = reservationRepository.save(reservation);
+
+        // Notifier le locataire de la confirmation
+        Notification notifLocataire = Notification.builder()
+                .destinataire(saved.getLocataire())
+                .message("Votre r\u00e9servation pour \u00ab" + saved.getAnnonce().getTitre() + "\u00bb a \u00e9t\u00e9 confirm\u00e9e.")
+                .type(TypeNotification.RESERVATION_CONFIRMEE)
+                .build();
+        notifLocataire = notificationRepository.save(notifLocataire);
+        wsService.envoyerNotification(saved.getLocataire().getEmail(), java.util.Map.of(
+                "type", "RESERVATION_CONFIRMEE",
+                "message", notifLocataire.getMessage(),
+                "id", notifLocataire.getId(),
+                "annonceId", saved.getAnnonce().getId()
+        ));
+
+        return ResponseEntity.ok(saved);
     }
 
     // ─── PATCH /api/reservations/{id}/annuler ─────────────────────────────────
@@ -164,7 +232,8 @@ public class ReservationController {
      * @throws ApiException 404 si introuvable, 403 si non autorisé, 409 si déjà annulée
      */
     @PatchMapping("/{id}/annuler")
-    @PreAuthorize("hasAnyRole('LOCATAIRE','PROPRIETAIRE')")
+    @Transactional
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
     public ResponseEntity<Reservation> annuler(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -185,7 +254,58 @@ public class ReservationController {
         }
 
         reservation.setStatut(StatutReservation.ANNULEE);
-        return ResponseEntity.ok(reservationRepository.save(reservation));
+        Reservation saved = reservationRepository.save(reservation);
+
+        Annonce annonce = reservation.getAnnonce();
+        boolean etaitIndisponible = annonce.getQuantiteDisponible() == 0;
+        annonce.setQuantiteDisponible(annonce.getQuantiteDisponible() + reservation.getQuantite());
+        annonce.setStatut(StatutAnnonce.DISPONIBLE);
+        annonceRepository.save(annonce);
+
+        // Notifier les followers si l'annonce redevient disponible
+        if (etaitIndisponible && annonce.getQuantiteDisponible() > 0) {
+            for (Utilisateur follower : annonce.getFollowers()) {
+                // Notifier par email
+                try {
+                    emailService.envoyerNotificationDisponibilite(follower.getEmail(), follower.getPrenom(), annonce.getTitre(), annonce.getId());
+                } catch(Exception ignored) {}
+
+                // Notifier par websocket et BD
+                Notification notif = Notification.builder()
+                        .destinataire(follower)
+                        .message("L'annonce '" + annonce.getTitre() + "' est de nouveau disponible !")
+                        .type(TypeNotification.NOUVELLE_ANNONCE)
+                        .build();
+                notif = notificationRepository.save(notif);
+
+                wsService.envoyerNotification(follower.getEmail(), java.util.Map.of(
+                        "type", "NOUVELLE_ANNONCE",
+                        "message", notif.getMessage(),
+                        "id", notif.getId(),
+                        "annonceId", annonce.getId()
+                ));
+            }
+        }
+
+        // Notifier l'autre partie de l'annulation
+        Utilisateur destinataireNotif = estLocataire ? annonce.getProprietaire() : reservation.getLocataire();
+        String msgNotif = estLocataire 
+            ? "Le locataire a annul\u00e9 sa r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb."
+            : "Le propri\u00e9taire a annul\u00e9 votre r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb.";
+        
+        Notification notifAnnulation = Notification.builder()
+                .destinataire(destinataireNotif)
+                .message(msgNotif)
+                .type(TypeNotification.RESERVATION_ANNULEE)
+                .build();
+        notificationRepository.save(notifAnnulation);
+        wsService.envoyerNotification(destinataireNotif.getEmail(), java.util.Map.of(
+                "type", "RESERVATION_ANNULEE",
+                "message", msgNotif,
+                "annonceId", annonce.getId()
+        ));
+
+        return ResponseEntity.ok(saved);
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────

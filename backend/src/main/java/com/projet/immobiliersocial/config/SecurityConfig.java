@@ -32,6 +32,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final AppProperties appProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -67,8 +68,8 @@ public class SecurityConfig {
                 // géré par @PreAuthorize dans MessageController
 
                 // ── Rôles spécifiques ──────────────────────────────────────
-                .requestMatchers("/api/annonces/mes-annonces/**").hasRole("PROPRIETAIRE")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/annonces/mes-annonces/**").hasAnyRole("PROPRIETAIRE", "LOCATAIRE", "SUPERADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
 
                 // ── Tout le reste : authentifié ────────────────────────────
                 .anyRequest().authenticated()
@@ -81,11 +82,18 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowedOrigins = appProperties.getUrls();
+
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        // Utiliser setAllowedOriginPatterns pour supporter les wildcards de sous-domaines
+        // tout en restant compatible avec allowCredentials=true.
+        config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

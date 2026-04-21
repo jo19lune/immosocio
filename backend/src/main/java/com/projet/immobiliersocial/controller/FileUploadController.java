@@ -36,6 +36,7 @@ import java.util.Map;
 @RequestMapping("/api/upload")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@SuppressWarnings("null")
 public class FileUploadController {
 
     private final LocalFileStorageService storageService;

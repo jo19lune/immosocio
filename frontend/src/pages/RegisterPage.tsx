@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../lib/api';
+import Logo from '../components/Logo';
+import homeLineSvg from '../assets/home_1_line.svg';
+import userLineSvg from '../assets/user_1_line.svg';
 import './AuthPages.css';
 
 type Role = 'LOCATAIRE' | 'PROPRIETAIRE';
@@ -14,6 +18,7 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [success, setSuccess] = useState('');
   const [showPwd, setShowPwd] = useState(false);
 
@@ -23,6 +28,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
     if (form.motDePasse !== form.confirm) {
       setError('Les mots de passe ne correspondent pas.');
       return;
@@ -43,7 +49,13 @@ export default function RegisterPage() {
       });
       setSuccess('Inscription réussie ! Vérifiez votre email pour activer votre compte.');
     } catch (err: any) {
-      setError(err.response?.data || 'Une erreur est survenue.');
+      if (err.response?.data?.champs) {
+        setFieldErrors(err.response.data.champs);
+      } else if (err.response?.data?.erreur) {
+        setError(err.response.data.erreur);
+      } else {
+        setError('Une erreur est survenue.');
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +65,13 @@ export default function RegisterPage() {
     return (
       <div className="auth-page">
         <div className="auth-right" style={{ margin: 'auto' }}>
-          <div className="auth-card card" style={{ textAlign: 'center' }}>
+          <motion.div 
+            className="auth-card card" 
+            style={{ textAlign: 'center' }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
             <h2 className="auth-title">Vérifiez votre email</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{success}</p>
@@ -61,7 +79,7 @@ export default function RegisterPage() {
               onClick={() => navigate('/login')}>
               Aller à la connexion
             </button>
-          </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -71,7 +89,7 @@ export default function RegisterPage() {
     <div className="auth-page">
       <div className="auth-left">
         <div className="auth-brand">
-          <span className="auth-brand-icon">🏡</span>
+          <Logo size={36} showText={false} />
           <span className="auth-brand-name">ImmoSocial</span>
         </div>
         <h1 className="auth-tagline">Rejoignez<br />la communauté<br /><span>immobilière</span></h1>
@@ -83,7 +101,7 @@ export default function RegisterPage() {
             className={`role-card ${form.role === 'LOCATAIRE' ? 'active' : ''}`}
             onClick={() => setForm((f) => ({ ...f, role: 'LOCATAIRE' }))}
           >
-            <span>🔑</span>
+            <img src={userLineSvg} alt="" width={24} height={24} />
             <div>
               <strong>Locataire</strong>
               <p>Je cherche un logement</p>
@@ -93,7 +111,7 @@ export default function RegisterPage() {
             className={`role-card ${form.role === 'PROPRIETAIRE' ? 'active' : ''}`}
             onClick={() => setForm((f) => ({ ...f, role: 'PROPRIETAIRE' }))}
           >
-            <span>🏠</span>
+            <img src={homeLineSvg} alt="" width={24} height={24} />
             <div>
               <strong>Propriétaire</strong>
               <p>Je propose un logement</p>
@@ -103,7 +121,12 @@ export default function RegisterPage() {
       </div>
 
       <div className="auth-right">
-        <div className="auth-card card">
+        <motion.div 
+          className="auth-card card"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <h2 className="auth-title">Créer un compte</h2>
           <p className="auth-desc">Rejoignez ImmoSocial gratuitement</p>
 
@@ -113,26 +136,30 @@ export default function RegisterPage() {
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Prénom</label>
-                <input type="text" className="form-input" placeholder="Marie" value={form.prenom}
+                <input type="text" className={`form-input ${fieldErrors.prenom ? 'input-error' : ''}`} placeholder="Marie" value={form.prenom}
                   onChange={set('prenom')} required autoFocus />
+                {fieldErrors.prenom && <span className="error-text">{fieldErrors.prenom}</span>}
               </div>
               <div className="form-group">
                 <label className="form-label">Nom</label>
-                <input type="text" className="form-input" placeholder="Dupont" value={form.nom}
+                <input type="text" className={`form-input ${fieldErrors.nom ? 'input-error' : ''}`} placeholder="Dupont" value={form.nom}
                   onChange={set('nom')} required />
+                {fieldErrors.nom && <span className="error-text">{fieldErrors.nom}</span>}
               </div>
             </div>
 
             <div className="form-group">
               <label className="form-label">Email</label>
-              <input type="email" className="form-input" placeholder="vous@exemple.com" value={form.email}
+              <input type="email" className={`form-input ${fieldErrors.email ? 'input-error' : ''}`} placeholder="vous@exemple.com" value={form.email}
                 onChange={set('email')} required />
+              {fieldErrors.email && <span className="error-text">{fieldErrors.email}</span>}
             </div>
 
             <div className="form-group">
               <label className="form-label">Téléphone</label>
-              <input type="tel" className="form-input" placeholder="+261 32 00 000 00" value={form.telephone}
+              <input type="tel" className={`form-input ${fieldErrors.telephone ? 'input-error' : ''}`} placeholder="+261 32 00 000 00" value={form.telephone}
                 onChange={set('telephone')} />
+              {fieldErrors.telephone && <span className="error-text">{fieldErrors.telephone}</span>}
             </div>
 
             <div className="form-group">
@@ -140,11 +167,13 @@ export default function RegisterPage() {
               <div className="role-toggle">
                 <button type="button" className={`role-btn ${form.role === 'LOCATAIRE' ? 'active' : ''}`}
                   onClick={() => setForm((f) => ({ ...f, role: 'LOCATAIRE' }))}>
-                  🔑 Locataire
+                  <img src={userLineSvg} alt="" width={16} height={16} style={{ marginRight: 6, filter: form.role === 'LOCATAIRE' ? 'brightness(0) invert(1)' : 'none' }} />
+                  Locataire
                 </button>
                 <button type="button" className={`role-btn ${form.role === 'PROPRIETAIRE' ? 'active' : ''}`}
                   onClick={() => setForm((f) => ({ ...f, role: 'PROPRIETAIRE' }))}>
-                  🏠 Propriétaire
+                  <img src={homeLineSvg} alt="" width={16} height={16} style={{ marginRight: 6, filter: form.role === 'PROPRIETAIRE' ? 'brightness(0) invert(1)' : 'none' }} />
+                  Propriétaire
                 </button>
               </div>
             </div>
@@ -152,13 +181,14 @@ export default function RegisterPage() {
             <div className="form-group">
               <label className="form-label">Mot de passe</label>
               <div className="password-field">
-                <input type={showPwd ? 'text' : 'password'} className="form-input"
+                <input type={showPwd ? 'text' : 'password'} className={`form-input ${fieldErrors.motDePasse ? 'input-error' : ''}`}
                   placeholder="Min. 8 caractères" value={form.motDePasse}
                   onChange={set('motDePasse')} required minLength={8} />
                 <button type="button" className="pwd-toggle" onClick={() => setShowPwd(!showPwd)}>
                   {showPwd ? '🙈' : '👁️'}
                 </button>
               </div>
+              {fieldErrors.motDePasse && <span className="error-text">{fieldErrors.motDePasse}</span>}
             </div>
 
             <div className="form-group">
@@ -179,7 +209,7 @@ export default function RegisterPage() {
             Déjà un compte ?{' '}
             <Link to="/login" style={{ fontWeight: 600 }}>Se connecter</Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

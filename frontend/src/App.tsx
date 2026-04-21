@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { initTheme } from './lib/theme';
 
 // Pages publiques
 import PublicFeedPage from './pages/PublicFeedPage';
@@ -10,6 +11,7 @@ import AnnoncesPage from './pages/AnnoncesPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import AnnonceDetailsPage from './pages/AnnonceDetailsPage';
 
 // Pages membres
 import FeedPage from './pages/FeedPage';
@@ -20,6 +22,10 @@ import ProfilPage from './pages/ProfilPage';
 import CreateAnnoncePage from './pages/CreateAnnoncePage';
 import MesAnnoncesPage from './pages/MesAnnoncesPage';
 import EditAnnoncePage from './pages/EditAnnoncePage';
+import SuperadminDashboard from './pages/SuperadminDashboard';
+import CreateReservationPage from './pages/CreateReservationPage';
+import MyReservationsPage from './pages/MyReservationsPage';
+import ReservationDemandsPage from './pages/ReservationDemandsPage';
 
 // Guard routes privées
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -47,6 +53,7 @@ function AppRoutes() {
       {/* ── Pages publiques ─────────────────────────── */}
       <Route path="/" element={<PublicFeedPage />} />
       <Route path="/annonces" element={<AnnoncesPage />} />
+      <Route path="/annonces/:id" element={<AnnonceDetailsPage />} />
 
       <Route path="/login" element={
         <PublicRoute><LoginPage /></PublicRoute>
@@ -92,6 +99,18 @@ function AppRoutes() {
       <Route path="/mes-annonces/:id/modifier" element={
         <PrivateRoute><EditAnnoncePage /></PrivateRoute>
       } />
+      <Route path="/reservations/nouvelle" element={
+        <PrivateRoute><CreateReservationPage /></PrivateRoute>
+      } />
+      <Route path="/mes-reservations" element={
+        <PrivateRoute><MyReservationsPage /></PrivateRoute>
+      } />
+      <Route path="/demandes-reservations" element={
+        <PrivateRoute><ReservationDemandsPage /></PrivateRoute>
+      } />
+      <Route path="/admin/dashboard" element={
+        <PrivateRoute><SuperadminDashboard /></PrivateRoute>
+      } />
 
       {/* ── Fallback ─────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -99,9 +118,16 @@ function AppRoutes() {
   );
 }
 
+import { Toaster } from 'react-hot-toast';
+
 export default function App() {
+  useEffect(() => {
+    initTheme();
+  }, []);
+
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -7,59 +7,108 @@
 }
 
 :root {
-  /* Palette principale */
-  --bg: #F4F5F7;
-  --bg-alt: #ECEEF2;
+  /* ─── GRADIENT PRINCIPAL ───────────────────────────────────────────────────── */
+  --gradient-bg: linear-gradient(135deg, #485563 0%, #29323c 100%);
+  --gradient-alt: linear-gradient(180deg, #29323c 0%, #485563 100%);
+  
+  /* ─── PALETTE 1: SOCIAL LIFESTYLE (Étudiants) - Indigo & Corail ────────────── */
+  --palette1-primary: #4F46E5;   /* Indigo Moderne */
+  --palette1-primary-light: #EEF2FF;
+  --palette1-accent: #F43F5E;    /* Rose Corail */
+  --palette1-accent-light: #FFE4EB;
+  --palette1-bg: #FFFFFF;
+  --palette1-surface: #F3F4F6;   /* Gris Clair */
+  --palette1-text: #1F2937;
+  --palette1-muted: #9CA3AF;
+
+  /* ─── PALETTE 2: ÉVASION & VOYAGE (Touristes) - Turquoise & Sable ──────────── */
+  --palette2-primary: #0891B2;   /* Turquoise Océan */
+  --palette2-primary-light: #E0F7FA;
+  --palette2-accent: #F59E0B;    /* Ambre */
+  --palette2-accent-light: #FFFBEB;
+  --palette2-bg: #F9FAFB;        /* Givre */
+  --palette2-surface: #FFFFFF;
+  --palette2-text: #111827;      /* Bleu Nuit */
+  --palette2-muted: #6B7280;
+
+  /* ─── PALETTE 3: COMMUNAUTÉ URBAINE (Colocation) - Menthe & Anthracite ────── */
+  --palette3-primary: #10B981;   /* Vert Menthe */
+  --palette3-primary-light: #D1FAE5;
+  --palette3-accent: #3B82F6;    /* Bleu Brillant */
+  --palette3-accent-secondary: #EC4899; /* Rose Vif */
+  --palette3-bg: #1F2937;        /* Dark Mode */
+  --palette3-surface: #111827;   /* Plus sombre */
+  --palette3-text: #F3F4F6;
+  --palette3-muted: #9CA3AF;
+
+  /* ─── COULEURS ACTIVES (Par défaut: Palette 1 Social Lifestyle) ────────────── */
+  --bg: #FFFFFF;
+  --bg-alt: #F3F4F6;
   --surface: #FFFFFF;
-  --surface-2: #F9FAFB;
-  --border: #E2E5EC;
-  --border-focus: #3B6CF8;
+  --surface-2: #F3F4F6;
+  --border: #E5E7EB;
+  --border-focus: #4F46E5;
 
-  /* Couleurs primaires */
-  --primary: #3B6CF8;
-  --primary-dark: #2855D4;
+  /* Couleurs primaires dynamiques */
+  --primary: #4F46E5;
+  --primary-rgb: 79, 70, 229;
   --primary-light: #EEF2FF;
-  --accent: #FF6B35;
-  --accent-light: #FFF1EC;
+  --primary-dark: #3730A3;
+  --secondary: #F43F5E;
+  --accent: #F43F5E;
+  --accent-light: #FFE4EB;
 
-  /* Texte */
-  --text: #1A1D29;
-  --text-secondary: #5C637A;
+  /* Texte optimisé */
+  --text: #1F2937;
+  --text-secondary: #6B7280;
   --text-muted: #9CA3AF;
   --text-inverse: #FFFFFF;
 
   /* États */
   --success: #10B981;
-  --success-light: #ECFDF5;
+  --success-light: #D1FAE5;
   --warning: #F59E0B;
   --warning-light: #FFFBEB;
   --danger: #EF4444;
-  --danger-light: #FEF2F2;
+  --danger-light: #FEE2E2;
 
-  /* Ombres */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-primary: 0 4px 16px rgba(59,108,248,0.25);
+  /* Ombres Modernes */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+  --shadow-lg: 0 12px 28px rgba(79, 70, 229, 0.12), 0 8px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.1);
 
-  /* Rayons */
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Rayons Modernes */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
-  /* Transitions */
-  --transition: 0.18s ease;
-  --transition-slow: 0.3s ease;
+  /* Transitions Fluides */
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Typographie */
-  --font-display: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  /* Typographie Moderne */
+  --font-display: 'Montserrat', 'Inter', 'Syne', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-social: 'Inter', 'Montserrat', sans-serif;
+
+  /* Gradient Primaire */
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
 
   /* Layout */
-  --sidebar-width: 260px;
-  --header-height: 64px;
+  --sidebar-width: 280px;
+  --header-height: 60px;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 html, body {
@@ -82,10 +131,11 @@ body {
 a {
   color: var(--primary);
   text-decoration: none;
+  transition: color var(--transition);
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--primary-dark);
 }
 
 button {
@@ -93,6 +143,7 @@ button {
   border: none;
   background: none;
   font-family: var(--font-body);
+  transition: all var(--transition);
 }
 
 input, textarea, select {
@@ -101,75 +152,116 @@ input, textarea, select {
 
 img {
   max-width: 100%;
+  display: block;
 }
 
 /* ── Scrollbar ─────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
 
-/* ── Utilitaires ───────────────────────────── */
+/* ── Loader Animé ──────────────────────────── */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--primary-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Boutons Fluides et Modernes ────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 10px 20px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-body);
+  border-radius: var(--radius-lg);
+  font-weight: 500;
   font-size: 14px;
-  font-weight: 600;
   transition: all var(--transition);
+  cursor: pointer;
+  border: none;
   white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:active { transform: scale(0.95); }
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+
+.btn-lg { 
+  padding: 14px 28px; 
+  font-size: 16px; 
+  border-radius: var(--radius-xl);
+  font-weight: 600;
+}
+
+.btn-sm { 
+  padding: 6px 12px; 
+  font-size: 12px;
+  border-radius: var(--radius);
 }
 
 .btn-primary {
   background: var(--primary);
-  color: #fff;
-  box-shadow: var(--shadow-primary);
+  color: white;
+  box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
 }
-.btn-primary:hover {
+
+.btn-primary:hover:not(:disabled) {
   background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(59,108,248,0.35);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.4);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
 }
-.btn-ghost:hover {
+
+.btn-ghost:hover:not(:disabled) {
   background: var(--bg-alt);
-  border-color: var(--primary);
-  color: var(--primary);
+  border-color: var(--text-muted);
+  color: var(--text);
 }
 
 .btn-accent {
   background: var(--accent);
-  color: #fff;
+  color: white;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.3);
 }
-.btn-accent:hover {
-  background: #e05d28;
-  transform: translateY(-1px);
+
+.btn-accent:hover:not(:disabled) {
+  background: #EC2D5E;
+  box-shadow: 0 8px 20px rgba(244, 63, 94, 0.4);
 }
 
 .btn-danger {
   background: var(--danger);
-  color: #fff;
+  color: white;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
 }
-.btn-danger:hover {
-  background: #dc2626;
+
+.btn-danger:hover:not(:disabled) {
+  background: #DC2626;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
 }
 
 .btn-sm {
@@ -298,4 +390,94 @@ textarea.form-input {
   background: var(--danger);
   border-radius: 50%;
   border: 1.5px solid var(--surface);
+}
+
+/* ── Logo text ─────────────────────────────── */
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ── Mode sombre (Palette 3: Communauté Urbaine - Menthe & Anthracite) ──────── */
+[data-theme="dark"] {
+  --bg: #111827;
+  --bg-alt: #1A2435;
+  --surface: #1F2937;
+  --surface-2: #243347;
+  --border: #2D3D52;
+  --border-focus: #10B981;
+
+  /* Palette 3: Vert Menthe comme primaire */
+  --primary: #10B981;
+  --primary-rgb: 16, 185, 129;
+  --primary-dark: #059669;
+  --primary-light: #0D2E22;
+
+  /* Bleu Brillant comme accent */
+  --accent: #3B82F6;
+  --accent-light: #0E1F3D;
+
+  /* Rose Vif pour boutons d'engagement fort */
+  --btn-dispute: #EC4899;
+  --btn-dispute-glow: rgba(236, 72, 153, 0.35);
+
+  --text: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --text-inverse: #111827;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow: 0 4px 14px rgba(16, 185, 129, 0.15);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+  --gradient-primary: linear-gradient(135deg, #10B981, #3B82F6);
+}
+
+[data-theme="dark"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme="dark"] .card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .form-input {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .form-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+[data-theme="dark"] .btn-ghost {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .btn-ghost:hover {
+  background: var(--surface-2);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+[data-theme="dark"] .logo-text {
+  color: var(--text);
+}
+
+/* Bouton dispute / engagement fort - Rose Vif (Palette 3) */
+.btn-dispute {
+  background: var(--btn-dispute, #EC4899);
+  color: white;
+  box-shadow: 0 4px 14px var(--btn-dispute-glow, rgba(236, 72, 153, 0.3));
+}
+.btn-dispute:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 8px 20px var(--btn-dispute-glow, rgba(236, 72, 153, 0.45));
 }

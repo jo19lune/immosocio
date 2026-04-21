@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { onNotification } from '../lib/websocket';
+import messengerLineSvg from '../assets/messenger_line.svg';
+import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
 import './MessagesPage.css';
 
 interface UserInfo {
@@ -177,7 +179,7 @@ export default function MessagesPage() {
 
           {!loadingConvs && filtered.length === 0 && (
             <div className="conv-empty">
-              <span>💬</span>
+              <img src={messengerLineSvg} alt="" width={48} height={48} style={{ opacity: 0.3, marginBottom: 8 }} />
               <p>Aucune conversation</p>
             </div>
           )}
@@ -216,7 +218,7 @@ export default function MessagesPage() {
         <div className="chat-area">
           {!activeUser ? (
             <div className="chat-empty">
-              <span style={{ fontSize: 56 }}>💬</span>
+              <img src={messengerLineSvg} alt="" width={64} height={64} style={{ opacity: 0.3, marginBottom: 16 }} />
               <h3>Vos messages</h3>
               <p>Sélectionnez une conversation pour commencer</p>
             </div>
@@ -278,7 +280,11 @@ export default function MessagesPage() {
                   className="btn btn-primary chat-send-btn"
                   disabled={!text.trim() || sending}
                 >
-                  {sending ? <span className="spinner" style={{ width: 16, height: 16 }} /> : '➤'}
+                  {sending ? (
+                    <span className="spinner" style={{ width: 16, height: 16 }} />
+                  ) : (
+                    <img src={sendPlaneFillSvg} alt="Envoyer" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} />
+                  )}
                 </button>
               </form>
             </>

@@ -2,6 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api, { uploadImage } from '../lib/api';
+import settingsLineSvg from '../assets/settings_1_line.svg';
+import closeLineSvg from '../assets/close_line.svg';
+import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
 import './CreateAnnoncePage.css';
 
 export default function EditAnnoncePage() {
@@ -10,7 +13,7 @@ export default function EditAnnoncePage() {
 
   const [form, setForm] = useState({
     titre: '', description: '', adresse: '', ville: '', pays: 'Madagascar',
-    prix: '', nombrePieces: '', superficie: '', typeLogement: 'APPARTEMENT'
+    prix: '', nombrePieces: '', superficie: '', typeLogement: 'APPARTEMENT', quantiteDisponible: '1'
   });
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -33,6 +36,7 @@ export default function EditAnnoncePage() {
           nombrePieces: data.nombrePieces != null ? String(data.nombrePieces) : '',
           superficie: data.superficie != null ? String(data.superficie) : '',
           typeLogement: data.typeLogement || 'APPARTEMENT',
+          quantiteDisponible: data.quantiteDisponible != null ? String(data.quantiteDisponible) : '1',
         });
         setPhotos(data.photos || []);
       } catch {
@@ -74,11 +78,16 @@ export default function EditAnnoncePage() {
         prix: Number(form.prix),
         nombrePieces: form.nombrePieces ? parseInt(form.nombrePieces) : null,
         superficie: form.superficie ? parseFloat(form.superficie) : null,
+        quantiteDisponible: form.quantiteDisponible ? parseInt(form.quantiteDisponible) : 1,
         photos,
       });
       navigate('/mes-annonces');
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data || 'Erreur lors de la modification.');
+      const errorData = err.response?.data;
+      const errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : (errorData?.message || errorData?.erreur || 'Erreur lors de la modification.');
+      setError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -98,7 +107,9 @@ export default function EditAnnoncePage() {
     <AppLayout>
       <div className="create-annonce-container">
         <div className="card create-annonce-card">
-          <h2 style={{ marginBottom: '24px' }}>✏️ Modifier l'annonce</h2>
+          <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src={settingsLineSvg} alt="" width={24} height={24} /> Modifier l'annonce
+          </h2>
           {error && <div className="auth-error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="create-annonce-form">
@@ -153,6 +164,10 @@ export default function EditAnnoncePage() {
                 <label className="form-label">Superficie (m²)</label>
                 <input type="number" className="form-input" min={1} step="0.1" value={form.superficie} onChange={set('superficie')} placeholder="Ex: 50" />
               </div>
+              <div className="form-group">
+                <label className="form-label">Quantité dispo.</label>
+                <input type="number" className="form-input" min={1} value={form.quantiteDisponible} onChange={set('quantiteDisponible')} placeholder="Ex: 1" />
+              </div>
             </div>
 
             <div className="form-group">
@@ -161,7 +176,9 @@ export default function EditAnnoncePage() {
                 {photos.map((url, idx) => (
                   <div key={idx} className="photo-preview">
                     <img src={url} alt="Aperçu" className="preview-img" />
-                    <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>✕</button>
+                    <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>
+                      <img src={closeLineSvg} alt="" width={12} height={12} style={{ filter: 'brightness(0) invert(1)' }} />
+                    </button>
                   </div>
                 ))}
                 {photos.length < 10 && (
@@ -175,8 +192,10 @@ export default function EditAnnoncePage() {
 
             <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button type="button" className="btn btn-ghost" onClick={() => navigate('/mes-annonces')} disabled={submitting}>Annuler</button>
-              <button type="submit" className="btn btn-primary" disabled={submitting || uploading}>
-                {submitting ? 'Enregistrement...' : '💾 Enregistrer les modifications'}
+              <button type="submit" className="btn btn-primary" disabled={submitting || uploading} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                {submitting ? 'Enregistrement...' : (
+                  <><img src={sendPlaneFillSvg} alt="" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} /> Enregistrer les modifications</>
+                )}
               </button>
             </div>
           </form>

@@ -1,79 +1,107 @@
-.profil-page { max-width: 680px; margin: 0 auto; }
+.profil-page {
+  animation: fadeIn 0.5s ease-out;
+}
 
 .profil-banner {
-  margin-bottom: 20px;
-  overflow: visible;
   position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
 }
 
 .profil-banner-bg {
-  height: 120px;
-  background: linear-gradient(135deg, #1a2e6f, #3B6CF8, #FF6B35);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  height: 180px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  position: relative;
+}
+.profil-banner-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 86c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm66 3c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-40-57c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm29 59c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
 }
 
 .profil-info {
+  padding: 0 32px 32px;
   display: flex;
   align-items: flex-end;
-  gap: 16px;
-  padding: 0 20px 20px;
-  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: -48px;
 }
 
 .profil-avatar {
-  border-radius: 50%;
   border: 4px solid var(--surface);
-  margin-top: -48px;
-  object-fit: cover;
-  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   box-shadow: var(--shadow);
+  z-index: 5;
 }
 
 .profil-meta {
   flex: 1;
-  min-width: 0;
-  padding-top: 12px;
+  padding-bottom: 8px;
 }
 
 .profil-name {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--text);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
-.profil-role { margin-bottom: 8px; }
+.profil-role {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
 
 .profil-stats {
   font-size: 14px;
   color: var(--text-secondary);
 }
-.profil-stats strong { color: var(--text); }
+.profil-stats strong { color: var(--text); font-weight: 700; }
 
 .profil-actions {
-  padding-top: 12px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.profil-publications { }
+.profil-publications {
+  max-width: 720px;
+  margin: 0 auto;
+}
 
 .profil-pubs-title {
   font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: var(--text);
+  padding-left: 4px;
 }
 
 .profil-empty {
-  padding: 48px;
+  padding: 64px 32px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   color: var(--text-muted);
 }
 
-@media (max-width: 480px) {
-  .profil-info { flex-direction: column; align-items: flex-start; }
+@media (max-width: 768px) {
+  .profil-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 20px 24px;
+    margin-top: -60px;
+  }
+  .profil-avatar { width: 120px; height: 120px; }
+  .profil-actions { width: 100%; justify-content: center; }
 }

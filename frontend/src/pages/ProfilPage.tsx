@@ -4,11 +4,16 @@ import AppLayout from '../components/layout/AppLayout';
 import PublicationCard from '../components/publications/PublicationCard';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
+import homeLineSvg from '../assets/home_1_line.svg';
+import settingsLineSvg from '../assets/settings_1_line.svg';
+import messengerLineSvg from '../assets/messenger_line.svg';
+import announcementLineSvg from '../assets/announcement_line.svg';
+import userLineSvg from '../assets/user_1_line.svg';
 import './ProfilPage.css';
 
 export default function ProfilPage() {
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, switchRole } = useAuth();
   const navigate = useNavigate();
   const [profil, setProfil] = useState<any>(null);
   const [publications, setPublications] = useState<any[]>([]);
@@ -70,8 +75,14 @@ export default function ProfilPage() {
                 {displayUser?.prenom} {displayUser?.nom}
               </h1>
               {user?.role && isOwnProfile && (
-                <span className="badge badge-primary profil-role">
-                  {user.role === 'PROPRIETAIRE' ? '🏠 Propriétaire' : user.role === 'ADMIN' ? '⚙️ Admin' : '🔑 Locataire'}
+                <span className="badge badge-primary profil-role" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {user.role === 'PROPRIETAIRE' ? (
+                    <><img src={homeLineSvg} alt="" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} /> Propriétaire</>
+                  ) : user.role === 'ADMIN' ? (
+                    <><img src={settingsLineSvg} alt="" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} /> Admin</>
+                  ) : (
+                    <><img src={userLineSvg} alt="" width={14} height={14} style={{ filter: 'brightness(0) invert(1)' }} /> Locataire</>
+                  )}
                 </span>
               )}
               <p className="profil-stats">
@@ -80,13 +91,22 @@ export default function ProfilPage() {
             </div>
             <div className="profil-actions">
               {isOwnProfile ? (
-                <button className="btn btn-ghost" onClick={() => navigate('/parametres')}>
-                  ✏️ Modifier le profil
-                </button>
+                <>
+                  <button className="btn btn-ghost" onClick={() => navigate('/parametres')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <img src={settingsLineSvg} alt="" width={16} height={16} /> Modifier le profil
+                  </button>
+                  {user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN' && (
+                    <button className="btn btn-secondary" onClick={() => switchRole()} style={{ marginLeft: 8 }}>
+                      🔄 Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Propriétaire'}
+                    </button>
+                  )}
+                </>
               ) : user ? (
                 <button className="btn btn-primary"
-                  onClick={() => navigate(`/messages/${userId}`)}>
-                  ✉️ Envoyer un message
+                  onClick={() => navigate(`/messages/${userId}`)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                >
+                  <img src={messengerLineSvg} alt="" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} /> Envoyer un message
                 </button>
               ) : null}
             </div>
@@ -99,7 +119,7 @@ export default function ProfilPage() {
 
           {publications.length === 0 && (
             <div className="profil-empty card">
-              <span style={{ fontSize: 40 }}>📝</span>
+              <img src={announcementLineSvg} alt="" width={48} height={48} style={{ opacity: 0.3, marginBottom: 12 }} />
               <p>{isOwnProfile ? 'Vous n\'avez pas encore publié.' : 'Aucune publication.'}</p>
               {isOwnProfile && (
                 <button className="btn btn-primary" onClick={() => navigate('/feed')}>

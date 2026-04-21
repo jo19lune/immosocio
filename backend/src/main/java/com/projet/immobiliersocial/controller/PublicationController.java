@@ -33,6 +33,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/publications")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class PublicationController {
 
     private final PublicationRepository publicationRepository;
@@ -40,6 +41,7 @@ public class PublicationController {
     private final CommentaireRepository commentaireRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final AnnonceRepository annonceRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationWebSocketService wsService;
 
     // ─── GET /api/publications ────────────────────────────────────────────────
@@ -161,7 +163,8 @@ public class PublicationController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Publication introuvable"));
 
         boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                            || a.getAuthority().equals("ROLE_SUPERADMIN"));
 
         if (!isAdmin && !publication.getAuteur().getEmail().equals(userDetails.getUsername())) {
             throw new ApiException(HttpStatus.FORBIDDEN,
@@ -203,9 +206,17 @@ public class PublicationController {
         long total = likeRepository.countByPublication(pub);
 
         if (liked && !pub.getAuteur().getEmail().equals(userDetails.getUsername())) {
+            Notification notification = Notification.builder()
+                    .destinataire(pub.getAuteur())
+                    .message(user.getNom() + " a aimé votre publication")
+                    .type(TypeNotification.NOUVEAU_LIKE)
+                    .build();
+            notification = notificationRepository.save(notification);
+
             wsService.envoyerNotification(pub.getAuteur().getEmail(), Map.of(
                     "type", "NOUVEAU_LIKE",
-                    "message", user.getNom() + " a aimé votre publication",
+                    "message", notification.getMessage(),
+                    "id", notification.getId(),
                     "publicationId", id
             ));
         }
@@ -271,9 +282,17 @@ public class PublicationController {
         Commentaire saved = commentaireRepository.save(commentaire);
 
         if (!pub.getAuteur().getEmail().equals(userDetails.getUsername())) {
+            Notification notification = Notification.builder()
+                    .destinataire(pub.getAuteur())
+                    .message(auteur.getNom() + " a commenté votre publication")
+                    .type(TypeNotification.NOUVEAU_COMMENTAIRE)
+                    .build();
+            notification = notificationRepository.save(notification);
+
             wsService.envoyerNotification(pub.getAuteur().getEmail(), Map.of(
                     "type", "NOUVEAU_COMMENTAIRE",
-                    "message", auteur.getNom() + " a commenté votre publication",
+                    "message", notification.getMessage(),
+                    "id", notification.getId(),
                     "publicationId", id
             ));
         }

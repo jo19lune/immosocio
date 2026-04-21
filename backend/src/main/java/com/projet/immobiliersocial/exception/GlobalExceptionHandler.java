@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 @Slf4j
+@SuppressWarnings("null")
 public class GlobalExceptionHandler {
 
     // ─── ApiException (erreurs métier explicites) ─────────────────────────────

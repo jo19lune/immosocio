@@ -1,5 +1,21 @@
 .annonces-page { }
 
+.page-header {
+  margin-bottom: 32px;
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.page-subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin-top: 4px;
+}
+
 .filters-bar {
   padding: 20px;
   margin-bottom: 20px;
@@ -46,15 +62,19 @@
   flex-direction: column;
   transition: all var(--transition-slow);
   overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
 }
 .annonce-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(9,36,75,0.12);
+  border-color: var(--primary-light);
 }
 
 .annonce-card-img {
   position: relative;
-  height: 190px;
+  aspect-ratio: 16/10;
+  height: auto;
   background: var(--bg-alt);
   overflow: hidden;
 }
@@ -65,77 +85,188 @@
   transition: transform 0.4s ease;
 }
 .annonce-card:hover .annonce-card-img img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
-.annonce-img-placeholder {
-  width: 100%;
-  height: 100%;
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 52px;
-  color: var(--text-muted);
-  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-alt) 100%);
+  font-size: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+  z-index: 5;
+  transition: all 0.2s;
 }
-.annonce-type-badge {
+.carousel-btn:hover { background: rgba(255,255,255,0.4); }
+.carousel-btn.prev { left: 8px; }
+.carousel-btn.next { right: 8px; }
+
+.carousel-dots {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  background: rgba(0,0,0,0.6);
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 5;
+}
+.carousel-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transition: all 0.2s;
+}
+.carousel-dots .dot.active {
+  background: white;
+  width: 12px;
+  border-radius: 3px;
+}
+
+.photos-count {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.5);
   color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
   backdrop-filter: blur(4px);
 }
 
+.badge-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .annonce-card-body {
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: 6px;
 }
+
+.annonce-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .annonce-card-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.3;
+  flex: 1;
+}
+
+.annonce-card-prix {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.annonce-card-prix small { font-size: 12px; opacity: 0.7; }
+
+.annonce-card-location {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.annonce-card-meta {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--bg-alt);
+  border-bottom: 1px solid var(--bg-alt);
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.meta-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.meta-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.annonce-card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.annonce-card-location {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-.annonce-card-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-.annonce-card-desc {
-  font-size: 13px;
-  color: var(--text-secondary);
-  line-height: 1.55;
-  flex: 1;
-}
+
 .annonce-card-footer {
+  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+  gap: 12px;
 }
-.annonce-card-prix {
-  font-size: 17px;
-  font-weight: 800;
-  font-family: var(--font-display);
-  color: var(--primary);
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+}
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-alt);
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.icon-btn:hover { background: var(--border); }
+.icon-btn.active { background: var(--primary-light); border-color: var(--primary); }
+
+.footer-main-btn {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 @media (max-width: 600px) {

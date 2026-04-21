@@ -1,80 +1,76 @@
 import { useEffect, useState } from 'react';
 import AppLayout from '../components/layout/AppLayout';
-import PublicationCard from '../components/publications/PublicationCard';
-import CreatePublication from '../components/publications/CreatePublication';
+import { AnnonceCard } from './AnnoncesPage';
 import api from '../lib/api';
+import announcementLineSvg from '../assets/announcement_line.svg';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import './FeedPage.css';
 
 export default function FeedPage() {
-  const [publications, setPublications] = useState<any[]>([]);
+  const [annonces, setAnnonces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    fetchPublications(0, true);
-  }, []);
-
-  const fetchPublications = async (p: number, reset = false) => {
+  const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
     try {
-      const { data } = await api.get(`/publications?page=${p}&size=10`);
+      const { data } = await api.get(`/annonces?page=${p}&size=10`);
       const items = data.content || [];
-      setPublications((prev) => reset ? items : [...prev, ...items]);
+      setAnnonces((prev) => reset ? items : [...prev, ...items]);
       setHasMore(!data.last);
     } catch { /* silencieux */ }
     finally { setLoading(false); }
   };
 
-  const handleCreated = (pub: any) => {
-    setPublications((prev) => [pub, ...prev]);
-  };
+  const fetchPosts = () => fetchAnnonces(0, true);
 
-  const handleDelete = (id: number) => {
-    setPublications((prev) => prev.filter((p) => p.id !== id));
-  };
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
-  const handleUpdate = (updated: any) => {
-    setPublications((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
-  };
+  useAutoRefresh(fetchPosts);
 
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    fetchPublications(next);
+    fetchAnnonces(next);
   };
 
   return (
     <AppLayout>
       <div className="feed-page">
-        <CreatePublication onCreated={handleCreated} />
+        <h1 className="feed-title">Découvrir les nouveautés</h1>
 
-        {loading && publications.length === 0 && (
+        {loading && annonces.length === 0 && (
           <div className="feed-center">
             <div className="spinner" />
             <span>Chargement du fil…</span>
           </div>
         )}
 
-        {!loading && publications.length === 0 && (
+        {!loading && annonces.length === 0 && (
           <div className="feed-empty card">
-            <span style={{ fontSize: 48 }}>📭</span>
-            <p>Aucune publication pour le moment. Soyez le premier à partager !</p>
+            <img src={announcementLineSvg} alt="Fil vide" width={64} height={64} />
+            <h3>Rien à voir ici</h3>
+            <p>Aucune annonce pour le moment. Soyez le premier à en publier !</p>
           </div>
         )}
 
-        {publications.map((pub) => (
-          <PublicationCard key={pub.id} publication={pub} onDelete={handleDelete} onUpdate={handleUpdate} />
+        {annonces.map((annonce) => (
+          <div key={annonce.id} className="feed-item-wrapper">
+            <AnnonceCard annonce={annonce} onToggleSuivre={fetchPosts} />
+          </div>
         ))}
 
         {hasMore && !loading && (
           <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}
             onClick={loadMore}>
-            Charger plus
+            Charger plus d'annonces
           </button>
         )}
 
-        {loading && publications.length > 0 && (
+        {loading && annonces.length > 0 && (
           <div className="feed-center"><div className="spinner" /></div>
         )}
       </div>

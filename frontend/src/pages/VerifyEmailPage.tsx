@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../lib/api';
 import './AuthPages.css';
 
@@ -22,11 +23,16 @@ export default function VerifyEmailPage() {
     const verify = async () => {
       try {
         const { data } = await api.get(`/auth/verify-email?token=${token}`);
-        setSuccess(data || 'Email vérifié avec succès.');
+        // Add a small delay for better UX
+        setTimeout(() => {
+          setSuccess(data || 'Email vérifié avec succès.');
+          setLoading(false);
+        }, 1500);
       } catch (err: any) {
-        setError(err.response?.data?.message || err.response?.data || 'Token invalide ou expiré.');
-      } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setError(err.response?.data?.message || err.response?.data || 'Token invalide ou expiré.');
+          setLoading(false);
+        }, 1500);
       }
     };
 
@@ -36,22 +42,34 @@ export default function VerifyEmailPage() {
   return (
     <div className="auth-page">
       <div className="auth-right" style={{ margin: 'auto' }}>
-        <div className="auth-card card" style={{ textAlign: 'center' }}>
+        <motion.div 
+          className="auth-card card" 
+          style={{ textAlign: 'center' }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
           {loading ? (
-            <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            >
               <div className="spinner" style={{ margin: '0 auto 24px', width: 48, height: 48, borderTopColor: 'var(--primary)' }} />
               <h2 className="auth-title">Vérification en cours...</h2>
               <p className="auth-desc">Veuillez patienter pendant la vérification de votre email.</p>
-            </>
+            </motion.div>
           ) : error ? (
-            <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            >
               <div style={{ fontSize: 56, marginBottom: 16 }}>❌</div>
               <h2 className="auth-title">Erreur de vérification</h2>
               <p className="auth-error" style={{ marginBottom: 24, textAlign: 'center' }}>{error}</p>
               <Link to="/login" className="btn btn-primary" style={{ display: 'inline-block' }}>Retour à la connexion</Link>
-            </>
+            </motion.div>
           ) : (
-            <>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            >
               <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
               <h2 className="auth-title">Email vérifié !</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{success}</p>
@@ -62,9 +80,9 @@ export default function VerifyEmailPage() {
               >
                 Aller à la connexion
               </button>
-            </>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

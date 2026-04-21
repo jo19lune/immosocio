@@ -22,7 +22,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("""
         SELECT m FROM Message m
         WHERE (m.expediteur = :u1 AND m.destinataire = :u2)
-           OR (m.expediteur = :u2 AND m.destinataire = :u1)
+        OR (m.expediteur = :u2 AND m.destinataire = :u1)
     """)
     Page<Message> findConversation(
             @Param("u1") Utilisateur u1,
@@ -36,14 +36,14 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("""
         SELECT m FROM Message m
         WHERE (m.expediteur.id = :userId OR m.destinataire.id = :userId)
-          AND m.dateEnvoi = (
-              SELECT MAX(m2.dateEnvoi) FROM Message m2
-              WHERE (
-                  (m2.expediteur.id = m.expediteur.id AND m2.destinataire.id = m.destinataire.id)
-                  OR
-                  (m2.expediteur.id = m.destinataire.id AND m2.destinataire.id = m.expediteur.id)
-              )
-          )
+        AND m.dateEnvoi = (
+            SELECT MAX(m2.dateEnvoi) FROM Message m2
+            WHERE (
+                (m2.expediteur.id = m.expediteur.id AND m2.destinataire.id = m.destinataire.id)
+                OR
+                (m2.expediteur.id = m.destinataire.id AND m2.destinataire.id = m.expediteur.id)
+            )
+        )
         ORDER BY m.dateEnvoi DESC
     """)
     List<Message> findDerniersMessages(@Param("userId") Long userId);
@@ -67,8 +67,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("""
         UPDATE Message m SET m.lu = true
         WHERE m.destinataire = :destinataire
-          AND m.expediteur = :expediteur
-          AND m.lu = false
+        AND m.expediteur = :expediteur
+        AND m.lu = false
     """)
     void marquerConversationLue(
             @Param("destinataire") Utilisateur destinataire,
