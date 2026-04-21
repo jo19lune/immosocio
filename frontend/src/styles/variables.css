@@ -83,8 +83,12 @@
   --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Typographie Moderne */
-  --font-display: 'Inter', 'Syne', sans-serif;
+  --font-display: 'Montserrat', 'Inter', 'Syne', sans-serif;
   --font-body: 'Inter', sans-serif;
+  --font-social: 'Inter', 'Montserrat', sans-serif;
+
+  /* Gradient Primaire */
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
 
   /* Layout */
   --sidebar-width: 280px;

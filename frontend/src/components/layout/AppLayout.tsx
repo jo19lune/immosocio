@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { onNotification } from '../../lib/websocket';
@@ -51,33 +51,44 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    // ── Guard : ne rien fetcher si l'utilisateur n'est pas connecté ──────────
+    if (!user) return;
+
+    const controller = new AbortController();
+
     const fetchCounts = async () => {
       try {
         const [n, m] = await Promise.all([
-          api.get('/notifications/count'),
-          api.get('/messages/non-lus'),
+          api.get('/notifications/count', { signal: controller.signal }),
+          api.get('/messages/non-lus',    { signal: controller.signal }),
         ]);
-        setUnreadNotifs(n.data.nonLues || 0);
-        setUnreadMessages(m.data.nonLus || 0);
-      } catch { /* silencieux */ }
+        setUnreadNotifs(n.data.nonLues ?? 0);
+        setUnreadMessages(m.data.nonLus ?? 0);
+      } catch (err: any) {
+        // Ignorer les erreurs d'annulation (Strict Mode / démontage)
+        if (err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError') return;
+        // Silencieux pour les erreurs réseau de fond
+      }
     };
+
     fetchCounts();
-    const id = setInterval(fetchCounts, 30000);
-    
-    // Refresh auto sur notification WebSocket
+    intervalRef.current = setInterval(fetchCounts, 30000);
+
+    // Refresh sur notification WebSocket
     const unsub = onNotification((data) => {
       fetchCounts();
-      // On peut aussi émettre un événement global pour que les pages se rafraîchissent
       window.dispatchEvent(new CustomEvent('ws-refresh', { detail: data }));
     });
 
     return () => {
-      clearInterval(id);
+      controller.abort();
+      if (intervalRef.current) clearInterval(intervalRef.current);
       unsub();
     };
-  }, []);
+  }, [user]); // Re-exécuter uniquement quand l'état d'auth change
 
   const navItems: NavItem[] = [
     { path: '/feed',          iconLine: homeLineSvg,         iconFill: homeFillSvg,         label: "Fil d'actualité" },

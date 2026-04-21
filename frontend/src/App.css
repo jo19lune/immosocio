@@ -17,14 +17,14 @@
   color: white;
   background: var(--primary);
   border: none;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.2);
   transition: all var(--transition);
   margin-bottom: 24px;
 }
 
 .counter:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .counter:active {
@@ -118,7 +118,7 @@
   width: 100%;
   padding: 32px 24px;
   border-top: 1px solid var(--border);
-  background: rgba(79, 70, 229, 0.02);
+  background: rgba(var(--primary-rgb), 0.02);
 }
 
 #next-steps > div {

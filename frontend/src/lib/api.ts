@@ -10,6 +10,17 @@ const api = axios.create({
   timeout: 15000,
 });
 
+// ── Endpoints de fond qui ne doivent pas afficher de toast ───────────────────
+const SILENT_ENDPOINTS = [
+  '/notifications/count',
+  '/messages/non-lus',
+  '/parametres',
+];
+
+function isSilentEndpoint(url: string = ''): boolean {
+  return SILENT_ENDPOINTS.some(ep => url.includes(ep));
+}
+
 // ── Intercepteur requête — attache automatiquement le token JWT si présent ──
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -23,18 +34,46 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
+    // Ignorer les requêtes annulées (AbortController / Strict Mode)
+    if (error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError') {
+      return Promise.reject(error);
+    }
+
+    const status = error.response?.status;
+    const url: string = error.config?.url ?? '';
+
+    if (status === 401) {
+      // Token absent ou invalide → déconnexion forcée
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       delete api.defaults.headers.common['Authorization'];
       window.location.href = '/login';
-    } else if (error.response?.data?.erreur) {
-      toast.error(error.response.data.erreur);
-    } else if (error.response?.data?.message) {
-      toast.error(error.response.data.message);
-    } else if (error.message !== 'canceled') {
-      toast.error("Une erreur inattendue s'est produite");
+      return Promise.reject(error);
     }
+
+    if (status === 403) {
+      // Accès refusé. Si c'est un endpoint de fond (polling), on ignore silencieusement.
+      // Si c'est un endpoint d'authentification, on force la déconnexion.
+      if (!isSilentEndpoint(url)) {
+        // Afficher une erreur uniquement pour les actions explicites de l'utilisateur
+        const msg = error.response?.data?.erreur || error.response?.data?.message;
+        if (msg) toast.error(msg);
+        // Ne pas rediriger — laisser la page gérer l'état vide
+      }
+      return Promise.reject(error);
+    }
+
+    // Autres erreurs — afficher un toast sauf pour les endpoints silencieux
+    if (!isSilentEndpoint(url)) {
+      if (error.response?.data?.erreur) {
+        toast.error(error.response.data.erreur);
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.message && error.message !== 'canceled') {
+        toast.error("Une erreur inattendue s'est produite");
+      }
+    }
+
     return Promise.reject(error);
   }
 );

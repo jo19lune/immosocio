@@ -398,7 +398,7 @@
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
 }
 
 /* ─── PAGINATION ────────────────────────────────────────────────────────────── */
@@ -432,7 +432,7 @@
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
 }
 
 .pagination-item.disabled {

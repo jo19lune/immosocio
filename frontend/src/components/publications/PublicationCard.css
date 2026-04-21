@@ -1,7 +1,7 @@
 .pub-card {
   padding: 0;
   margin-bottom: 16px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
@@ -30,6 +30,7 @@
 }
 
 .pub-author-name {
+  font-family: var(--font-social);
   font-size: 15px;
   font-weight: 700;
   color: var(--text);
@@ -148,6 +149,7 @@
   justify-content: center;
   gap: 8px;
   padding: 10px;
+  font-family: var(--font-social);
   font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
@@ -155,7 +157,9 @@
   transition: all 0.2s;
 }
 .pub-action-btn:hover { background: var(--bg); color: var(--text); }
-.pub-action-btn.liked { color: var(--danger); }
+.pub-action-btn.liked {
+  color: var(--accent); /* Corail #F43F5E */
+}
 .pub-action-btn.liked img { filter: none !important; }
 
 /* ── Commentaires ───────────────────────────── */
@@ -171,12 +175,24 @@
 }
 .comment-bubble {
   background: var(--bg);
-  border-radius: 18px;
-  padding: 8px 16px;
+  border-radius: var(--radius-xl);
+  padding: 10px 16px;
   max-width: 85%;
+  border: 1px solid var(--border);
 }
-.comment-author { font-size: 13px; font-weight: 700; color: var(--text); margin-right: 6px; }
-.comment-text { font-size: 14px; color: var(--text); line-height: 1.4; }
+.comment-author {
+  font-family: var(--font-social);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-right: 6px;
+}
+.comment-text {
+  font-family: var(--font-social);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
 .comment-time { display: block; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
 .comment-form {
@@ -187,10 +203,16 @@
 }
 .comment-input {
   flex: 1;
+  font-family: var(--font-social) !important;
   background: var(--bg) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 20px !important;
+  border-radius: var(--radius-full) !important;
   padding: 10px 16px !important;
+}
+.comment-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-light) !important;
+  outline: none;
 }
 
 /* Animations */

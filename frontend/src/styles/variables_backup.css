@@ -222,12 +222,12 @@ img {
 .btn-primary {
   background: var(--primary);
   color: white;
-  box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-dark);
-  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.4);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
 }
 
 .btn-ghost {
