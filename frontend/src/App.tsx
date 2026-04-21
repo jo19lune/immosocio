@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AUTH_SESSION_EXPIRED_EVENT } from './lib/api';
 import { initTheme } from './lib/theme';
 
 // Pages publiques
@@ -120,6 +121,23 @@ function AppRoutes() {
 
 import { Toaster } from 'react-hot-toast';
 
+function AuthSessionRedirect() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      navigate('/login', { replace: true });
+    };
+
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 export default function App() {
   useEffect(() => {
     initTheme();
@@ -129,6 +147,7 @@ export default function App() {
     <BrowserRouter>
       <Toaster position="top-right" />
       <AuthProvider>
+        <AuthSessionRedirect />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>

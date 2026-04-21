@@ -6,7 +6,7 @@ import api from '../lib/api';
 import { onNotification } from '../lib/websocket';
 import messengerLineSvg from '../assets/messenger_line.svg';
 import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
-import './MessagesPage.css';
+import '../styles/pages/MessagesPage.css';
 
 interface UserInfo {
   id: number;

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api, { uploadImage } from '../../lib/api';
-import './CreatePublication.css';
+import '../../styles/components/publications/CreatePublication.css';
 
 interface Props {
   onCreated: (pub: any) => void;

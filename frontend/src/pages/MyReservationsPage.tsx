@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import homeLineSvg from '../assets/home_1_line.svg';
 import closeLineSvg from '../assets/close_line.svg';
-import checkFillSvg from '../assets/checkbox_circle_fill.svg';
-import './MesAnnoncesPage.css'; // On peut réutiliser les styles ou en créer de nouveaux
+import '../styles/pages/MesAnnoncesPage.css'; // On peut réutiliser les styles ou en créer de nouveaux
 
 interface Reservation {
   id: number;
@@ -97,7 +96,7 @@ export default function MyReservationsPage() {
             return (
               <div key={res.id} className="ma-card card">
                 <div className="ma-card-img">
-                  {img ? <img src={img} alt="" /> : <div className="ma-card-placeholder"><img src={homeLineSvg} width={32} opacity={0.3} /></div>}
+                  {img ? <img src={img} alt="" /> : <div className="ma-card-placeholder"><img src={homeLineSvg} width={32} style={{ opacity: 0.3 }} /></div>}
                 </div>
                 <div className="ma-card-body">
                   <div className="ma-card-info">

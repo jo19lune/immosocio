@@ -4,7 +4,7 @@ import Logo from '../Logo';
 import menuLineSvg  from '../../assets/menu_line.svg';
 import closeLineSvg from '../../assets/close_line.svg';
 import userLineSvg  from '../../assets/user_1_line.svg';
-import './PublicNavbar.css';
+import '../../styles/components/layout/PublicNavbar.css';
 
 export default function PublicNavbar() {
   const navigate = useNavigate();

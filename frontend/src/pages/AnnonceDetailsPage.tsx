@@ -8,8 +8,7 @@ import api from '../lib/api';
 import homeLineSvg from '../assets/home_1_line.svg';
 import messengerLineSvg from '../assets/messenger_line.svg';
 import shareForwardLineSvg from '../assets/share_forward_line.svg';
-import thumbUpLineSvg from '../assets/thumb_up_line.svg';
-import './AnnoncesPage.css';
+import '../styles/pages/AnnoncesPage.css';
 
 export default function AnnonceDetailsPage() {
   const { id } = useParams<{ id: string }>();

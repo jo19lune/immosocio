@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
-import './CreateAnnoncePage.css';
+import '../styles/pages/CreateAnnoncePage.css';
 
 export default function CreateReservationPage() {
   const navigate = useNavigate();

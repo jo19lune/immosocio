@@ -10,6 +10,14 @@ const api = axios.create({
   timeout: 15000,
 });
 
+export const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
+
+function clearStoredSession() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  delete api.defaults.headers.common['Authorization'];
+}
+
 // ── Endpoints de fond qui ne doivent pas afficher de toast ───────────────────
 const SILENT_ENDPOINTS = [
   '/notifications/count',
@@ -44,10 +52,8 @@ api.interceptors.response.use(
 
     if (status === 401) {
       // Token absent ou invalide → déconnexion forcée
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      delete api.defaults.headers.common['Authorization'];
-      window.location.href = '/login';
+      clearStoredSession();
+      window.dispatchEvent(new Event(AUTH_SESSION_EXPIRED_EVENT));
       return Promise.reject(error);
     }
 

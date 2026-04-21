@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
@@ -9,8 +9,7 @@ import shareForwardLineSvg  from '../assets/share_forward_line.svg';
 import thumbUpLineSvg       from '../assets/thumb_up_line.svg';
 import thumbUpFillSvg       from '../assets/thumb_up_fill.svg';
 import homeLineSvg          from '../assets/home_1_line.svg';
-import announcementLineSvg  from '../assets/announcement_line.svg';
-import './AnnoncesPage.css';
+import '../styles/pages/AnnoncesPage.css';
 
 interface Annonce {
   id: number;

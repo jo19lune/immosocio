@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
 import announcementLineSvg from '../assets/announcement_line.svg';
@@ -7,7 +7,7 @@ import closeLineSvg from '../assets/close_line.svg';
 import messengerLineSvg from '../assets/messenger_line.svg';
 import { Link } from 'react-router-dom';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import './MesAnnoncesPage.css';
+import '../styles/pages/MesAnnoncesPage.css';
 
 interface Reservation {
   id: number;

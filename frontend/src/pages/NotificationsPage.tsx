@@ -10,7 +10,7 @@ import notificationFillSvg from '../assets/notification_fill.svg';
 import notificationLineSvg from '../assets/notification_line.svg';
 import settingsLineSvg from '../assets/settings_1_line.svg';
 import closeLineSvg from '../assets/close_line.svg';
-import './NotificationsPage.css';
+import '../styles/pages/NotificationsPage.css';
 
 interface Notification {
   id: number;

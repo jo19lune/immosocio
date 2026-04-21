@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { onNotification } from '../../lib/websocket';
 import api from '../../lib/api';
 import Logo from '../Logo';
-import './AppLayout.css';
+import '../../styles/components/layout/AppLayout.css';
 
 // ── SVG assets ────────────────────────────────────────────────────────────────
 import homeLineSvg        from '../../assets/home_1_line.svg';

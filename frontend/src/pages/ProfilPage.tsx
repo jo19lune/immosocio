@@ -9,7 +9,7 @@ import settingsLineSvg from '../assets/settings_1_line.svg';
 import messengerLineSvg from '../assets/messenger_line.svg';
 import announcementLineSvg from '../assets/announcement_line.svg';
 import userLineSvg from '../assets/user_1_line.svg';
-import './ProfilPage.css';
+import '../styles/pages/ProfilPage.css';
 
 export default function ProfilPage() {
   const { userId } = useParams<{ userId: string }>();

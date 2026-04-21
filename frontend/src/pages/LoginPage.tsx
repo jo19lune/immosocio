@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../components/Logo';
-import './AuthPages.css';
+import '../styles/pages/AuthPages.css';
 
 export default function LoginPage() {
   const { login } = useAuth();

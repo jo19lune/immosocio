@@ -18,7 +18,7 @@ export function connectWebSocket(token: string) {
     connectHeaders: {
       Authorization: `Bearer ${token}`
     },
-    debug: (str) => {
+    debug: (_str) => {
       // console.log(str);
     },
     reconnectDelay: 5000,
@@ -26,7 +26,7 @@ export function connectWebSocket(token: string) {
     heartbeatOutgoing: 4000,
   });
 
-  stompClient.onConnect = (frame) => {
+  stompClient.onConnect = (_frame) => {
     console.log('WebSocket Connecté (STOMP)');
     
     // S'abonner aux notifications personnelles

@@ -9,7 +9,7 @@ import thumbUpFillSvg from '../../assets/thumb_up_fill.svg';
 import thumbUpLineSvg from '../../assets/thumb_up_line.svg';
 import commentLineSvg from '../../assets/comment_line.svg';
 import sendPlaneFillSvg from '../../assets/send_plane_fill.svg';
-import './PublicationCard.css';
+import '../../styles/components/publications/PublicationCard.css';
 
 interface Auteur {
   id: number;

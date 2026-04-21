@@ -5,7 +5,7 @@ import api, { uploadImage } from '../lib/api';
 import settingsLineSvg from '../assets/settings_1_line.svg';
 import closeLineSvg from '../assets/close_line.svg';
 import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
-import './CreateAnnoncePage.css';
+import '../styles/pages/CreateAnnoncePage.css';
 
 export default function EditAnnoncePage() {
   const { id } = useParams<{ id: string }>();
