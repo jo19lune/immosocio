@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Contrôleur REST pour la gestion des annonces immobilières.
@@ -59,11 +60,16 @@ public class AnnonceController {
     @GetMapping
     public ResponseEntity<Page<Annonce>> listerAnnonces(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(defaultValue = "12") int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-            return ResponseEntity.ok(annonceRepository.findByStatutIn(List.of(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU), pageable));
+            Utilisateur viewer = resolveUtilisateurOrNull(userDetails);
+            return ResponseEntity.ok(
+                    annonceRepository.findByStatutIn(List.of(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU), pageable)
+                            .map(annonce -> enrichAnnonce(annonce, viewer))
+            );
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des annonces", e);
             throw e;
@@ -89,7 +95,8 @@ public class AnnonceController {
             @RequestParam(required = false) BigDecimal prixMax,
             @RequestParam(required = false) Double superficie,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
+            @RequestParam(defaultValue = "12") int size,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
@@ -134,7 +141,9 @@ public class AnnonceController {
                 return cb.and(predicates.toArray(new Predicate[0]));
             };
 
-            Page<Annonce> result = annonceRepository.findAll(spec, pageable);
+            Utilisateur viewer = resolveUtilisateurOrNull(userDetails);
+            Page<Annonce> result = annonceRepository.findAll(spec, pageable)
+                    .map(annonce -> enrichAnnonce(annonce, viewer));
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {
@@ -150,11 +159,13 @@ public class AnnonceController {
      * @throws ApiException 404 si l'annonce n'existe pas
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Annonce> getAnnonce(@PathVariable Long id) {
+    public ResponseEntity<Annonce> getAnnonce(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Annonce annonce = annonceRepository.findByIdWithDetails(id)
                     .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Annonce introuvable"));
-            return ResponseEntity.ok(annonce);
+            return ResponseEntity.ok(enrichAnnonce(annonce, resolveUtilisateurOrNull(userDetails)));
         } catch (ApiException e) {
             throw e;
         } catch (Exception e) {
@@ -248,7 +259,8 @@ public class AnnonceController {
         try {
             Utilisateur user = resolveUtilisateur(userDetails);
             Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-            Page<Annonce> result = annonceRepository.findFollowedByUtilisateur(user, pageable);
+            Page<Annonce> result = annonceRepository.findFollowedByUtilisateur(user, pageable)
+                    .map(annonce -> enrichAnnonce(annonce, user));
             return ResponseEntity.ok(result);
         } catch (ApiException e) {
             throw e;
@@ -272,7 +284,10 @@ public class AnnonceController {
 
         Utilisateur proprietaire = resolveUtilisateur(userDetails);
         Pageable pageable = PageRequest.of(page, size, Sort.by("dateCreation").descending());
-        return ResponseEntity.ok(annonceRepository.findByProprietaire(proprietaire, pageable));
+        return ResponseEntity.ok(
+                annonceRepository.findByProprietaire(proprietaire, pageable)
+                        .map(annonce -> enrichAnnonce(annonce, proprietaire))
+        );
     }
 
     // ─── Écriture — PROPRIETAIRE ──────────────────────────────────────────────
@@ -312,7 +327,7 @@ public class AnnonceController {
             annonce.setStatut(StatutAnnonce.SUSPENDU);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(annonceRepository.save(annonce));
+        return ResponseEntity.status(HttpStatus.CREATED).body(enrichAnnonce(annonceRepository.save(annonce), proprietaire));
     }
 
     /**
@@ -355,7 +370,7 @@ public class AnnonceController {
             }
         }
 
-        return ResponseEntity.ok(annonceRepository.save(annonce));
+        return ResponseEntity.ok(enrichAnnonce(annonceRepository.save(annonce), resolveUtilisateur(userDetails)));
     }
 
     /**
@@ -404,16 +419,23 @@ public class AnnonceController {
 
         Utilisateur user = resolveUtilisateur(userDetails);
 
-        boolean isFollowing = annonce.getFollowers().contains(user);
+        Optional<Utilisateur> existingFollower = annonce.getFollowers().stream()
+                .filter(follower -> Objects.equals(follower.getId(), user.getId()))
+                .findFirst();
+        boolean isFollowing = existingFollower.isPresent();
         if (isFollowing) {
-            annonce.getFollowers().remove(user);
+            annonce.getFollowers().remove(existingFollower.get());
         } else {
             annonce.getFollowers().add(user);
         }
 
         annonceRepository.save(annonce);
 
-        return ResponseEntity.ok(java.util.Map.of("suivi", !isFollowing, "message", !isFollowing ? "Vous suivez cette annonce" : "Vous ne suivez plus cette annonce"));
+        return ResponseEntity.ok(java.util.Map.of(
+                "suivi", !isFollowing,
+                "followers", annonce.getFollowers().size(),
+                "message", !isFollowing ? "Vous suivez cette annonce" : "Vous ne suivez plus cette annonce"
+        ));
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────
@@ -429,6 +451,13 @@ public class AnnonceController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
     }
 
+    private Utilisateur resolveUtilisateurOrNull(UserDetails userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        return resolveUtilisateur(userDetails);
+    }
+
     /**
      * Vérifie que l'email du propriétaire de la ressource correspond à l'utilisateur connecté.
      *
@@ -441,5 +470,12 @@ public class AnnonceController {
             throw new ApiException(HttpStatus.FORBIDDEN,
                     "Vous n'êtes pas autorisé à modifier cette annonce");
         }
+    }
+    private Annonce enrichAnnonce(Annonce annonce, Utilisateur viewer) {
+        boolean suivi = viewer != null
+                && annonce.getFollowers().stream().anyMatch(follower -> Objects.equals(follower.getId(), viewer.getId()));
+        annonce.setSuivi(suivi);
+        annonce.setFollowerCount(annonce.getFollowers().size());
+        return annonce;
     }
 }

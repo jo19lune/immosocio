@@ -29,6 +29,9 @@ public class Notification {
     @Column(updatable = false)
     private LocalDateTime dateCreation;
 
+    @Column(name = "route_cible", length = 255)
+    private String routeCible;
+
     @PrePersist
     protected void onCreate() {
         dateCreation = LocalDateTime.now();

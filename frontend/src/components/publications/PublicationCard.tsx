@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faGlobe,
+  faLocationDot,
+  faPaperPlane,
+  faPenToSquare,
+  faTrashCan,
+  faUsers,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  faCommentDots as faCommentDotsRegular,
+  faHeart as faHeartRegular,
+} from '@fortawesome/free-regular-svg-icons';
+import {
+  faCommentDots as faCommentDotsSolid,
+  faHeart as faHeartSolid,
+  faHouse,
+} from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
-import settingsLineSvg from '../../assets/settings_1_line.svg';
-import closeLineSvg from '../../assets/close_line.svg';
-import homeLineSvg from '../../assets/home_1_line.svg';
-import thumbUpFillSvg from '../../assets/thumb_up_fill.svg';
-import thumbUpLineSvg from '../../assets/thumb_up_line.svg';
-import commentLineSvg from '../../assets/comment_line.svg';
-import sendPlaneFillSvg from '../../assets/send_plane_fill.svg';
+import { emitAppRefresh } from '../../lib/appEvents';
 import '../../styles/components/publications/PublicationCard.css';
 
 interface Auteur {
@@ -35,9 +47,17 @@ interface Props {
   publication: Publication;
   onDelete?: (id: number) => void;
   onUpdate?: (pub: Publication) => void;
+  domId?: string;
+  highlighted?: boolean;
 }
 
-export default function PublicationCard({ publication, onDelete, onUpdate }: Props) {
+export default function PublicationCard({
+  publication,
+  onDelete,
+  onUpdate,
+  domId,
+  highlighted = false,
+}: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [likeCount, setLikeCount] = useState(publication.likeCount || 0);
@@ -48,38 +68,65 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
   const [commentCount, setCommentCount] = useState(publication.commentCount || 0);
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingLike, setLoadingLike] = useState(false);
-
-  // ── Édition inline
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(publication.contenu);
   const [currentContenu, setCurrentContenu] = useState(publication.contenu);
   const [savingEdit, setSavingEdit] = useState(false);
 
+  useEffect(() => {
+    setLikeCount(publication.likeCount || 0);
+    setLiked(publication.liked || false);
+    setCommentCount(publication.commentCount || 0);
+    setCurrentContenu(publication.contenu);
+    setEditText(publication.contenu);
+  }, [
+    publication.id,
+    publication.likeCount,
+    publication.liked,
+    publication.commentCount,
+    publication.contenu,
+  ]);
+
   const avatarUrl = (auteur: Auteur) =>
     auteur.photo ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(auteur.prenom + '+' + auteur.nom)}&background=3B6CF8&color=fff&bold=true`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      `${auteur.prenom}+${auteur.nom}`
+    )}&background=3B6CF8&color=fff&bold=true`;
 
   const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
+    const date = new Date(dateStr);
     const now = new Date();
-    const diff = (now.getTime() - d.getTime()) / 1000;
-    if (diff < 60) return 'À l\'instant';
+    const diff = (now.getTime() - date.getTime()) / 1000;
+    if (diff < 60) return "A l'instant";
     if (diff < 3600) return `${Math.floor(diff / 60)} min`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} h`;
     if (diff < 604800) return `${Math.floor(diff / 86400)} j`;
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
   const handleLike = async () => {
-    if (!user) { navigate('/login'); return; }
-    if (loadingLike) return;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (loadingLike) {
+      return;
+    }
+
     setLoadingLike(true);
     try {
       const { data } = await api.post(`/publications/${publication.id}/like`);
       setLiked(data.liked);
       setLikeCount(data.total);
-    } catch { /* silencieux */ }
-    finally { setLoadingLike(false); }
+      emitAppRefresh(['publications', 'profile'], {
+        source: 'local',
+        payload: { publicationId: publication.id, liked: data.liked, likeCount: data.total },
+      });
+    } catch {
+      // silent background refresh
+    } finally {
+      setLoadingLike(false);
+    }
   };
 
   const toggleComments = async () => {
@@ -88,52 +135,78 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
       try {
         const { data } = await api.get(`/publications/${publication.id}/commentaires`);
         setComments(data.content || []);
-      } catch { /* silencieux */ }
-      finally { setLoadingComments(false); }
+      } catch {
+        // silent background refresh
+      } finally {
+        setLoadingComments(false);
+      }
     }
+
     setShowComments(!showComments);
   };
 
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) { navigate('/login'); return; }
-    if (!commentText.trim()) return;
+  const handleComment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (!commentText.trim()) {
+      return;
+    }
+
     try {
       const { data } = await api.post(`/publications/${publication.id}/commentaires`, {
         contenu: commentText,
       });
+      const nextCommentCount = commentCount + 1;
       setComments((prev) => [...prev, data]);
-      setCommentCount((c) => c + 1);
+      setCommentCount(nextCommentCount);
       setCommentText('');
-    } catch { /* silencieux */ }
+      emitAppRefresh(['publications', 'profile'], {
+        source: 'local',
+        payload: { publicationId: publication.id, commentCount: nextCommentCount },
+      });
+    } catch {
+      // silent background refresh
+    }
   };
 
   const canDelete = user && (user.id === publication.auteur.id || user.role === 'ADMIN');
   const canEdit = user && user.id === publication.auteur.id;
 
   const handleDelete = async () => {
-    if (!window.confirm('Supprimer cette publication ?')) return;
+    if (!window.confirm('Supprimer cette publication ?')) {
+      return;
+    }
+
     try {
       await api.delete(`/publications/${publication.id}`);
       onDelete?.(publication.id);
-    } catch { /* silencieux */ }
+      emitAppRefresh(['publications', 'profile'], {
+        source: 'local',
+        payload: { publicationId: publication.id },
+      });
+    } catch {
+      // silent background refresh
+    }
   };
-
-  const startEdit = () => {
-    setEditText(currentContenu);
-    setEditing(true);
-  };
-
-  const cancelEdit = () => setEditing(false);
 
   const saveEdit = async () => {
-    if (!editText.trim()) return;
+    if (!editText.trim()) {
+      return;
+    }
+
     setSavingEdit(true);
     try {
       const { data } = await api.put(`/publications/${publication.id}`, { contenu: editText });
       setCurrentContenu(data.contenu);
       onUpdate?.({ ...publication, contenu: data.contenu });
       setEditing(false);
+      emitAppRefresh(['publications', 'profile'], {
+        source: 'local',
+        payload: { publicationId: publication.id },
+      });
     } catch {
       alert('Erreur lors de la modification.');
     } finally {
@@ -141,9 +214,14 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
     }
   };
 
+  const visibleMedias = publication.medias?.slice(0, 4) || [];
+  const hiddenMediaCount = Math.max(0, (publication.medias?.length || 0) - visibleMedias.length);
+
   return (
-    <article className="pub-card card fade-in">
-      {/* Header */}
+    <article
+      id={domId}
+      className={`pub-card card fade-in ${highlighted ? 'highlighted' : ''}`}
+    >
       <div className="pub-header">
         <Link to={`/profil/${publication.auteur.id}`} className="pub-author-link">
           <img
@@ -160,39 +238,45 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
             <div className="pub-meta">
               <span>{formatDate(publication.dateCreation)}</span>
               <span className="pub-visibility">
-                <img src={publication.visibilite === 'PUBLIC' ? homeLineSvg : settingsLineSvg} alt="" width={10} style={{ opacity: 0.6, marginRight: 4 }} />
+                <FontAwesomeIcon
+                  icon={publication.visibilite === 'PUBLIC' ? faGlobe : faUsers}
+                />
                 {publication.visibilite === 'PUBLIC' ? 'Public' : 'Membres'}
               </span>
             </div>
           </div>
         </Link>
+
         <div className="pub-header-actions">
           {canEdit && !editing && (
-            <button className="pub-edit-btn" onClick={startEdit} title="Modifier">
-              <img src={settingsLineSvg} alt="" width={16} height={16} />
+            <button className="pub-edit-btn" onClick={() => setEditing(true)} title="Modifier">
+              <FontAwesomeIcon icon={faPenToSquare} />
             </button>
           )}
           {canDelete && (
             <button className="pub-delete-btn" onClick={handleDelete} title="Supprimer">
-              <img src={closeLineSvg} alt="" width={16} height={16} style={{ filter: 'grayscale(1) brightness(0.5)' }} />
+              <FontAwesomeIcon icon={faTrashCan} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Contenu / Édition inline */}
       <div className="pub-content">
         {editing ? (
           <div className="pub-edit-area">
             <textarea
               className="form-input pub-edit-textarea"
               value={editText}
-              onChange={(e) => setEditText(e.target.value)}
+              onChange={(event) => setEditText(event.target.value)}
               rows={4}
               autoFocus
             />
             <div className="pub-edit-actions">
-              <button className="btn btn-ghost btn-sm" onClick={cancelEdit} disabled={savingEdit}>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setEditing(false)}
+                disabled={savingEdit}
+              >
                 Annuler
               </button>
               <button
@@ -200,7 +284,7 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
                 onClick={saveEdit}
                 disabled={savingEdit || !editText.trim()}
               >
-                {savingEdit ? 'Enregistrement…' : 'Enregistrer'}
+                {savingEdit ? 'Enregistrement...' : 'Enregistrer'}
               </button>
             </div>
           </div>
@@ -209,60 +293,73 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
         )}
       </div>
 
-      {/* Médias */}
-      {publication.medias && publication.medias.length > 0 && (
-        <div className={`pub-medias count-${Math.min(publication.medias.length, 4)}`}>
-          {publication.medias.slice(0, 4).map((url, i) => (
-            <img key={i} src={url} alt="" className="pub-media-img" />
-          ))}
+      {visibleMedias.length > 0 && (
+        <div className={`pub-medias count-${Math.min(visibleMedias.length, 4)}`}>
+          {visibleMedias.map((url, index) => {
+            const showMoreOverlay = index === visibleMedias.length - 1 && hiddenMediaCount > 0;
+            return (
+              <div key={`${publication.id}-${index}`} className="pub-media-tile">
+                <img src={url} alt="" className="pub-media-img" />
+                {showMoreOverlay && (
+                  <span className="pub-media-more">+{hiddenMediaCount}</span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Annonce intégrée */}
       {publication.annonce && (
-        <div className="pub-embedded-annonce" onClick={() => navigate(`/annonces/${publication.annonce.id}`)}>
+        <div
+          className="pub-embedded-annonce"
+          onClick={() => navigate(`/annonces/${publication.annonce.id}`)}
+        >
           <div className="pub-embedded-img">
             {publication.annonce.photos && publication.annonce.photos.length > 0 ? (
               <img src={publication.annonce.photos[0]} alt="" />
             ) : (
               <div className="pub-embedded-placeholder">
-                <img src={homeLineSvg} alt="" width={32} height={32} style={{ opacity: 0.3 }} />
+                <FontAwesomeIcon icon={faHouse} />
               </div>
             )}
           </div>
           <div className="pub-embedded-body">
             <h4>{publication.annonce.titre}</h4>
-            <p>📍 {publication.annonce.ville}</p>
+            <p className="pub-embedded-location">
+              <FontAwesomeIcon icon={faLocationDot} />
+              {publication.annonce.ville}
+            </p>
             <strong>{Number(publication.annonce.prix).toLocaleString('fr-FR')} Ar</strong>
           </div>
         </div>
       )}
 
-      {/* Actions */}
       <div className="pub-actions">
         <button
           className={`pub-action-btn ${liked ? 'liked' : ''}`}
           onClick={handleLike}
           disabled={loadingLike}
         >
-          <img src={liked ? thumbUpFillSvg : thumbUpLineSvg} alt="" width={20} height={20} className={liked ? 'bounce-in' : ''} />
-          <span>{likeCount > 0 ? likeCount : ''} J'aime</span>
+          <FontAwesomeIcon
+            icon={liked ? faHeartSolid : faHeartRegular}
+            className={liked ? 'bounce-in' : ''}
+          />
+          <span>{likeCount > 0 ? `${likeCount} J'aime` : "J'aime"}</span>
         </button>
         <button className="pub-action-btn" onClick={toggleComments}>
-          <img src={commentLineSvg} alt="" width={20} height={20} />
-          <span>{commentCount > 0 ? commentCount : ''} Commenter</span>
+          <FontAwesomeIcon icon={showComments ? faCommentDotsSolid : faCommentDotsRegular} />
+          <span>{commentCount > 0 ? `${commentCount} Commentaires` : 'Commenter'}</span>
         </button>
       </div>
 
-      {/* Section commentaires */}
       {showComments && (
         <div className="pub-comments">
           {loadingComments && <div className="spinner" style={{ margin: '12px auto' }} />}
 
-          {comments.map((c) => (
-            <div key={c.id} className="comment">
+          {comments.map((comment) => (
+            <div key={comment.id} className="comment">
               <img
-                src={avatarUrl(c.auteur)}
+                src={avatarUrl(comment.auteur)}
                 alt=""
                 className="avatar"
                 width={32}
@@ -270,10 +367,10 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
               />
               <div className="comment-bubble">
                 <span className="comment-author">
-                  {c.auteur.prenom} {c.auteur.nom}
+                  {comment.auteur.prenom} {comment.auteur.nom}
                 </span>
-                <span className="comment-text">{c.contenu}</span>
-                <span className="comment-time">{formatDate(c.dateCreation)}</span>
+                <span className="comment-text">{comment.contenu}</span>
+                <span className="comment-time">{formatDate(comment.dateCreation)}</span>
               </div>
             </div>
           ))}
@@ -281,7 +378,12 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
           {user ? (
             <form className="comment-form" onSubmit={handleComment}>
               <img
-                src={avatarUrl({ id: user.id, nom: user.nom, prenom: user.prenom, photo: user.photo })}
+                src={avatarUrl({
+                  id: user.id,
+                  nom: user.nom,
+                  prenom: user.prenom,
+                  photo: user.photo,
+                })}
                 alt=""
                 className="avatar"
                 width={32}
@@ -289,12 +391,16 @@ export default function PublicationCard({ publication, onDelete, onUpdate }: Pro
               />
               <input
                 className="comment-input form-input"
-                placeholder="Écrire un commentaire…"
+                placeholder="Ecrire un commentaire..."
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+                onChange={(event) => setCommentText(event.target.value)}
               />
-              <button type="submit" className="btn btn-primary btn-sm" disabled={!commentText.trim()}>
-                <img src={sendPlaneFillSvg} alt="Envoyer" width={16} height={16} style={{ filter: 'brightness(0) invert(1)' }} />
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm comment-send-btn"
+                disabled={!commentText.trim()}
+              >
+                <FontAwesomeIcon icon={faPaperPlane} />
               </button>
             </form>
           ) : (

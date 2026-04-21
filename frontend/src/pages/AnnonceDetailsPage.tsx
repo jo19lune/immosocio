@@ -1,33 +1,78 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faBan,
+  faBed,
+  faCamera,
+  faHeart,
+  faHouse,
+  faLocationDot,
+  faMessage,
+  faRulerCombined,
+  faShareNodes,
+} from '@fortawesome/free-solid-svg-icons';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import Lightbox from '../components/Lightbox';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
-import homeLineSvg from '../assets/home_1_line.svg';
-import messengerLineSvg from '../assets/messenger_line.svg';
-import shareForwardLineSvg from '../assets/share_forward_line.svg';
-import '../styles/pages/AnnoncesPage.css';
+import { emitAppRefresh } from '../lib/appEvents';
+import '../styles/pages/AnnonceDetailsPage.css';
+
+interface Owner {
+  id: number;
+  nom: string;
+  prenom: string;
+  photo?: string;
+}
+
+interface Annonce {
+  id: number;
+  titre: string;
+  description: string;
+  ville: string;
+  pays: string;
+  prix: number;
+  nombrePieces: number;
+  superficie: number;
+  typeLogement: string;
+  photos: string[];
+  statut: string;
+  quantiteDisponible: number;
+  suivi?: boolean;
+  followerCount?: number;
+  proprietaire: Owner;
+}
+
+function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="public-page">
+      <PublicNavbar />
+      <div className="annonce-public-shell">{children}</div>
+    </div>
+  );
+}
 
 export default function AnnonceDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [annonce, setAnnonce] = useState<any>(null);
+  const [annonce, setAnnonce] = useState<Annonce | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [updatingFollow, setUpdatingFollow] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
-  useEffect(() => {
-    fetchAnnonce();
-  }, [id]);
+  const Layout = user ? AppLayout : PublicLayout;
 
   const fetchAnnonce = async () => {
     setLoading(true);
     try {
       const { data } = await api.get(`/annonces/${id}`);
       setAnnonce(data);
+      setIsFollowing(Boolean(data?.suivi));
     } catch {
       navigate('/annonces');
     } finally {
@@ -35,140 +80,283 @@ export default function AnnonceDetailsPage() {
     }
   };
 
-  const handleShare = () => {
+  useEffect(() => {
+    fetchAnnonce();
+  }, [id]);
+
+  useEffect(() => {
+    setIsFollowing(Boolean(annonce?.suivi));
+  }, [annonce?.id, annonce?.suivi]);
+
+  const handleShare = async () => {
+    if (!annonce) {
+      return;
+    }
+
     const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    alert("Lien de l'annonce copié !");
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: annonce.titre,
+          text: annonce.description,
+          url,
+        });
+        return;
+      }
+    } catch {
+      // fall through to clipboard copy
+    }
+
+    await navigator.clipboard.writeText(url);
+    alert("Lien de l'annonce copie.");
   };
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: 100 }}>
-      <div className="spinner" />
-    </div>
-  );
+  const handleFollow = async () => {
+    if (!annonce) {
+      return;
+    }
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-  const Layout = user ? AppLayout : ({ children }: any) => (
-    <div className="public-page">
-      <PublicNavbar />
-      <div style={{ padding: '24px' }}>{children}</div>
-    </div>
-  );
+    setUpdatingFollow(true);
+    try {
+      const { data } = await api.post(`/annonces/${annonce.id}/suivre`);
+      const nextValue = Boolean(data?.suivi);
+      setIsFollowing(nextValue);
+      setAnnonce((prev) =>
+        prev
+          ? {
+              ...prev,
+              suivi: nextValue,
+              followerCount:
+                typeof data?.followers === 'number' ? data.followers : prev.followerCount,
+            }
+          : prev
+      );
+      emitAppRefresh('annonces', {
+        source: 'local',
+        payload: { annonceId: annonce.id, suivi: nextValue },
+      });
+    } catch {
+      alert("Impossible de mettre a jour le suivi pour l'instant.");
+    } finally {
+      setUpdatingFollow(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="annonce-details-loading">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (!annonce) {
+    return null;
+  }
 
   const photos = annonce.photos || [];
+  const isUnavailable = annonce.statut !== 'DISPONIBLE' || annonce.quantiteDisponible <= 0;
+  const canFollow = Boolean(user && user.id !== annonce.proprietaire.id);
+  const canMessage = Boolean(user && user.id !== annonce.proprietaire.id);
+  const canReserve = Boolean(user?.role === 'LOCATAIRE' && !isUnavailable);
+  const ownerAvatar =
+    annonce.proprietaire.photo ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      `${annonce.proprietaire.prenom}+${annonce.proprietaire.nom}`
+    )}&background=09244B&color=fff`;
 
   return (
     <Layout>
-      <div className="annonce-details-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        <div className="annonce-details-grid" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '32px' }}>
-          
-          {/* Galerie Images */}
-          <div className="annonce-gallery">
-            <div 
-              className="active-photo-wrapper card" 
-              onClick={() => photos.length > 0 && setShowLightbox(true)}
-              style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden', marginBottom: '12px', cursor: 'zoom-in' }}
-            >
-              {photos.length > 0 ? (
-                <img src={photos[activeImg]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <div className="annonce-img-placeholder" style={{ height: '100%' }}>
-                   <img src={homeLineSvg} alt="" width={64} style={{ opacity: 0.2 }} />
+      <div className="annonce-details-page">
+        <div className="annonce-details-shell">
+          <div className="annonce-details-grid">
+            <section className="annonce-gallery">
+              <button
+                type="button"
+                className="annonce-hero-media card"
+                onClick={() => photos.length > 0 && setShowLightbox(true)}
+              >
+                {photos.length > 0 ? (
+                  <img
+                    src={photos[activeImg]}
+                    alt={`${annonce.titre} - photo ${activeImg + 1}`}
+                    className="annonce-hero-image"
+                  />
+                ) : (
+                  <div className="annonce-hero-placeholder">
+                    <FontAwesomeIcon icon={faHouse} />
+                    <span>Aucune photo</span>
+                  </div>
+                )}
+                {photos.length > 0 && (
+                  <span className="annonce-hero-count">
+                    <FontAwesomeIcon icon={faCamera} />
+                    {photos.length} photo{photos.length > 1 ? 's' : ''}
+                  </span>
+                )}
+              </button>
+
+              {photos.length > 1 && (
+                <div className="annonce-thumbnails">
+                  {photos.map((photo, index) => (
+                    <button
+                      key={`${photo}-${index}`}
+                      type="button"
+                      className={`annonce-thumbnail ${index === activeImg ? 'active' : ''}`}
+                      onClick={() => setActiveImg(index)}
+                    >
+                      <img src={photo} alt={`${annonce.titre} - miniature ${index + 1}`} />
+                    </button>
+                  ))}
                 </div>
               )}
-            </div>
-            <div className="photo-thumbnails" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
-              {photos.map((p: string, i: number) => (
-                <div 
-                  key={i} 
-                  className={`thumbnail card ${i === activeImg ? 'active' : ''}`} 
-                  onClick={() => setActiveImg(i)}
-                  style={{ aspectRatio: '1/1', cursor: 'pointer', overflow: 'hidden', border: i === activeImg ? '2px solid var(--secondary)' : 'none' }}
-                >
-                  <img src={p} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </section>
+
+            <aside className="annonce-info-side">
+              <div className="card annonce-details-card">
+                <div className="annonce-heading-row">
+                  <span className="badge badge-primary">{annonce.typeLogement}</span>
+                  <span className={`annonce-status ${isUnavailable ? 'unavailable' : 'available'}`}>
+                    {isUnavailable ? annonce.statut : 'Disponible'}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Info Side */}
-          <div className="annonce-info-side">
-            <div className="card" style={{ padding: '24px' }}>
-              <span className="badge badge-primary" style={{ marginBottom: '12px' }}>{annonce.typeLogement}</span>
-              <h1 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px' }}>{annonce.titre}</h1>
-              <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: '20px' }}>
-                <img src={homeLineSvg} alt="" width={16} style={{ opacity: 0.5 }} />
-                {annonce.ville}, {annonce.pays}
-              </p>
+                <h1 className="annonce-details-title">{annonce.titre}</h1>
 
-              <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--primary)', marginBottom: '24px' }}>
-                {Number(annonce.prix).toLocaleString('fr-FR')} <small style={{ fontSize: '14px', opacity: 0.6 }}>Ar</small>
-              </div>
+                <p className="annonce-details-location">
+                  <FontAwesomeIcon icon={faLocationDot} />
+                  {annonce.ville}
+                  {annonce.pays ? `, ${annonce.pays}` : ''}
+                </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-                 <div className="card" style={{ padding: '12px', textAlign: 'center', background: 'var(--bg)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Surface</div>
-                    <div style={{ fontWeight: 700 }}>{annonce.superficie} m²</div>
-                 </div>
-                 <div className="card" style={{ padding: '12px', textAlign: 'center', background: 'var(--bg)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pièces</div>
-                    <div style={{ fontWeight: 700 }}>{annonce.nombrePieces}</div>
-                 </div>
-              </div>
+                <div className="annonce-price">
+                  {Number(annonce.prix).toLocaleString('fr-FR')} <small>Ar</small>
+                </div>
 
-              <div className="actions-stack" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }}
-                  onClick={() => navigate(`/reservations/nouvelle?annonceId=${annonce.id}`)}>
-                  Réserver maintenant
-                </button>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={handleShare}>
-                    <img src={shareForwardLineSvg} alt="" width={18} /> Partager
+                <div className="annonce-metrics">
+                  <div className="annonce-metric card">
+                    <span>Surface</span>
+                    <strong>
+                      <FontAwesomeIcon icon={faRulerCombined} />
+                      {annonce.superficie} m2
+                    </strong>
+                  </div>
+                  <div className="annonce-metric card">
+                    <span>Pieces</span>
+                    <strong>
+                      <FontAwesomeIcon icon={faBed} />
+                      {annonce.nombrePieces}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="annonce-availability-card">
+                  <span>Disponibilite actuelle</span>
+                  <strong>{annonce.quantiteDisponible} unite(s) restantes</strong>
+                  {typeof annonce.followerCount === 'number' && annonce.followerCount > 0 && (
+                    <small>{annonce.followerCount} utilisateur(s) suivent cette annonce.</small>
+                  )}
+                </div>
+
+                {isUnavailable && (
+                  <div className="annonce-warning">
+                    <FontAwesomeIcon icon={faBan} />
+                    Cette annonce est suspendue. La reservation est desactivee jusqu'a son retour
+                    en disponibilite.
+                  </div>
+                )}
+
+                <div className="annonce-actions-stack">
+                  <button
+                    className="btn btn-primary btn-lg annonce-primary-action"
+                    onClick={() =>
+                      canReserve
+                        ? navigate(`/reservations/nouvelle?annonceId=${annonce.id}`)
+                        : !user
+                          ? navigate('/login')
+                          : undefined
+                    }
+                    disabled={Boolean(user) && !canReserve}
+                  >
+                    {user
+                      ? canReserve
+                        ? 'Reserver maintenant'
+                        : 'Reservation indisponible'
+                      : 'Connectez-vous pour reserver'}
                   </button>
-                  <Link to={`/messages/${annonce.proprietaire.id}`} className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center' }}>
-                    <img src={messengerLineSvg} alt="" width={18} style={{ filter: 'brightness(0) invert(1)' }} /> Contacter
-                  </Link>
+
+                  <div className="annonce-secondary-actions">
+                    {canFollow && (
+                      <button
+                        type="button"
+                        className={`btn btn-ghost annonce-follow-btn ${isFollowing ? 'active' : ''}`}
+                        onClick={handleFollow}
+                        disabled={updatingFollow}
+                      >
+                        <FontAwesomeIcon icon={faHeart} />
+                        {isFollowing ? 'Suivi actif' : 'Suivre'}
+                      </button>
+                    )}
+
+                    <button type="button" className="btn btn-ghost" onClick={handleShare}>
+                      <FontAwesomeIcon icon={faShareNodes} />
+                      Partager
+                    </button>
+
+                    {canMessage ? (
+                      <Link
+                        to={`/messages/${annonce.proprietaire.id}`}
+                        className="btn btn-secondary annonce-contact-btn"
+                      >
+                        <FontAwesomeIcon icon={faMessage} />
+                        Contacter
+                      </Link>
+                    ) : !user ? (
+                      <button
+                        type="button"
+                        className="btn btn-secondary annonce-contact-btn"
+                        onClick={() => navigate('/login')}
+                      >
+                        <FontAwesomeIcon icon={faMessage} />
+                        Se connecter
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Propriétaire */}
-            <div className="card" style={{ marginTop: '20px', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-               <img 
-                 src={annonce.proprietaire.photo || `https://ui-avatars.com/api/?name=${annonce.proprietaire.prenom}+${annonce.proprietaire.nom}&background=09244B&color=fff`} 
-                 alt="" className="avatar" width={48} height={48} 
-               />
-               <div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Propriétaire</div>
-                  <div style={{ fontWeight: 700 }}>{annonce.proprietaire.prenom} {annonce.proprietaire.nom}</div>
-               </div>
-            </div>
+              <div className="card annonce-owner-card">
+                <img src={ownerAvatar} alt="" className="avatar" width={52} height={52} />
+                <div>
+                  <div className="annonce-owner-label">Proprietaire</div>
+                  <div className="annonce-owner-name">
+                    {annonce.proprietaire.prenom} {annonce.proprietaire.nom}
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
+
+          <section className="card annonce-description-card">
+            <h2>Description</h2>
+            <p>{annonce.description}</p>
+          </section>
         </div>
 
-        {/* Description */}
-        <div className="card" style={{ marginTop: '32px', padding: '32px' }}>
-           <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '16px' }}>Description</h2>
-           <p style={{ lineHeight: 1.7, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
-             {annonce.description}
-           </p>
-        </div>
+        {showLightbox && photos.length > 0 && (
+          <Lightbox
+            images={photos}
+            currentIndex={activeImg}
+            onClose={() => setShowLightbox(false)}
+            onNext={() => setActiveImg((prev) => (prev + 1) % photos.length)}
+            onPrev={() => setActiveImg((prev) => (prev - 1 + photos.length) % photos.length)}
+          />
+        )}
       </div>
-      
-      {showLightbox && (
-        <Lightbox 
-          images={photos}
-          currentIndex={activeImg}
-          onClose={() => setShowLightbox(false)}
-          onNext={() => setActiveImg((prev) => (prev + 1) % photos.length)}
-          onPrev={() => setActiveImg((prev) => (prev - 1 + photos.length) % photos.length)}
-        />
-      )}
-
-      <style>{`
-        @media (max-width: 800px) {
-          .annonce-details-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </Layout>
   );
 }

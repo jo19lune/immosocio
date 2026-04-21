@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import shareForwardLineSvg  from '../assets/share_forward_line.svg';
-import thumbUpLineSvg       from '../assets/thumb_up_line.svg';
-import thumbUpFillSvg       from '../assets/thumb_up_fill.svg';
+import { emitAppRefresh } from '../lib/appEvents';
 import homeLineSvg          from '../assets/home_1_line.svg';
 import '../styles/pages/AnnoncesPage.css';
 
@@ -91,7 +91,7 @@ export default function AnnoncesPage() {
 
   useAutoRefresh(() => {
     fetchAnnonces(0, true);
-  });
+  }, ['annonces']);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +147,7 @@ export default function AnnoncesPage() {
             </div>
           </div>
           <div className="filter-actions">
-            <button type="submit" className="btn btn-primary">🔍 Rechercher</button>
+            <button type="submit" className="btn btn-primary">Rechercher</button>
             <button type="button" className="btn btn-ghost" onClick={resetFilters}>Réinitialiser</button>
           </div>
         </form>
@@ -202,7 +202,12 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
   const { user } = useAuth();
   const navigate = useNavigate();
   const [currentImg, setCurrentImg] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(Boolean(annonce.suivi));
   const photos = (annonce.photos && annonce.photos.length > 0) ? annonce.photos : [];
+
+  useEffect(() => {
+    setIsFollowing(Boolean(annonce.suivi));
+  }, [annonce.id, annonce.suivi]);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -211,6 +216,7 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
     if (contenu === null) return;
     try {
       await api.post('/publications', { contenu, annonceId: annonce.id, visibilite: 'PUBLIC' });
+      emitAppRefresh(['publications', 'profile'], { source: 'local', payload: { annonceId: annonce.id } });
       alert("Annonce partagée avec succès !");
     } catch {
       alert("Erreur lors du partage.");
@@ -221,7 +227,9 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
     e.stopPropagation();
     if (!user) { navigate('/login'); return; }
     try {
-      await api.post(`/annonces/${annonce.id}/suivre`);
+      const { data } = await api.post(`/annonces/${annonce.id}/suivre`);
+      setIsFollowing(Boolean(data?.suivi));
+      emitAppRefresh('annonces', { source: 'local', payload: { annonceId: annonce.id, suivi: data?.suivi } });
       if (onToggleSuivre) onToggleSuivre();
     } catch {
       alert("Erreur lors de l'action suivre.");
@@ -319,10 +327,10 @@ export function AnnonceCard({ annonce, onToggleSuivre }: { annonce: Annonce, onT
         <div className="annonce-card-footer">
           <div className="footer-actions">
             <button onClick={handleShare} className="icon-btn" title="Partager">
-              <img src={shareForwardLineSvg} alt="" width={18} />
+              <FontAwesomeIcon icon={faShareNodes} />
             </button>
-            <button onClick={handleSuivre} className={`icon-btn ${annonce.suivi ? 'active' : ''}`} title="Suivre">
-               <img src={annonce.suivi ? thumbUpFillSvg : thumbUpLineSvg} alt="" width={18} />
+            <button onClick={handleSuivre} className={`icon-btn ${isFollowing ? 'active' : ''}`} title="Suivre">
+              <FontAwesomeIcon icon={faHeart} />
             </button>
           </div>
           

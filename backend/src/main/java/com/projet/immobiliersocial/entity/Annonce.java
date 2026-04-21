@@ -113,4 +113,10 @@ public class Annonce {
     @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Reservation> reservations;
+
+    @jakarta.persistence.Transient
+    private Boolean suivi;
+
+    @jakarta.persistence.Transient
+    private Integer followerCount;
 }

@@ -55,4 +55,13 @@ public class Publication {
     @OneToMany(mappedBy = "publication", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Like> likes;
+
+    @Transient
+    private Long likeCount;
+
+    @Transient
+    private Long commentCount;
+
+    @Transient
+    private Boolean liked;
 }

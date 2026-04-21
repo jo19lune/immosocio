@@ -29,7 +29,7 @@ export default function FeedPage() {
     fetchPosts();
   }, []);
 
-  useAutoRefresh(fetchPosts);
+  useAutoRefresh(fetchPosts, ['annonces']);
 
   const loadMore = () => {
     const next = page + 1;

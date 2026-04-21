@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { onNotification } from '../../lib/websocket';
+import { emitAppRefresh, getRefreshScopesFromPayload } from '../../lib/appEvents';
 import api from '../../lib/api';
 import Logo from '../Logo';
 import '../../styles/components/layout/AppLayout.css';
@@ -80,7 +81,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // Refresh sur notification WebSocket
     const unsub = onNotification((data) => {
       fetchCounts();
-      window.dispatchEvent(new CustomEvent('ws-refresh', { detail: data }));
+      emitAppRefresh(getRefreshScopesFromPayload(data), { source: 'websocket', payload: data });
     });
 
     return () => {

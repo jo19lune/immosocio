@@ -146,15 +146,20 @@ public class MessageController {
                 .destinataire(destinataire)
                 .message(expediteur.getPrenom() + " " + expediteur.getNom() + " vous a envoyé un message")
                 .type(com.projet.immobiliersocial.entity.TypeNotification.MESSAGE)
+                .routeCible("/messages/" + expediteur.getId())
                 .build();
         notification = notificationRepository.save(notification);
 
         wsService.envoyerNotification(destinataire.getEmail(), Map.of(
-                "type", "MESSAGE",
+                "type", "NOUVEAU_MESSAGE",
+                "notificationType", "MESSAGE",
                 "message", notification.getMessage(),
                 "id", notification.getId(),
+                "dateCreation", notification.getDateCreation(),
+                "routeCible", notification.getRouteCible(),
                 "expediteurId", expediteur.getId(),
-                "messageId", saved.getId()
+                "messageId", saved.getId(),
+                "messagePayload", saved
         ));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);

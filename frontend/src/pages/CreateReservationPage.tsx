@@ -1,20 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faBan,
+  faHouse,
+  faTriangleExclamation,
+} from '@fortawesome/free-solid-svg-icons';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
-import '../styles/pages/CreateAnnoncePage.css';
+import '../styles/pages/CreateReservationPage.css';
+
+interface Annonce {
+  id: number;
+  titre: string;
+  prix: number;
+  quantiteDisponible: number;
+  statut: string;
+}
 
 export default function CreateReservationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const annonceId = searchParams.get('annonceId');
 
-  const [annonce, setAnnonce] = useState<any>(null);
+  const [annonce, setAnnonce] = useState<Annonce | null>(null);
   const [form, setForm] = useState({
     dateDebut: '',
     dateFin: '',
     quantite: 1,
-    message: ''
+    message: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -25,30 +39,42 @@ export default function CreateReservationPage() {
       navigate('/annonces');
       return;
     }
+
     const fetchAnnonce = async () => {
       try {
         const { data } = await api.get(`/annonces/${annonceId}`);
         setAnnonce(data);
       } catch {
-        setError("Annonce introuvable");
+        setError('Annonce introuvable');
       } finally {
         setLoading(false);
       }
     };
+
     fetchAnnonce();
   }, [annonceId, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const isReservable = Boolean(
+    annonce && annonce.statut === 'DISPONIBLE' && annonce.quantiteDisponible > 0
+  );
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError('');
+
+    if (!annonce || !isReservable) {
+      setError("Cette annonce n'est pas disponible a la reservation.");
+      return;
+    }
     if (form.quantite < 1) {
-       setError("La quantité minimale à réserver est de 1.");
-       return;
+      setError('La quantite minimale a reserver est de 1.');
+      return;
     }
-    if (form.quantite > (annonce?.quantiteDisponible || 0)) {
-       setError(`Vous ne pouvez pas réserver plus de ${annonce?.quantiteDisponible || 0} unité(s).`);
-       return;
+    if (form.quantite > annonce.quantiteDisponible) {
+      setError(`Vous ne pouvez pas reserver plus de ${annonce.quantiteDisponible} unite(s).`);
+      return;
     }
+
     setSubmitting(true);
     try {
       await api.post('/reservations', {
@@ -56,15 +82,16 @@ export default function CreateReservationPage() {
         dateDebut: form.dateDebut,
         dateFin: form.dateFin,
         quantite: form.quantite,
-        message: form.message
+        message: form.message,
       });
-      alert("Réservation effectuée avec succès !");
+      alert('Reservation effectuee avec succes.');
       navigate('/annonces');
     } catch (err: any) {
       const errorData = err.response?.data;
-      const errorMessage = typeof errorData === 'string' 
-        ? errorData 
-        : (errorData?.message || errorData?.erreur || 'Erreur lors de la réservation.');
+      const errorMessage =
+        typeof errorData === 'string'
+          ? errorData
+          : errorData?.message || errorData?.erreur || 'Erreur lors de la reservation.';
       setError(errorMessage);
     } finally {
       setSubmitting(false);
@@ -76,7 +103,9 @@ export default function CreateReservationPage() {
   if (loading) {
     return (
       <AppLayout>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}><div className="spinner" /></div>
+        <div className="reservation-loading">
+          <div className="spinner" />
+        </div>
       </AppLayout>
     );
   }
@@ -84,57 +113,138 @@ export default function CreateReservationPage() {
   if (!annonce) {
     return (
       <AppLayout>
-        <div className="auth-error" style={{ margin: '24px auto', maxWidth: 600 }}>{error}</div>
+        <div className="reservation-error auth-error">{error}</div>
       </AppLayout>
     );
   }
 
   return (
     <AppLayout>
-      <div className="create-annonce-container">
-        <div className="card create-annonce-card">
-          <h2 style={{ marginBottom: '24px' }}>Réserver : {annonce.titre}</h2>
+      <div className="reservation-page">
+        <div className="card reservation-card">
+          <div className="reservation-title-row">
+            <div>
+              <h2>
+                <FontAwesomeIcon icon={faHouse} />
+                Reserver : {annonce.titre}
+              </h2>
+              <p>Completez votre demande sans recharger la page.</p>
+            </div>
+          </div>
+
           {error && <div className="auth-error">{error}</div>}
-          
-          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--surface-50)', borderRadius: '8px' }}>
-            <p><strong>Prix unitaire :</strong> {Number(annonce.prix).toLocaleString('fr-FR')} Ar</p>
-            <p><strong>Disponibilité :</strong> {annonce.quantiteDisponible} unité(s)</p>
+
+          {!isReservable && (
+            <div className="reservation-warning">
+              <FontAwesomeIcon icon={faBan} />
+              <div>
+                <strong>Reservation indisponible</strong>
+                <p>
+                  Cette annonce est actuellement suspendue ou n'a plus de disponibilite.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="reservation-summary">
+            <p>
+              <strong>Prix unitaire :</strong> {Number(annonce.prix).toLocaleString('fr-FR')} Ar
+            </p>
+            <p>
+              <strong>Disponibilite :</strong> {annonce.quantiteDisponible} unite(s)
+            </p>
+            <p>
+              <strong>Statut :</strong> {annonce.statut}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="create-annonce-form">
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Date de début *</label>
-                <input type="date" required className="form-input" 
-                  value={form.dateDebut} onChange={e => setForm({...form, dateDebut: e.target.value})} />
+                <label className="form-label">Date de debut *</label>
+                <input
+                  type="date"
+                  required
+                  className="form-input"
+                  disabled={!isReservable || submitting}
+                  value={form.dateDebut}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, dateDebut: event.target.value }))
+                  }
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Date de fin *</label>
-                <input type="date" required className="form-input" 
-                  value={form.dateFin} onChange={e => setForm({...form, dateFin: e.target.value})} />
+                <input
+                  type="date"
+                  required
+                  className="form-input"
+                  disabled={!isReservable || submitting}
+                  value={form.dateFin}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, dateFin: event.target.value }))
+                  }
+                />
               </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Quantité (Nb. pièces/maisons) *</label>
-              <input type="number" required className="form-input" min={1} max={annonce.quantiteDisponible}
-                value={form.quantite} onChange={e => setForm({...form, quantite: parseInt(e.target.value) || 1})} />
+              <label className="form-label">Quantite (Nb. pieces/maisons) *</label>
+              <input
+                type="number"
+                required
+                min={1}
+                max={annonce.quantiteDisponible}
+                className="form-input"
+                disabled={!isReservable || submitting}
+                value={form.quantite}
+                onChange={(event) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    quantite: parseInt(event.target.value, 10) || 1,
+                  }))
+                }
+              />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Message au propriétaire (optionnel)</label>
-              <textarea className="form-input" rows={3} maxLength={500}
-                value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="Dites bonjour..." />
+              <label className="form-label">Message au proprietaire (optionnel)</label>
+              <textarea
+                className="form-input"
+                rows={3}
+                maxLength={500}
+                disabled={!isReservable || submitting}
+                value={form.message}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, message: event.target.value }))
+                }
+                placeholder="Dites bonjour..."
+              />
             </div>
 
-            <div style={{ padding: '16px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '8px', fontSize: '18px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'right' }}>
-              Total à payer : {prixTotal.toLocaleString('fr-FR')} Ar
+            <div className="reservation-total">
+              <span>
+                <FontAwesomeIcon icon={faTriangleExclamation} />
+                Total a payer
+              </span>
+              <strong>{prixTotal.toLocaleString('fr-FR')} Ar</strong>
             </div>
 
-            <div className="form-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn btn-ghost" onClick={() => navigate('/annonces')} disabled={submitting}>Annuler</button>
-              <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? 'Validation...' : 'Confirmer la réservation'}
+            <div className="form-actions reservation-actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => navigate('/annonces')}
+                disabled={submitting}
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={!isReservable || submitting}
+              >
+                {submitting ? 'Validation...' : 'Confirmer la reservation'}
               </button>
             </div>
           </form>
