@@ -1,281 +1,141 @@
-/* ─────────────────────────────────────────────────────────────────────────────
-   theme.css - Thèmes pour les 3 Segments d'Utilisateurs
-   ────────────────────────────────────────────────────────────────────────────── */
-
-/* ─── PALETTE 1: SOCIAL LIFESTYLE (Étudiants) ───────────────────────────────── */
+/* ─── PALETTE 1 : SOCIAL LIFESTYLE (Étudiants) ─────────────────────────── */
 :root.theme-lifestyle,
 :root[data-user-segment="STUDENT"] {
-  /* Primaires */
-  --primary: #4F46E5;           /* Indigo */
-  --primary-dark: #3730A3;      /* Indigo Dark */
-  --primary-light: #EEF2FF;     /* Indigo Light */
+  --primary: #4F46E5;
+  --primary-dark: #3730A3;
+  --primary-light: #EEF2FF;
   --primary-rgb: 79, 70, 229;
 
-  /* Accent */
-  --accent: #F43F5E;            /* Rose Corail */
-  --accent-light: #FFE4EB;      /* Rose Light */
+  --accent: #F43F5E;
+  --accent-light: #FFE4EB;
   --secondary: #F43F5E;
 
-  /* Couleurs de surface */
   --bg: #FFFFFF;
-  --bg-alt: #F3F4F6;            /* Gris Clair */
+  --bg-alt: #F3F4F6;
   --surface: #FFFFFF;
   --surface-2: #F3F4F6;
 
-  /* Texte */
-  --text: #1F2937;              /* Gris Foncé */
-  --text-secondary: #6B7280;    /* Gris Moyen */
-  --text-muted: #9CA3AF;        /* Gris Clair */
+  --text: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
 
-  /* Gradients */
   --gradient-primary: linear-gradient(135deg, #4F46E5, #F43F5E);
   --gradient-subtle: linear-gradient(135deg, #EEF2FF, #FFE4EB);
 
-  /* Ombres */
   --shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
   --shadow-lg: 0 12px 28px rgba(79, 70, 229, 0.12), 0 8px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* ─── PALETTE 2: ÉVASION & VOYAGE (Touristes) ──────────────────────────────── */
+/* ─── PALETTE 2 : ÉVASION & VOYAGE (Touristes) ─────────────────────────── */
 :root.theme-voyage,
 :root[data-user-segment="TOURIST"] {
-  /* Primaires */
-  --primary: #0891B2;           /* Turquoise Océan */
-  --primary-dark: #0E7490;      /* Turquoise Dark */
-  --primary-light: #E0F7FA;     /* Turquoise Light */
+  --primary: #0891B2;
+  --primary-dark: #0E7490;
+  --primary-light: #E0F7FA;
   --primary-rgb: 8, 145, 178;
 
-  /* Accent */
-  --accent: #F59E0B;            /* Ambre Chaud */
-  --accent-light: #FFFBEB;      /* Ambre Light */
+  --accent: #F59E0B;
+  --accent-light: #FFFBEB;
   --secondary: #F59E0B;
 
-  /* Couleurs de surface */
-  --bg: #F9FAFB;                /* Givre */
-  --bg-alt: #F3F4F6;            /* Gris Clair */
+  --bg: #F9FAFB;
+  --bg-alt: #F3F4F6;
   --surface: #FFFFFF;
   --surface-2: #F3F4F6;
 
-  /* Texte */
-  --text: #111827;              /* Bleu Nuit */
-  --text-secondary: #4B5563;    /* Gris Foncé */
-  --text-muted: #6B7280;        /* Gris Moyen */
+  --text: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
 
-  /* Gradients */
   --gradient-primary: linear-gradient(135deg, #0891B2, #F59E0B);
   --gradient-subtle: linear-gradient(135deg, #E0F7FA, #FFFBEB);
 
-  /* Ombres */
   --shadow: 0 4px 12px rgba(8, 145, 178, 0.08);
   --shadow-lg: 0 12px 28px rgba(8, 145, 178, 0.12), 0 8px 8px rgba(0, 0, 0, 0.06);
 }
 
-/* ─── PALETTE 3: COMMUNAUTÉ URBAINE (Colocation) ───────────────────────────── */
+/* ─── PALETTE 3 : COMMUNAUTÉ URBAINE (Colocation) ─────────────────────── */
 :root.theme-community,
 :root[data-user-segment="COLOCATION"] {
-  /* Primaires */
-  --primary: #10B981;           /* Vert Menthe */
-  --primary-dark: #059669;      /* Vert Dark */
-  --primary-light: #D1FAE5;     /* Vert Light */
+  --primary: #10B981;
+  --primary-dark: #059669;
+  --primary-light: #D1FAE5;
   --primary-rgb: 16, 185, 129;
 
-  /* Accents */
-  --accent: #3B82F6;            /* Bleu Brillant */
-  --accent-light: #DBEAFE;      /* Bleu Light */
-  --accent-secondary: #EC4899;  /* Rose Vif */
+  --accent: #3B82F6;
+  --accent-light: #DBEAFE;
+  --accent-secondary: #EC4899;
   --secondary: #3B82F6;
 
-  /* Couleurs de surface */
-  --bg: #1F2937;                /* Dark Mode */
-  --bg-alt: #111827;            /* Darker */
-  --surface: #111827;           /* Dark Surface */
-  --surface-2: #0F172A;         /* Very Dark */
+  --bg: #1F2937;
+  --bg-alt: #111827;
+  --surface: #111827;
+  --surface-2: #0F172A;
 
-  /* Texte */
-  --text: #F3F4F6;              /* Blanc Cassé */
-  --text-secondary: #D1D5DB;    /* Gris Clair */
-  --text-muted: #9CA3AF;        /* Gris Moyen */
+  --text: #F3F4F6;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9CA3AF;
 
-  /* Gradients */
   --gradient-primary: linear-gradient(135deg, #10B981, #EC4899);
   --gradient-subtle: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(236, 72, 153, 0.1));
 
-  /* Ombres */
   --shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
   --shadow-lg: 0 12px 28px rgba(16, 185, 129, 0.2), 0 8px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* ─── VARIANTES DYNAMIQUES ──────────────────────────────────────────────────── */
-
-/* Boutons par palette */
+/* Ajustements spécifiques aux boutons par thème */
 :root.theme-lifestyle .btn-primary,
 :root[data-user-segment="STUDENT"] .btn-primary {
   background: #4F46E5;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
 }
-
 :root.theme-voyage .btn-primary,
 :root[data-user-segment="TOURIST"] .btn-primary {
   background: #0891B2;
   box-shadow: 0 4px 14px rgba(8, 145, 178, 0.3);
 }
-
 :root.theme-community .btn-primary,
 :root[data-user-segment="COLOCATION"] .btn-primary {
   background: #10B981;
   box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
 }
 
-/* Cartes par palette */
+/* Cartes */
 :root.theme-lifestyle .card,
 :root[data-user-segment="STUDENT"] .card {
   border-color: #E5E7EB;
 }
-
 :root.theme-lifestyle .card:hover,
 :root[data-user-segment="STUDENT"] .card:hover {
   border-color: #4F46E5;
   box-shadow: 0 12px 28px rgba(79, 70, 229, 0.12);
 }
-
 :root.theme-voyage .card,
 :root[data-user-segment="TOURIST"] .card {
   border-color: #E5E7EB;
 }
-
 :root.theme-voyage .card:hover,
 :root[data-user-segment="TOURIST"] .card:hover {
   border-color: #0891B2;
   box-shadow: 0 12px 28px rgba(8, 145, 178, 0.12);
 }
-
 :root.theme-community .card,
 :root[data-user-segment="COLOCATION"] .card {
   background: #111827;
   border-color: #1F2937;
 }
-
 :root.theme-community .card:hover,
 :root[data-user-segment="COLOCATION"] .card:hover {
   border-color: #10B981;
   box-shadow: 0 12px 28px rgba(16, 185, 129, 0.2);
 }
 
-/* ─── TRANSITIONS FLUIDES ENTRE THÈMES ──────────────────────────────────────── */
-:root,
-body,
-html {
+/* Transitions fluides entre thèmes */
+:root, body, html {
   transition: background-color var(--transition-slow),
               color var(--transition-slow),
               border-color var(--transition-slow);
 }
-
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   transition: inherit;
-}
-
-/* ─── VARIANTES DE BADGES ──────────────────────────────────────────────────── */
-.badge {
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.badge-primary {
-  background: var(--primary-light);
-  color: var(--primary-dark);
-}
-
-.badge-accent {
-  background: var(--accent-light);
-  color: var(--accent);
-}
-
-.badge-success {
-  background: #D1FAE5;
-  color: #059669;
-}
-
-.badge-warning {
-  background: #FFFBEB;
-  color: #D97706;
-}
-
-.badge-danger {
-  background: #FEE2E2;
-  color: #DC2626;
-}
-
-/* ─── CARTES ANNONCES AVEC COINS ARRONDIS ──────────────────────────────────── */
-.annonce-card {
-  border-radius: var(--radius-2xl);
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  transition: all var(--transition);
-  box-shadow: var(--shadow-sm);
-}
-
-.annonce-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary);
-}
-
-.annonce-card-image {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background: linear-gradient(135deg, var(--primary-light), var(--accent-light));
-}
-
-.annonce-card-content {
-  padding: 16px;
-}
-
-.annonce-card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.annonce-card-price {
-  font-size: 18px;
-  font-weight: 700;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ─── INTERACTIONS FLUIDES ──────────────────────────────────────────────────── */
-a,
-button,
-input,
-select,
-textarea {
-  transition: all var(--transition);
-}
-
-a:hover {
-  color: var(--primary-dark);
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
-  outline: none;
 }
