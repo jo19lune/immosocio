@@ -122,11 +122,16 @@ public class ReservationController {
                 .destinataire(annonce.getProprietaire())
                 .message("Nouvelle demande de r\u00e9servation pour votre annonce \u00ab" + annonce.getTitre() + "\u00bb.")
                 .type(TypeNotification.RESERVATION_CONFIRMEE) // On peut utiliser un type spécifique si existant
+                .routeCible(buildDemandesReservationsRoute())
                 .build();
-        notificationRepository.save(notifProprio);
+        notifProprio = notificationRepository.save(notifProprio);
         wsService.envoyerNotification(annonce.getProprietaire().getEmail(), java.util.Map.of(
                 "type", "NOUVELLE_RESERVATION",
                 "message", notifProprio.getMessage(),
+                "notificationType", notifProprio.getType().name(),
+                "id", notifProprio.getId(),
+                "dateCreation", notifProprio.getDateCreation(),
+                "routeCible", notifProprio.getRouteCible(),
                 "annonceId", annonce.getId()
         ));
 
@@ -135,11 +140,16 @@ public class ReservationController {
                 .destinataire(locataire)
                 .message("Votre demande de r\u00e9servation pour \u00ab" + annonce.getTitre() + "\u00bb a bien \u00e9t\u00e9 transmise.")
                 .type(TypeNotification.RESERVATION_CONFIRMEE)
+                .routeCible(buildMesReservationsRoute())
                 .build();
-        notificationRepository.save(notifLocataire);
+        notifLocataire = notificationRepository.save(notifLocataire);
         wsService.envoyerNotification(locataire.getEmail(), java.util.Map.of(
                 "type", "RESERVATION_CREEE",
                 "message", notifLocataire.getMessage(),
+                "notificationType", notifLocataire.getType().name(),
+                "id", notifLocataire.getId(),
+                "dateCreation", notifLocataire.getDateCreation(),
+                "routeCible", notifLocataire.getRouteCible(),
                 "annonceId", annonce.getId()
         ));
 
@@ -211,12 +221,16 @@ public class ReservationController {
                 .destinataire(saved.getLocataire())
                 .message("Votre r\u00e9servation pour \u00ab" + saved.getAnnonce().getTitre() + "\u00bb a \u00e9t\u00e9 confirm\u00e9e.")
                 .type(TypeNotification.RESERVATION_CONFIRMEE)
+                .routeCible(buildMesReservationsRoute())
                 .build();
         notifLocataire = notificationRepository.save(notifLocataire);
         wsService.envoyerNotification(saved.getLocataire().getEmail(), java.util.Map.of(
                 "type", "RESERVATION_CONFIRMEE",
                 "message", notifLocataire.getMessage(),
                 "id", notifLocataire.getId(),
+                "notificationType", notifLocataire.getType().name(),
+                "dateCreation", notifLocataire.getDateCreation(),
+                "routeCible", notifLocataire.getRouteCible(),
                 "annonceId", saved.getAnnonce().getId()
         ));
 
@@ -275,6 +289,7 @@ public class ReservationController {
                         .destinataire(follower)
                         .message("L'annonce '" + annonce.getTitre() + "' est de nouveau disponible !")
                         .type(TypeNotification.NOUVELLE_ANNONCE)
+                        .routeCible(buildAnnonceRoute(annonce))
                         .build();
                 notif = notificationRepository.save(notif);
 
@@ -282,6 +297,9 @@ public class ReservationController {
                         "type", "NOUVELLE_ANNONCE",
                         "message", notif.getMessage(),
                         "id", notif.getId(),
+                        "notificationType", notif.getType().name(),
+                        "dateCreation", notif.getDateCreation(),
+                        "routeCible", notif.getRouteCible(),
                         "annonceId", annonce.getId()
                 ));
             }
@@ -297,15 +315,73 @@ public class ReservationController {
                 .destinataire(destinataireNotif)
                 .message(msgNotif)
                 .type(TypeNotification.RESERVATION_ANNULEE)
+                .routeCible(estLocataire ? buildDemandesReservationsRoute() : buildMesReservationsRoute())
                 .build();
-        notificationRepository.save(notifAnnulation);
+        notifAnnulation = notificationRepository.save(notifAnnulation);
         wsService.envoyerNotification(destinataireNotif.getEmail(), java.util.Map.of(
                 "type", "RESERVATION_ANNULEE",
                 "message", msgNotif,
+                "notificationType", notifAnnulation.getType().name(),
+                "id", notifAnnulation.getId(),
+                "dateCreation", notifAnnulation.getDateCreation(),
+                "routeCible", notifAnnulation.getRouteCible(),
                 "annonceId", annonce.getId()
         ));
 
         return ResponseEntity.ok(saved);
+    }
+
+    // ─── PATCH /api/reservations/{id}/terminer ──────────────────────────────────
+
+    /**
+     * Marque une réservation confirmée comme terminée (séjour achevé).
+     * Seul le propriétaire de l'annonce peut le faire.
+     * Cela restaure la quantité disponible de l'annonce.
+     */
+    @PatchMapping("/{id}/terminer")
+    @Transactional
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','SUPERADMIN')")
+    public ResponseEntity<Reservation> terminer(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Reservation reservation = resolveReservation(id);
+        verifierProprietaireAnnonce(reservation, userDetails.getUsername());
+
+        if (reservation.getStatut() != StatutReservation.CONFIRMEE) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Seules les réservations confirmées peuvent être marquées comme terminées");
+        }
+
+        // Marquer la réservation comme terminée
+        reservation.setStatut(StatutReservation.TERMINEE);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // Restaurer la quantité disponible
+        Annonce annonce = reservation.getAnnonce();
+        annonce.setQuantiteDisponible(annonce.getQuantiteDisponible() + reservation.getQuantite());
+        annonce.setStatut(StatutAnnonce.DISPONIBLE);
+        annonceRepository.save(annonce);
+
+        // Notifier le locataire
+        Notification notifLocataire = Notification.builder()
+                .destinataire(savedReservation.getLocataire())
+                .message("Votre réservation pour \"" + annonce.getTitre() + "\" a été marquée comme terminée.")
+                .type(TypeNotification.SYSTEME)
+                .routeCible(buildMesReservationsRoute())
+                .build();
+        notifLocataire = notificationRepository.save(notifLocataire);
+        wsService.envoyerNotification(savedReservation.getLocataire().getEmail(), java.util.Map.of(
+                "type", "RESERVATION_TERMINEE",
+                "message", notifLocataire.getMessage(),
+                "id", notifLocataire.getId(),
+                "notificationType", notifLocataire.getType().name(),
+                "dateCreation", notifLocataire.getDateCreation(),
+                "routeCible", notifLocataire.getRouteCible(),
+                "annonceId", annonce.getId()
+        ));
+
+        return ResponseEntity.ok(savedReservation);
     }
 
     // ─── Helpers privés ───────────────────────────────────────────────────────
@@ -330,5 +406,17 @@ public class ReservationController {
             throw new ApiException(HttpStatus.FORBIDDEN,
                     "Vous n'êtes pas le propriétaire de cette annonce");
         }
+    }
+
+    private String buildAnnonceRoute(Annonce annonce) {
+        return "/annonces/" + annonce.getId();
+    }
+
+    private String buildMesReservationsRoute() {
+        return "/mes-reservations";
+    }
+
+    private String buildDemandesReservationsRoute() {
+        return "/demandes-reservations";
     }
 }

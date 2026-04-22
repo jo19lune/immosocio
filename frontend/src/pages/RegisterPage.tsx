@@ -5,7 +5,7 @@ import api from '../lib/api';
 import Logo from '../components/Logo';
 import homeLineSvg from '../assets/home_1_line.svg';
 import userLineSvg from '../assets/user_1_line.svg';
-import './AuthPages.css';
+import '../styles/pages/AuthPages.css';
 
 type Role = 'LOCATAIRE' | 'PROPRIETAIRE';
 

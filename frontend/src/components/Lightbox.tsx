@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import './Lightbox.css';
+import { useEffect } from 'react';
+import '../styles/components/Lightbox.css';
 import closeLineSvg from '../assets/close_line.svg';
 
 interface LightboxProps {

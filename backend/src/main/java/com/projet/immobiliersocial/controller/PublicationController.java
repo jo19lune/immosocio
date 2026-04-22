@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Contrôleur REST pour les publications du fil d'actualité.
@@ -60,12 +61,14 @@ public class PublicationController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         Pageable pageable = PageRequest.of(page, size);
+        Utilisateur viewer = resolveUtilisateurOrNull(userDetails);
         List<VisibilitePublication> visibilites = (userDetails != null)
                 ? List.of(VisibilitePublication.PUBLIC, VisibilitePublication.MEMBRES)
                 : List.of(VisibilitePublication.PUBLIC);
 
         return ResponseEntity.ok(
             publicationRepository.findByVisibiliteInOrderByDateCreationDesc(visibilites, pageable)
+                    .map(publication -> enrichPublication(publication, viewer))
         );
     }
 
@@ -109,7 +112,7 @@ public class PublicationController {
                 "auteur", auteur.getNom() + " " + auteur.getPrenom()
         ));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(enrichPublication(saved, auteur));
     }
 
     // ─── PUT /api/publications/{id} ──────────────────────────────────────────
@@ -142,7 +145,7 @@ public class PublicationController {
         }
 
         publication.setContenu(contenu);
-        return ResponseEntity.ok(publicationRepository.save(publication));
+        return ResponseEntity.ok(enrichPublication(publicationRepository.save(publication), resolveUtilisateur(userDetails)));
     }
 
     // ─── DELETE /api/publications/{id} ───────────────────────────────────────
@@ -210,6 +213,7 @@ public class PublicationController {
                     .destinataire(pub.getAuteur())
                     .message(user.getNom() + " a aimé votre publication")
                     .type(TypeNotification.NOUVEAU_LIKE)
+                    .routeCible(buildPublicationRoute(pub))
                     .build();
             notification = notificationRepository.save(notification);
 
@@ -217,11 +221,18 @@ public class PublicationController {
                     "type", "NOUVEAU_LIKE",
                     "message", notification.getMessage(),
                     "id", notification.getId(),
-                    "publicationId", id
+                    "publicationId", id,
+                    "dateCreation", notification.getDateCreation(),
+                    "routeCible", notification.getRouteCible()
             ));
         }
 
-        return ResponseEntity.ok(Map.of("liked", liked, "total", total));
+        return ResponseEntity.ok(Map.of(
+                "liked", liked,
+                "total", total,
+                "commentCount", commentaireRepository.countByPublication(pub),
+                "publicationId", id
+        ));
     }
 
     // ─── GET /api/publications/{id}/commentaires ──────────────────────────────
@@ -286,6 +297,7 @@ public class PublicationController {
                     .destinataire(pub.getAuteur())
                     .message(auteur.getNom() + " a commenté votre publication")
                     .type(TypeNotification.NOUVEAU_COMMENTAIRE)
+                    .routeCible(buildPublicationRoute(pub))
                     .build();
             notification = notificationRepository.save(notification);
 
@@ -293,7 +305,9 @@ public class PublicationController {
                     "type", "NOUVEAU_COMMENTAIRE",
                     "message", notification.getMessage(),
                     "id", notification.getId(),
-                    "publicationId", id
+                    "publicationId", id,
+                    "dateCreation", notification.getDateCreation(),
+                    "routeCible", notification.getRouteCible()
             ));
         }
 
@@ -305,5 +319,32 @@ public class PublicationController {
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
         return utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+    }
+
+    private Utilisateur resolveUtilisateurOrNull(UserDetails userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        return resolveUtilisateur(userDetails);
+    }
+
+    private Publication enrichPublication(Publication publication, Utilisateur viewer) {
+        publication.setLikeCount(likeRepository.countByPublication(publication));
+        publication.setCommentCount(commentaireRepository.countByPublication(publication));
+        publication.setLiked(viewer != null && likeRepository.existsByUtilisateurAndPublication(viewer, publication));
+
+        if (publication.getAnnonce() != null) {
+            Annonce annonce = publication.getAnnonce();
+            boolean suivi = viewer != null
+                    && annonce.getFollowers().stream().anyMatch(follower -> Objects.equals(follower.getId(), viewer.getId()));
+            annonce.setSuivi(suivi);
+            annonce.setFollowerCount(annonce.getFollowers().size());
+        }
+
+        return publication;
+    }
+
+    private String buildPublicationRoute(Publication publication) {
+        return "/profil/" + publication.getAuteur().getId() + "?publicationId=" + publication.getId();
     }
 }

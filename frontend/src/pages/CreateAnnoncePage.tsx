@@ -5,7 +5,7 @@ import api, { uploadImage } from '../lib/api';
 import closeLineSvg from '../assets/close_line.svg';
 import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
 import announcementLineSvg from '../assets/announcement_line.svg';
-import './CreateAnnoncePage.css';
+import '../styles/pages/CreateAnnoncePage.css';
 
 export default function CreateAnnoncePage() {
   const navigate = useNavigate();

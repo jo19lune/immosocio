@@ -4,7 +4,7 @@ import { AnnonceCard } from './AnnoncesPage';
 import api from '../lib/api';
 import announcementLineSvg from '../assets/announcement_line.svg';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import './FeedPage.css';
+import '../styles/pages/FeedPage.css';
 
 export default function FeedPage() {
   const [annonces, setAnnonces] = useState<any[]>([]);
@@ -29,7 +29,7 @@ export default function FeedPage() {
     fetchPosts();
   }, []);
 
-  useAutoRefresh(fetchPosts);
+  useAutoRefresh(fetchPosts, ['annonces']);
 
   const loadMore = () => {
     const next = page + 1;

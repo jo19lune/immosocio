@@ -113,4 +113,27 @@ public class Annonce {
     @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<LikeAnnonce> likesAnnonce;
+
+    @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<CommentaireAnnonce> commentairesAnnonce;
+
+    @jakarta.persistence.Transient
+    private Long likeCount;
+
+    @jakarta.persistence.Transient
+    private Long commentCount;
+
+    @jakarta.persistence.Transient
+    private Boolean liked;
+
+    @jakarta.persistence.Transient
+    private Boolean suivi;
+
+    @jakarta.persistence.Transient
+    private Integer followerCount;
 }

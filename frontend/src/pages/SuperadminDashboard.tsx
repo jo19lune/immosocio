@@ -2,7 +2,7 @@
 import AppLayout from '../components/layout/AppLayout';
 import { motion } from 'framer-motion';
 import { ShieldAlert, Users, Home as HomeIcon, Settings, Activity } from 'lucide-react';
-import './SuperadminDashboard.css';
+import '../styles/pages/SuperadminDashboard.css';
 
 export default function SuperadminDashboard() {
   const stats = [

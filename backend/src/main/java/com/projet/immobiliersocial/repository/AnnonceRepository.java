@@ -101,8 +101,9 @@ public interface AnnonceRepository
 
     /** Détail complet avec JOIN FETCH pour éviter N+1. */
     @Query("""
-        SELECT a FROM Annonce a
+        SELECT DISTINCT a FROM Annonce a
         LEFT JOIN FETCH a.proprietaire
+        LEFT JOIN FETCH a.followers
         WHERE a.id = :id
     """)
     Optional<Annonce> findByIdWithDetails(@Param("id") Long id);

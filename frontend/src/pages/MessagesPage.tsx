@@ -1,12 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faArrowLeft,
+  faMagnifyingGlass,
+  faPaperPlane,
+} from '@fortawesome/free-solid-svg-icons';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../contexts/AuthContext';
-import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { emitAppRefresh } from '../lib/appEvents';
 import { onNotification } from '../lib/websocket';
 import messengerLineSvg from '../assets/messenger_line.svg';
-import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
-import './MessagesPage.css';
+import '../styles/pages/MessagesPage.css';
 
 interface UserInfo {
   id: number;
@@ -34,6 +40,19 @@ interface Conversation {
   lu: boolean;
 }
 
+function sortMessages(items: Message[]) {
+  return [...items].sort(
+    (left, right) => new Date(left.dateEnvoi).getTime() - new Date(right.dateEnvoi).getTime()
+  );
+}
+
+function mergeMessages(existing: Message[], incoming: Message[]) {
+  const byId = new Map<number, Message>();
+  existing.forEach((message) => byId.set(message.id, message));
+  incoming.forEach((message) => byId.set(message.id, message));
+  return sortMessages(Array.from(byId.values()));
+}
+
 export default function MessagesPage() {
   const { user } = useAuth();
   const { userId } = useParams<{ userId?: string }>();
@@ -48,75 +67,92 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // Ref pour accéder à l'utilisateur actif dans le callback WebSocket sans stale closure
   const activeUserRef = useRef<UserInfo | null>(null);
+
   activeUserRef.current = activeUser;
 
-  // ── Réception en temps réel via WebSocket ────────────────────────────────
-  useEffect(() => {
-    const unsubscribe = onNotification((data: unknown) => {
-      const payload = data as { type?: string; message?: Message };
-      if (payload.type === 'NOUVEAU_MESSAGE' && payload.message) {
-        const msg = payload.message;
-        const isFromActiveConv =
-          activeUserRef.current?.id === msg.expediteur.id ||
-          activeUserRef.current?.id === msg.destinataire.id;
-        if (isFromActiveConv) {
-          setMessages((prev) => {
-            // Eviter les doublons (le message qu'on vient d'envoyer est déjà ajouté)
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
+  const getOtherUser = (conversation: Conversation): UserInfo =>
+    conversation.expediteur.id === user?.id ? conversation.destinataire : conversation.expediteur;
+
+  const avatarOf = (person: UserInfo) =>
+    person.photo ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      `${person.prenom}+${person.nom}`
+    )}&background=3B6CF8&color=fff&bold=true`;
+
+  const markConversationAsReadLocally = (otherId: number) => {
+    setConversations((prev) => {
+      let changed = false;
+      const next = prev.map((conversation) => {
+        const other = getOtherUser(conversation);
+        if (other.id === otherId && !conversation.lu) {
+          changed = true;
+          return { ...conversation, lu: true };
         }
-        // Rafraîchir la liste des conversations pour le badge non-lu
-        fetchConversations();
-      }
+        return conversation;
+      });
+      return changed ? next : prev;
     });
-    return unsubscribe;
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
-
-  useEffect(() => {
-    if (userId) {
-      const numId = parseInt(userId);
-      const found = conversations.find(
-        (c) => c.expediteur.id === numId || c.destinataire.id === numId
-      );
-      if (found) {
-        const other = found.expediteur.id === user?.id ? found.destinataire : found.expediteur;
-        openConversation(other);
-      } else if (numId) {
-        // Ouvrir une nouvelle conversation
-        setActiveUser({ id: numId, nom: '...', prenom: '' });
-        fetchMessages(numId);
-      }
+  const fetchConversations = async (options?: { showLoader?: boolean }) => {
+    const showLoader = options?.showLoader ?? true;
+    if (showLoader) {
+      setLoadingConvs(true);
     }
-  }, [userId, conversations]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const fetchConversations = async () => {
-    setLoadingConvs(true);
     try {
       const { data } = await api.get('/messages/conversations');
       setConversations(data || []);
-    } catch { /* silencieux */ }
-    finally { setLoadingConvs(false); }
+    } catch {
+      // silent background refresh
+    } finally {
+      if (showLoader) {
+        setLoadingConvs(false);
+      }
+    }
   };
 
-  const fetchMessages = async (otherId: number) => {
-    setLoadingMsgs(true);
-    setMessages([]);
+  const fetchMessages = async (
+    otherId: number,
+    options?: { replace?: boolean; showLoader?: boolean }
+  ) => {
+    const replace = options?.replace ?? true;
+    const showLoader = options?.showLoader ?? true;
+    if (showLoader) {
+      setLoadingMsgs(true);
+    }
+    if (replace) {
+      setMessages([]);
+    }
     try {
       const { data } = await api.get(`/messages/${otherId}?page=0&size=50`);
-      setMessages(data.content?.reverse() || []);
-    } catch { /* silencieux */ }
-    finally { setLoadingMsgs(false); }
+      const nextMessages = sortMessages(data.content || []);
+      if (nextMessages.length > 0) {
+        const lastMessage = nextMessages[nextMessages.length - 1];
+        const resolvedUser =
+          lastMessage.expediteur.id === user?.id
+            ? lastMessage.destinataire
+            : lastMessage.expediteur;
+        setActiveUser((prev) => {
+          if (!prev) {
+            return resolvedUser;
+          }
+          if (prev.id !== resolvedUser.id) {
+            return prev;
+          }
+          return resolvedUser;
+        });
+      }
+      setMessages((prev) => (replace ? nextMessages : mergeMessages(prev, nextMessages)));
+      markConversationAsReadLocally(otherId);
+      emitAppRefresh(['messages', 'layout'], { source: 'local', payload: { otherId } });
+    } catch {
+      // silent background refresh
+    } finally {
+      if (showLoader) {
+        setLoadingMsgs(false);
+      }
+    }
   };
 
   const openConversation = (other: UserInfo) => {
@@ -125,73 +161,193 @@ export default function MessagesPage() {
     fetchMessages(other.id);
   };
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim() || !activeUser || sending) return;
+  useEffect(() => {
+    const unsubscribe = onNotification((data: unknown) => {
+      const payload = data as { type?: string; messagePayload?: Message };
+      if (payload.type !== 'NOUVEAU_MESSAGE' || !payload.messagePayload) {
+        return;
+      }
+
+      const message = payload.messagePayload;
+      const otherParticipant =
+        message.expediteur.id === user?.id ? message.destinataire : message.expediteur;
+      const activeConversationId = activeUserRef.current?.id;
+
+      if (activeConversationId === otherParticipant.id) {
+        setMessages((prev) => mergeMessages(prev, [message]));
+        markConversationAsReadLocally(otherParticipant.id);
+        if (message.expediteur.id !== user?.id) {
+          api.patch(`/messages/${otherParticipant.id}/lu`).catch(() => undefined);
+        }
+      }
+
+      fetchConversations({ showLoader: false });
+      emitAppRefresh(['messages', 'notifications', 'layout'], {
+        source: 'websocket',
+        payload,
+      });
+    });
+
+    return unsubscribe;
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
+    const refreshVisibleData = () => {
+      if (document.visibilityState !== 'visible') {
+        return;
+      }
+      fetchConversations({ showLoader: false });
+      if (activeUserRef.current) {
+        fetchMessages(activeUserRef.current.id, { replace: false, showLoader: false });
+      }
+    };
+
+    const conversationsTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchConversations({ showLoader: false });
+      }
+    }, 12000);
+
+    const messagesTimer = window.setInterval(() => {
+      if (document.visibilityState === 'visible' && activeUserRef.current) {
+        fetchMessages(activeUserRef.current.id, { replace: false, showLoader: false });
+      }
+    }, 5000);
+
+    window.addEventListener('focus', refreshVisibleData);
+    document.addEventListener('visibilitychange', refreshVisibleData);
+
+    return () => {
+      window.clearInterval(conversationsTimer);
+      window.clearInterval(messagesTimer);
+      window.removeEventListener('focus', refreshVisibleData);
+      document.removeEventListener('visibilitychange', refreshVisibleData);
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+
+    const numericUserId = parseInt(userId, 10);
+    if (Number.isNaN(numericUserId) || activeUser?.id === numericUserId) {
+      return;
+    }
+
+    const existingConversation = conversations.find((conversation) => {
+      const other = getOtherUser(conversation);
+      return other.id === numericUserId;
+    });
+
+    if (existingConversation) {
+      openConversation(getOtherUser(existingConversation));
+      return;
+    }
+
+    setActiveUser({ id: numericUserId, nom: '...', prenom: '' });
+    fetchMessages(numericUserId);
+  }, [userId, conversations, activeUser?.id, user?.id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!text.trim() || !activeUser || sending) {
+      return;
+    }
+
     setSending(true);
     try {
       const { data } = await api.post(`/messages/${activeUser.id}`, { contenu: text });
-      setMessages((prev) => [...prev, data]);
+      setMessages((prev) => mergeMessages(prev, [data]));
       setText('');
-      fetchConversations();
-    } catch { /* silencieux */ }
-    finally { setSending(false); }
+      fetchConversations({ showLoader: false });
+      emitAppRefresh(['messages', 'layout'], {
+        source: 'local',
+        payload: { otherId: activeUser.id },
+      });
+    } catch {
+      // silent background refresh
+    } finally {
+      setSending(false);
+    }
   };
-
-  const getOtherUser = (conv: Conversation): UserInfo =>
-    conv.expediteur.id === user?.id ? conv.destinataire : conv.expediteur;
-
-  const avatarOf = (u: UserInfo) =>
-    u.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.prenom + '+' + u.nom)}&background=3B6CF8&color=fff&bold=true`;
 
   const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
+    const date = new Date(dateStr);
     const now = new Date();
-    const diff = (now.getTime() - d.getTime()) / 1000;
-    if (diff < 86400) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    const diff = (now.getTime() - date.getTime()) / 1000;
+    if (diff < 86400) {
+      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  const filtered = conversations.filter((c) => {
-    const other = getOtherUser(c);
-    const name = `${other.prenom} ${other.nom}`.toLowerCase();
-    return name.includes(searchQuery.toLowerCase());
+  const filteredConversations = conversations.filter((conversation) => {
+    const other = getOtherUser(conversation);
+    const fullName = `${other.prenom} ${other.nom}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase());
   });
 
   return (
     <AppLayout>
-      <div className="messages-page">
-        {/* Liste des conversations */}
+      <div className={`messages-page ${activeUser ? 'chat-open' : ''}`}>
         <div className="conv-list">
           <div className="conv-list-header">
             <h2 className="conv-list-title">Messages</h2>
           </div>
+
           <div className="conv-search-wrap">
-            <input
-              className="form-input conv-search"
-              placeholder="🔍 Rechercher une conversation…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className="conv-search-field">
+              <FontAwesomeIcon icon={faMagnifyingGlass} className="conv-search-icon" />
+              <input
+                className="form-input conv-search"
+                placeholder="Rechercher une conversation..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+              />
+            </div>
           </div>
 
-          {loadingConvs && <div className="conv-loading"><div className="spinner" /></div>}
+          {loadingConvs && (
+            <div className="conv-loading">
+              <div className="spinner" />
+            </div>
+          )}
 
-          {!loadingConvs && filtered.length === 0 && (
+          {!loadingConvs && filteredConversations.length === 0 && (
             <div className="conv-empty">
-              <img src={messengerLineSvg} alt="" width={48} height={48} style={{ opacity: 0.3, marginBottom: 8 }} />
+              <img
+                src={messengerLineSvg}
+                alt=""
+                width={48}
+                height={48}
+                style={{ opacity: 0.3, marginBottom: 8 }}
+              />
               <p>Aucune conversation</p>
             </div>
           )}
 
           <div className="conv-items">
-            {filtered.map((conv) => {
-              const other = getOtherUser(conv);
+            {filteredConversations.map((conversation) => {
+              const other = getOtherUser(conversation);
               const isActive = activeUser?.id === other.id;
-              const isUnread = !conv.lu && conv.destinataire.id === user?.id;
+              const isUnread = !conversation.lu && conversation.destinataire.id === user?.id;
+
               return (
                 <div
-                  key={conv.id}
+                  key={conversation.id}
                   className={`conv-item ${isActive ? 'active' : ''} ${isUnread ? 'unread' : ''}`}
                   onClick={() => openConversation(other)}
                 >
@@ -204,61 +360,82 @@ export default function MessagesPage() {
                       {other.prenom} {other.nom}
                     </div>
                     <div className="conv-item-preview">
-                      {conv.expediteur.id === user?.id ? 'Vous: ' : ''}{conv.contenu}
+                      {conversation.expediteur.id === user?.id ? 'Vous: ' : ''}
+                      {conversation.contenu}
                     </div>
                   </div>
-                  <div className="conv-item-time">{formatTime(conv.dateEnvoi)}</div>
+                  <div className="conv-item-time">{formatTime(conversation.dateEnvoi)}</div>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Zone de chat */}
         <div className="chat-area">
           {!activeUser ? (
             <div className="chat-empty">
-              <img src={messengerLineSvg} alt="" width={64} height={64} style={{ opacity: 0.3, marginBottom: 16 }} />
+              <img
+                src={messengerLineSvg}
+                alt=""
+                width={64}
+                height={64}
+                style={{ opacity: 0.3, marginBottom: 16 }}
+              />
               <h3>Vos messages</h3>
-              <p>Sélectionnez une conversation pour commencer</p>
+              <p>Selectionnez une conversation pour commencer.</p>
             </div>
           ) : (
             <>
-              {/* Header chat */}
               <div className="chat-header">
-                <button className="chat-back" onClick={() => { setActiveUser(null); navigate('/messages'); }}>
-                  ←
+                <button
+                  className="chat-back"
+                  onClick={() => {
+                    setActiveUser(null);
+                    navigate('/messages');
+                  }}
+                >
+                  <FontAwesomeIcon icon={faArrowLeft} />
                 </button>
                 <img src={avatarOf(activeUser)} alt="" className="avatar" width={38} height={38} />
                 <div>
-                  <div className="chat-header-name">{activeUser.prenom} {activeUser.nom}</div>
+                  <div className="chat-header-name">
+                    {activeUser.prenom} {activeUser.nom}
+                  </div>
                 </div>
               </div>
 
-              {/* Messages */}
               <div className="chat-messages">
-                {loadingMsgs && <div className="conv-loading"><div className="spinner" /></div>}
-
-                {!loadingMsgs && messages.length === 0 && (
-                  <div className="chat-start">
-                    <p>Commencez la conversation avec {activeUser.prenom} !</p>
+                {loadingMsgs && (
+                  <div className="conv-loading">
+                    <div className="spinner" />
                   </div>
                 )}
 
-                {messages.map((msg) => {
-                  const isMine = msg.expediteur.id === user?.id;
+                {!loadingMsgs && messages.length === 0 && (
+                  <div className="chat-start">
+                    <p>Commencez la conversation avec {activeUser.prenom || 'cet utilisateur'}.</p>
+                  </div>
+                )}
+
+                {messages.map((message) => {
+                  const isMine = message.expediteur.id === user?.id;
                   return (
-                    <div key={msg.id} className={`message-bubble ${isMine ? 'mine' : 'theirs'}`}>
+                    <div key={message.id} className={`message-bubble ${isMine ? 'mine' : 'theirs'}`}>
                       {!isMine && (
-                        <img src={avatarOf(msg.expediteur)} alt="" className="avatar msg-avatar"
-                          width={28} height={28} />
+                        <img
+                          src={avatarOf(message.expediteur)}
+                          alt=""
+                          className="avatar msg-avatar"
+                          width={28}
+                          height={28}
+                        />
                       )}
                       <div className="message-content">
-                        {msg.mediaUrl && (
-                          <img src={msg.mediaUrl} alt="" className="message-media" />
+                        {message.mediaUrl && (
+                          <img src={message.mediaUrl} alt="" className="message-media" />
                         )}
-                        <p>{msg.contenu}</p>
-                        <span className="message-time">{formatTime(msg.dateEnvoi)}</span>
+                        <p>{message.contenu}</p>
+                        <span className="message-time">{formatTime(message.dateEnvoi)}</span>
                       </div>
                     </div>
                   );
@@ -266,24 +443,24 @@ export default function MessagesPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
               <form className="chat-input-bar" onSubmit={handleSend}>
                 <input
                   className="form-input chat-input"
-                  placeholder={`Message à ${activeUser.prenom}…`}
+                  placeholder={`Message a ${activeUser.prenom || '...'}`}
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={(event) => setText(event.target.value)}
                   autoFocus
                 />
                 <button
                   type="submit"
                   className="btn btn-primary chat-send-btn"
                   disabled={!text.trim() || sending}
+                  aria-label="Envoyer le message"
                 >
                   {sending ? (
                     <span className="spinner" style={{ width: 16, height: 16 }} />
                   ) : (
-                    <img src={sendPlaneFillSvg} alt="Envoyer" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} />
+                    <FontAwesomeIcon icon={faPaperPlane} className="chat-send-icon" />
                   )}
                 </button>
               </form>

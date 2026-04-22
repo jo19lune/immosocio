@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../lib/api';
-import './AuthPages.css';
+import '../styles/pages/AuthPages.css';
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();

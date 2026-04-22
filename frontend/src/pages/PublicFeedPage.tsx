@@ -5,7 +5,7 @@ import { AnnonceCard } from './AnnoncesPage';
 import Logo from '../components/Logo';
 import api from '../lib/api';
 import announcementLineSvg from '../assets/announcement_line.svg';
-import './PublicFeedPage.css';
+import '../styles/pages/PublicFeedPage.css';
 
 export default function PublicFeedPage() {
   const [annoncesFeed, setAnnoncesFeed] = useState<any[]>([]);

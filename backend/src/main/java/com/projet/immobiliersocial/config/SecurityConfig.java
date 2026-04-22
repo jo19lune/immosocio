@@ -4,6 +4,7 @@ import com.projet.immobiliersocial.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -53,19 +54,19 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
 
                 // ── Annonces — lecture publique ────────────────────────────
-                .requestMatchers("/api/annonces/recherche").permitAll()
-                .requestMatchers("/api/annonces/{id}").permitAll()
-                .requestMatchers("/api/annonces").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/annonces/recherche").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/annonces/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/annonces").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/annonces/segment/**").permitAll()
+
+                // ── Commentaires annonces — lecture publique ───────────────
+                // (fix : les commentaires doivent être visibles sans connexion)
+                .requestMatchers(HttpMethod.GET, "/api/annonces/*/commentaires").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/annonces/*/commentaires/*/reponses").permitAll()
 
                 // ── Publications — GET public (filtrage visibilité dans controller)
-                .requestMatchers("/api/publications").permitAll()
-                .requestMatchers("/api/publications/{id}/commentaires").permitAll()
-
-                // ── Upload — authentifié uniquement ───────────────────────
-                // (pas de permit public sur /api/upload)
-
-                // ── Messages — authentifié ─────────────────────────────────
-                // géré par @PreAuthorize dans MessageController
+                .requestMatchers(HttpMethod.GET, "/api/publications").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/publications/{id}/commentaires").permitAll()
 
                 // ── Rôles spécifiques ──────────────────────────────────────
                 .requestMatchers("/api/annonces/mes-annonces/**").hasAnyRole("PROPRIETAIRE", "LOCATAIRE", "SUPERADMIN")
@@ -85,8 +86,6 @@ public class SecurityConfig {
         List<String> allowedOrigins = appProperties.getUrls();
 
         CorsConfiguration config = new CorsConfiguration();
-        // Utiliser setAllowedOriginPatterns pour supporter les wildcards de sous-domaines
-        // tout en restant compatible avec allowCredentials=true.
         config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

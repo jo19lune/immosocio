@@ -6,7 +6,7 @@ import { applyTheme } from '../lib/theme';
 import lightModeSvg from '../assets/light_mode.svg';
 import darkModeSvg from '../assets/dark_mode.svg';
 import systemModeSvg from '../assets/system_mode.svg';
-import './NotificationsSettings.css';
+import '../styles/pages/NotificationsSettings.css';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();

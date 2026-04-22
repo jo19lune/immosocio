@@ -7,7 +7,7 @@ import announcementLineSvg from '../assets/announcement_line.svg';
 import settingsLineSvg from '../assets/settings_1_line.svg';
 import closeLineSvg from '../assets/close_line.svg';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import './MesAnnoncesPage.css';
+import '../styles/pages/MesAnnoncesPage.css';
 
 interface Annonce {
   id: number;

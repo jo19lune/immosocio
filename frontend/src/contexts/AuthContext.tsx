@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import api from '../lib/api';
+import api, { AUTH_SESSION_EXPIRED_EVENT } from '../lib/api';
 import { connectWebSocket, disconnectWebSocket } from '../lib/websocket';
 import { initTheme, applyTheme } from '../lib/theme';
 import toast from 'react-hot-toast';
@@ -34,6 +34,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restaurer la session sauvegardée + connecter le WS
   useEffect(() => {
+    const syncLogoutState = () => {
+      disconnectWebSocket();
+      setToken(null);
+      setUser(null);
+      delete api.defaults.headers.common['Authorization'];
+    };
+
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     if (savedToken && savedUser) {
@@ -54,9 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       initTheme();
     }
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, syncLogoutState);
     setLoading(false);
 
-    return () => { disconnectWebSocket(); };
+    return () => {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, syncLogoutState);
+      disconnectWebSocket();
+    };
   }, []);
 
   const login = async (email: string, motDePasse: string) => {
