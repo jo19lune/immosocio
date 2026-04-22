@@ -97,7 +97,7 @@ goto :EOF
 :START_BACKEND
 echo [BACKEND] Demarrage...
 pushd "%BACKEND_DIR%"
-start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && mvnw.cmd spring-boot:run"
+start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && mvn spring-boot:run"
 popd
 echo [BACKEND] Lance dans une nouvelle fenetre.
 goto :EOF

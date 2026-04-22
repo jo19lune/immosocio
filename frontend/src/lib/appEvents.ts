@@ -45,6 +45,7 @@ export function getRefreshScopesFromPayload(payload: any): RefreshScope[] {
       return ['publications', 'profile', 'notifications', 'layout'];
     case 'RESERVATION_CONFIRMEE':
     case 'RESERVATION_ANNULEE':
+    case 'RESERVATION_TERMINEE':
     case 'NOUVELLE_ANNONCE':
       return ['annonces', 'reservations', 'notifications', 'layout'];
     default:

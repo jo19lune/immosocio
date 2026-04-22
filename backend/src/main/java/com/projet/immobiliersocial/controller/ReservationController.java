@@ -331,6 +331,59 @@ public class ReservationController {
         return ResponseEntity.ok(saved);
     }
 
+    // ─── PATCH /api/reservations/{id}/terminer ──────────────────────────────────
+
+    /**
+     * Marque une réservation confirmée comme terminée (séjour achevé).
+     * Seul le propriétaire de l'annonce peut le faire.
+     * Cela restaure la quantité disponible de l'annonce.
+     */
+    @PatchMapping("/{id}/terminer")
+    @Transactional
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','SUPERADMIN')")
+    public ResponseEntity<Reservation> terminer(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Reservation reservation = resolveReservation(id);
+        verifierProprietaireAnnonce(reservation, userDetails.getUsername());
+
+        if (reservation.getStatut() != StatutReservation.CONFIRMEE) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Seules les réservations confirmées peuvent être marquées comme terminées");
+        }
+
+        // Marquer la réservation comme terminée
+        reservation.setStatut(StatutReservation.TERMINEE);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // Restaurer la quantité disponible
+        Annonce annonce = reservation.getAnnonce();
+        annonce.setQuantiteDisponible(annonce.getQuantiteDisponible() + reservation.getQuantite());
+        annonce.setStatut(StatutAnnonce.DISPONIBLE);
+        annonceRepository.save(annonce);
+
+        // Notifier le locataire
+        Notification notifLocataire = Notification.builder()
+                .destinataire(savedReservation.getLocataire())
+                .message("Votre réservation pour \"" + annonce.getTitre() + "\" a été marquée comme terminée.")
+                .type(TypeNotification.SYSTEME)
+                .routeCible(buildMesReservationsRoute())
+                .build();
+        notifLocataire = notificationRepository.save(notifLocataire);
+        wsService.envoyerNotification(savedReservation.getLocataire().getEmail(), java.util.Map.of(
+                "type", "RESERVATION_TERMINEE",
+                "message", notifLocataire.getMessage(),
+                "id", notifLocataire.getId(),
+                "notificationType", notifLocataire.getType().name(),
+                "dateCreation", notifLocataire.getDateCreation(),
+                "routeCible", notifLocataire.getRouteCible(),
+                "annonceId", annonce.getId()
+        ));
+
+        return ResponseEntity.ok(savedReservation);
+    }
+
     // ─── Helpers privés ───────────────────────────────────────────────────────
 
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {

@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "utilisateurs")
@@ -105,5 +107,24 @@ public class Utilisateur {
     @JsonIgnore
     private List<Reservation> reservations;
 
+    /**
+     * Comptes (propriétaires) que cet utilisateur suit.
+     * Quand un suivi publie une annonce, ses abonnés sont notifiés.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "utilisateur_suivis",
+        joinColumns = @JoinColumn(name = "suiveur_id"),
+        inverseJoinColumns = @JoinColumn(name = "suivi_id")
+    )
+    @JsonIgnore
+    @Builder.Default
+    private Set<Utilisateur> suivisProprietaires = new HashSet<>();
 
+    /**
+     * Indique si l'utilisateur connecté suit ce compte — champ transient rempli
+     * par le contrôleur ou endpoint de vérification.
+     */
+    @Transient
+    private Boolean suivi;
 }
