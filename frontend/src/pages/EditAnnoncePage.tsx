@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
+
 import api, { uploadImage } from '../lib/api';
 import settingsLineSvg from '../assets/settings_1_line.svg';
 import closeLineSvg from '../assets/close_line.svg';
@@ -95,16 +95,16 @@ export default function EditAnnoncePage() {
 
   if (loadingAnnonce) {
     return (
-      <AppLayout>
+      
         <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
           <div className="spinner" />
         </div>
-      </AppLayout>
+      
     );
   }
 
   return (
-    <AppLayout>
+    
       <div className="create-annonce-container">
         <div className="card create-annonce-card">
           <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -201,6 +201,6 @@ export default function EditAnnoncePage() {
           </form>
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

@@ -6,6 +6,32 @@
 #root {
   background: var(--bg);
   min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+/* Scroll reveal container */
+.scroll-reveal-container {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.scroll-reveal-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  #root {
+    scroll-behavior: auto;
+  }
+  
+  .scroll-reveal-container {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* ── Compteur Fluide ────────────────────────────────────────────────────────── */

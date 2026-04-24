@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
+
 import PublicationCard from '../components/publications/PublicationCard';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
@@ -73,18 +73,18 @@ export default function ProfilPage() {
 
   if (loading) {
     return (
-      <AppLayout>
+      
         <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
           <div className="spinner" />
         </div>
-      </AppLayout>
+      
     );
   }
 
   const displayUser = profil || (isOwnProfile ? user : null);
 
   return (
-    <AppLayout>
+    
       <div className="profil-page">
         <div className="profil-banner card">
           <div className="profil-banner-bg" />
@@ -221,6 +221,6 @@ export default function ProfilPage() {
           ))}
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

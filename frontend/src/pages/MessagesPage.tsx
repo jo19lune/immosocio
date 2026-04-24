@@ -6,7 +6,7 @@ import {
   faMagnifyingGlass,
   faPaperPlane,
 } from '@fortawesome/free-solid-svg-icons';
-import AppLayout from '../components/layout/AppLayout';
+
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import { emitAppRefresh } from '../lib/appEvents';
@@ -301,7 +301,7 @@ export default function MessagesPage() {
   });
 
   return (
-    <AppLayout>
+    
       <div className={`messages-page ${activeUser ? 'chat-open' : ''}`}>
         <div className="conv-list">
           <div className="conv-list-header">
@@ -468,6 +468,6 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

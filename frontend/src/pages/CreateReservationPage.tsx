@@ -6,7 +6,7 @@ import {
   faHouse,
   faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons';
-import AppLayout from '../components/layout/AppLayout';
+
 import api from '../lib/api';
 import '../styles/pages/CreateReservationPage.css';
 
@@ -102,24 +102,24 @@ export default function CreateReservationPage() {
 
   if (loading) {
     return (
-      <AppLayout>
+      
         <div className="reservation-loading">
           <div className="spinner" />
         </div>
-      </AppLayout>
+      
     );
   }
 
   if (!annonce) {
     return (
-      <AppLayout>
+      
         <div className="reservation-error auth-error">{error}</div>
-      </AppLayout>
+      
     );
   }
 
   return (
-    <AppLayout>
+    
       <div className="reservation-page">
         <div className="card reservation-card">
           <div className="reservation-title-row">
@@ -250,6 +250,6 @@ export default function CreateReservationPage() {
           </form>
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

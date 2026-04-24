@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import AppLayout from '../components/layout/AppLayout';
+
 import { useAuth } from '../contexts/AuthContext';
 import api, { uploadImage } from '../lib/api';
 import { applyTheme } from '../lib/theme';
@@ -132,7 +132,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="settings-page">
         <h1 className="settings-title">Paramètres</h1>
 
@@ -294,6 +294,6 @@ export default function SettingsPage() {
           </form>
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

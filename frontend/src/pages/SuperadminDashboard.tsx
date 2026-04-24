@@ -1,5 +1,5 @@
 // import React from 'react';
-import AppLayout from '../components/layout/AppLayout';
+
 import { motion } from 'framer-motion';
 import { ShieldAlert, Users, Home as HomeIcon, Settings, Activity } from 'lucide-react';
 import '../styles/pages/SuperadminDashboard.css';
@@ -13,7 +13,7 @@ export default function SuperadminDashboard() {
   ];
 
   return (
-    <AppLayout>
+    
       <motion.div 
         className="superadmin-dashboard"
         initial={{ opacity: 0, y: 20 }}
@@ -80,6 +80,6 @@ export default function SuperadminDashboard() {
           </motion.div>
         </div>
       </motion.div>
-    </AppLayout>
+    
   );
 }

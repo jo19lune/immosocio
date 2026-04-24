@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import AppLayout from '../components/layout/AppLayout';
+
 import { AnnonceCard } from './AnnoncesPage';
 import api from '../lib/api';
 import announcementLineSvg from '../assets/announcement_line.svg';
@@ -38,7 +38,7 @@ export default function FeedPage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="feed-page">
         <h1 className="feed-title">Découvrir les nouveautés</h1>
 
@@ -59,7 +59,7 @@ export default function FeedPage() {
 
         {annonces.map((annonce) => (
           <div key={annonce.id} className="feed-item-wrapper">
-            <AnnonceCard annonce={annonce} onToggleSuivre={fetchPosts} />
+            <AnnonceCard annonce={annonce} />
           </div>
         ))}
 
@@ -74,6 +74,6 @@ export default function FeedPage() {
           <div className="feed-center"><div className="spinner" /></div>
         )}
       </div>
-    </AppLayout>
+    
   );
 }

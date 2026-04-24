@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
+
 import api from '../lib/api';
 import homeLineSvg from '../assets/home_1_line.svg';
 import announcementLineSvg from '../assets/announcement_line.svg';
@@ -71,7 +71,7 @@ export default function MesAnnoncesPage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="mes-annonces-page">
         <div className="mes-annonces-header">
           <div>
@@ -176,6 +176,6 @@ export default function MesAnnoncesPage() {
           })}
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

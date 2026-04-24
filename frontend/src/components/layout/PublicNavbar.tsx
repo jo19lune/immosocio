@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faHome,
+  faBuilding,
+  faUsers,
+} from '@fortawesome/free-solid-svg-icons';
 import Logo from '../Logo';
 import menuLineSvg  from '../../assets/menu_line.svg';
 import closeLineSvg from '../../assets/close_line.svg';
@@ -17,8 +23,18 @@ export default function PublicNavbar() {
           <Logo size={30} />
         </Link>
         <div className={`public-nav-links ${menuOpen ? 'open' : ''}`}>
-          <Link to="/"         className="nav-link" onClick={() => setMenuOpen(false)}>Accueil</Link>
-          <Link to="/annonces" className="nav-link" onClick={() => setMenuOpen(false)}>Annonces</Link>
+          <Link to="/"         className="nav-link" onClick={() => setMenuOpen(false)}>
+            <FontAwesomeIcon icon={faHome} style={{ marginRight: 6 }} />
+            Accueil
+          </Link>
+          <Link to="/annonces" className="nav-link" onClick={() => setMenuOpen(false)}>
+            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: 6 }} />
+            Annonces
+          </Link>
+          <Link to="/utilisateurs" className="nav-link" onClick={() => setMenuOpen(false)}>
+            <FontAwesomeIcon icon={faUsers} style={{ marginRight: 6 }} />
+            Propriétaires
+          </Link>
           <Link to="/login" className="btn btn-ghost btn-sm" onClick={() => setMenuOpen(false)}>
             <img src={userLineSvg} alt="" width={16} height={16} style={{ marginRight: 4 }} />
             Connexion

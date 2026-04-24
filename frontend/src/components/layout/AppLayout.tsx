@@ -5,7 +5,8 @@ import { onNotification } from '../../lib/websocket';
 import { emitAppRefresh, getRefreshScopesFromPayload } from '../../lib/appEvents';
 import api from '../../lib/api';
 import Logo from '../Logo';
-import '../../styles/components/layout/AppLayout.css';
+import Footer from '../Footer';
+
 
 // ── SVG assets ────────────────────────────────────────────────────────────────
 import homeLineSvg        from '../../assets/home_1_line.svg';
@@ -204,6 +205,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Footer */}
+      {user && <Footer />}
     </div>
   );
 }

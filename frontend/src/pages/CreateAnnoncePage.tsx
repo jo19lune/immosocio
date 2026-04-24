@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
+
 import api, { uploadImage } from '../lib/api';
 import closeLineSvg from '../assets/close_line.svg';
 import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
@@ -65,7 +65,7 @@ export default function CreateAnnoncePage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="create-annonce-container">
         <div className="card create-annonce-card">
           <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -162,6 +162,6 @@ export default function CreateAnnoncePage() {
           </form>
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

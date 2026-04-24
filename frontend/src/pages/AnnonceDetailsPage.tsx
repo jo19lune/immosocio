@@ -14,8 +14,8 @@ import {
   faShareNodes,
   faCommentDots as faCommentDotsSolid,
 } from '@fortawesome/free-solid-svg-icons';
-import AppLayout from '../components/layout/AppLayout';
-import PublicNavbar from '../components/layout/PublicNavbar';
+
+
 import Lightbox from '../components/Lightbox';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
@@ -62,14 +62,7 @@ interface Commentaire {
   reponseCount?: number;
 }
 
-function PublicLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="public-page">
-      <PublicNavbar />
-      <div className="annonce-public-shell">{children}</div>
-    </div>
-  );
-}
+
 
 export default function AnnonceDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -111,7 +104,7 @@ export default function AnnonceDetailsPage() {
   const [menuOpen, setMenuOpen]     = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const Layout = user ? AppLayout : PublicLayout;
+  const Layout = ({ children }: any) => <>{children}</>;
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const fetchAnnonce = async () => {

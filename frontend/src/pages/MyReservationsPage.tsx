@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import AppLayout from '../components/layout/AppLayout';
+
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import homeLineSvg from '../assets/home_1_line.svg';
@@ -64,7 +64,7 @@ export default function MyReservationsPage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="mes-annonces-page">
         <div className="mes-annonces-header">
           <div>
@@ -125,6 +125,6 @@ export default function MyReservationsPage() {
           })}
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

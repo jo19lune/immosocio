@@ -12,7 +12,7 @@ import {
   faMessage,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import AppLayout from '../components/layout/AppLayout';
+
 import api from '../lib/api';
 import { emitAppRefresh } from '../lib/appEvents';
 import { onNotification } from '../lib/websocket';
@@ -178,7 +178,7 @@ export default function NotificationsPage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="notifs-page">
         <div className="notifs-header">
           <div>
@@ -257,6 +257,6 @@ export default function NotificationsPage() {
           </button>
         )}
       </div>
-    </AppLayout>
+    
   );
 }

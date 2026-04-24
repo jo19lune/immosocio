@@ -5,18 +5,65 @@
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+  transition: box-shadow var(--transition-slow), border-color var(--transition-slow), transform var(--transition-slow);
   overflow: hidden;
   scroll-margin-top: 120px;
+  animation: cardSlideIn 0.5s ease-out;
 }
 
 .pub-card:hover {
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
 }
 
 .pub-card.highlighted {
   border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12), 0 18px 40px rgba(9, 36, 75, 0.08);
+  position: relative;
+}
+
+.pub-card.highlighted::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  z-index: 1;
+}
+
+/* Scroll reveal animation */
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger reveal utility */
+.pub-card.reveal {
+  opacity: 0;
+  animation: cardSlideIn 0.5s ease forwards;
+}
+
+/* Hover lift with smooth transition */
+.card-hover-lift {
+  transition: transform var(--transition-slow), box-shadow var(--transition-slow);
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Focus states for accessibility */
+.pub-card:focus-within {
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgba(99, 102, 241, 0.3);
 }
 
 .pub-header {

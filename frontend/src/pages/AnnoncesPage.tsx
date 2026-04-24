@@ -17,8 +17,8 @@ import {
   faSort,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
-import AppLayout from '../components/layout/AppLayout';
-import PublicNavbar from '../components/layout/PublicNavbar';
+
+
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { emitAppRefresh } from '../lib/appEvents';
@@ -91,14 +91,7 @@ export default function AnnoncesPage() {
 
   const [tri, setTri] = useState(searchParams.get('tri') || 'DATE_DESC');
 
-  const Wrapper = user
-    ? AppLayout
-    : ({ children }: any) => (
-        <div>
-          <PublicNavbar />
-          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px' }}>{children}</div>
-        </div>
-      );
+  const Wrapper = ({ children }: any) => <>{children}</>;
 
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);

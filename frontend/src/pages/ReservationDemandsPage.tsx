@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import AppLayout from '../components/layout/AppLayout';
+
 import api from '../lib/api';
 import announcementLineSvg from '../assets/announcement_line.svg';
 import checkFillSvg from '../assets/checkbox_circle_fill.svg';
@@ -63,7 +63,7 @@ export default function ReservationDemandsPage() {
   };
 
   return (
-    <AppLayout>
+    
       <div className="mes-annonces-page">
         <div className="mes-annonces-header">
           <div>
@@ -139,6 +139,6 @@ export default function ReservationDemandsPage() {
           ))}
         </div>
       </div>
-    </AppLayout>
+    
   );
 }

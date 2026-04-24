@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import PublicNavbar from '../components/layout/PublicNavbar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faHome,
+  faBuilding,
+  faUsers,
+  faHandshake,
+  faShield,
+  faChevronRight,
+  faChevronDown,
+} from '@fortawesome/free-solid-svg-icons';
+
 import { AnnonceCard } from './AnnoncesPage';
 import Logo from '../components/Logo';
 import api from '../lib/api';
@@ -12,6 +22,7 @@ export default function PublicFeedPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [totalElements, setTotalElements] = useState(0);
 
   useEffect(() => {
     fetchAnnoncesFeed(0, true);
@@ -24,6 +35,7 @@ export default function PublicFeedPage() {
       const items = data.content || [];
       setAnnoncesFeed((prev) => reset ? items : [...prev, ...items]);
       setHasMore(!data.last);
+      setTotalElements(data.totalElements || items.length);
     } catch { /* silencieux */ }
     finally { setLoading(false); }
   };
@@ -36,9 +48,9 @@ export default function PublicFeedPage() {
 
   return (
     <div className="public-page">
-      <PublicNavbar />
+      
 
-      {/* Hero */}
+      {/* Welcome/Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-badge">
@@ -58,10 +70,24 @@ export default function PublicFeedPage() {
             <Link to="/annonces" className="btn btn-ghost btn-lg">Voir les annonces</Link>
           </div>
         </div>
+        <div className="hero-stats">
+          <div className="stat-item">
+            <span className="stat-number">{totalElements}+</span>
+            <span className="stat-label">Annonces</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">500+</span>
+            <span className="stat-label">Utilisateurs</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-number">100%</span>
+            <span className="stat-label">Sécurisé</span>
+          </div>
+        </div>
       </section>
 
       <div className="public-main">
-        {/* Feed public */}
+        {/* Feed public with pagination */}
         <div className="public-feed">
           <div className="feed-header">
             <h2 className="feed-title">Dernières annonces</h2>
@@ -82,16 +108,21 @@ export default function PublicFeedPage() {
             </div>
           )}
 
-          {annoncesFeed.map((annonce) => (
-            <div key={annonce.id} style={{ marginBottom: '24px' }}>
-              <AnnonceCard annonce={annonce} />
-            </div>
-          ))}
+          <div className="annonces-list">
+            {annoncesFeed.map((annonce) => (
+              <div key={annonce.id} style={{ marginBottom: '24px' }}>
+                <AnnonceCard annonce={annonce} />
+              </div>
+            ))}
+          </div>
 
           {hasMore && !loading && (
-            <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}
+            <button 
+              className="btn btn-ghost load-more-btn" 
+              style={{ width: '100%', justifyContent: 'center' }}
               onClick={loadMore}>
-              Charger plus
+              <FontAwesomeIcon icon={faChevronDown} style={{ marginRight: 8 }} />
+              Charger plus d'annonces
             </button>
           )}
           {loading && annoncesFeed.length > 0 && (
@@ -101,6 +132,20 @@ export default function PublicFeedPage() {
 
         {/* Sidebar */}
         <aside className="public-sidebar">
+          {/* Navigation */}
+          <div className="sidebar-nav card">
+            <Link to="/annonces" className="sidebar-link">
+              <FontAwesomeIcon icon={faHome} />
+              <span>Toutes les annonces</span>
+              <FontAwesomeIcon icon={faChevronRight} className="chevron" />
+            </Link>
+            <Link to="/utilisateurs" className="sidebar-link">
+              <FontAwesomeIcon icon={faUsers} />
+              <span>Propriétaires</span>
+              <FontAwesomeIcon icon={faChevronRight} className="chevron" />
+            </Link>
+          </div>
+
           {/* CTA connexion */}
           <div className="sidebar-cta card">
             <h3>Rejoindre la communauté</h3>
@@ -112,10 +157,45 @@ export default function PublicFeedPage() {
               Se connecter
             </Link>
           </div>
-
-          {/* Removed mini annonces from sidebar since they are in the feed now */}
         </aside>
       </div>
+
+      {/* About Section */}
+      <section className="about-section">
+        <div className="about-content">
+          <h2 className="about-title">À propos de l'application</h2>
+          <p className="about-desc">
+            Notre plateforme facilite la recherche et la publication d'annonces immobilières pour les étudiants et les propriétaires.
+            Nous offering une solution complète pour la gestion des locations, réservations et communications.
+          </p>
+          <div className="features-grid">
+            <div className="feature-item">
+              <div className="feature-icon">
+                <FontAwesomeIcon icon={faBuilding} />
+              </div>
+              <h3>Annonces</h3>
+              <p>Publiez et consultez des annonces de logement facilement.</p>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">
+                <FontAwesomeIcon icon={faHandshake} />
+              </div>
+              <h3>Réservations</h3>
+              <p>Gérez vos réservations en toute simplicité.</p>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">
+                <FontAwesomeIcon icon={faShield} />
+              </div>
+              <h3>Sécurité</h3>
+              <p>Vos données et transactions sont protégées.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      
     </div>
   );
 }
