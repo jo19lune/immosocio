@@ -11,9 +11,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Contrôleur REST pour les interactions sociales entre utilisateurs.
@@ -64,7 +69,15 @@ public class SocialController {
         } else {
             suiveur.getSuivisProprietaires().add(cible);
         }
-        utilisateurRepository.save(suiveur);
+        
+        try {
+            utilisateurRepository.save(suiveur);
+        } catch (ApiException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Erreur lors de la mise à jour de l'abonnement", e);
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur serveur");
+        }
 
         boolean nowSuivi = !estSuivi;
         log.info("Utilisateur {} {} le compte {}", suiveur.getId(), nowSuivi ? "suit" : "ne suit plus", id);
@@ -96,9 +109,24 @@ public class SocialController {
         return ResponseEntity.ok(Map.of("suivi", estSuivi));
     }
 
+    /**
+     * Recherche des utilisateurs par nom ou prénom.
+     */
+    @GetMapping("/recherche")
+    public ResponseEntity<Page<Utilisateur>> rechercher(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(utilisateurRepository.rechercher(q, pageable));
+    }
+
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
+        if (userDetails == null || userDetails.getUsername() == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié");
+        }
         return utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
     }

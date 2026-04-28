@@ -83,9 +83,11 @@ public class AnnonceController {
                     annonceRepository.findByStatutIn(List.of(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU), pageable)
                             .map(annonce -> enrichAnnonce(annonce, viewer))
             );
+        } catch (ApiException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des annonces", e);
-            throw e;
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors de la récupération des annonces");
         }
     }
 
@@ -652,8 +654,10 @@ public class AnnonceController {
     }
 
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        return utilisateurRepository.findByEmail(Objects.requireNonNull(email))
+        if (userDetails == null || userDetails.getUsername() == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié");
+        }
+        return utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
     }
 
