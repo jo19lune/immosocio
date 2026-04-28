@@ -1,52 +1,50 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faHome,
-  faBuilding,
-  faUsers,
-} from '@fortawesome/free-solid-svg-icons';
-import Logo from '../Logo';
-import menuLineSvg  from '../../assets/menu_line.svg';
-import closeLineSvg from '../../assets/close_line.svg';
-import userLineSvg  from '../../assets/user_1_line.svg';
-import '../../styles/components/layout/PublicNavbar.css';
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function PublicNavbar() {
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <nav className="public-nav">
-      <div className="public-nav-inner">
-        <Link to="/" className="public-nav-logo">
-          <Logo size={30} />
-        </Link>
-        <div className={`public-nav-links ${menuOpen ? 'open' : ''}`}>
-          <Link to="/"         className="nav-link" onClick={() => setMenuOpen(false)}>
-            <FontAwesomeIcon icon={faHome} style={{ marginRight: 6 }} />
-            Accueil
-          </Link>
-          <Link to="/annonces" className="nav-link" onClick={() => setMenuOpen(false)}>
-            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: 6 }} />
+    <nav className={`bg-surface-container/60 backdrop-blur-xl border-b border-surface-variant/50 shadow-2xl flex justify-between items-center w-full px-8 h-20 fixed top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-surface-container/90' : ''}`}>
+      <div className="flex items-center gap-8">
+        <Link to="/" className="text-2xl font-h1 tracking-tight text-primary-fixed-dim hover:text-primary-container transition-colors">ImmoSocial</Link>
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/annonces" className={`font-body-md font-bold duration-300 ease-in-out active:scale-95 ${location.pathname === '/annonces' ? 'text-primary-fixed-dim border-b-2 border-primary-fixed-dim pb-1' : 'text-on-surface-variant hover:text-primary-fixed-dim hover:bg-surface-variant/40 px-3 py-1 rounded-md'}`}>
             Annonces
           </Link>
-          <Link to="/utilisateurs" className="nav-link" onClick={() => setMenuOpen(false)}>
-            <FontAwesomeIcon icon={faUsers} style={{ marginRight: 6 }} />
-            Propriétaires
+          <Link to="/" className={`font-body-md font-bold duration-300 ease-in-out active:scale-95 ${location.pathname === '/' ? 'text-primary-fixed-dim border-b-2 border-primary-fixed-dim pb-1' : 'text-on-surface-variant hover:text-primary-fixed-dim hover:bg-surface-variant/40 px-3 py-1 rounded-md'}`}>
+            Communauté
           </Link>
-          <Link to="/login" className="btn btn-ghost btn-sm" onClick={() => setMenuOpen(false)}>
-            <img src={userLineSvg} alt="" width={16} height={16} style={{ marginRight: 4 }} />
-            Connexion
-          </Link>
-          <button className="btn btn-primary btn-sm" onClick={() => { navigate('/register'); setMenuOpen(false); }}>
-            S'inscrire
-          </button>
         </div>
-
-        <button className="public-nav-burger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
-          <img src={menuOpen ? closeLineSvg : menuLineSvg} alt={menuOpen ? 'Fermer' : 'Menu'} width={22} height={22} />
-        </button>
+      </div>
+      
+      <div className="flex-1 max-w-md mx-6 hidden lg:block">
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+          <input 
+            type="text" 
+            placeholder="Rechercher des biens ou des membres..." 
+            className="w-full bg-surface-container border border-surface-variant rounded-full py-2 pl-10 pr-4 text-body-sm font-body-sm text-on-surface focus:outline-none focus:border-primary-container transition-colors placeholder:text-on-surface-variant/50"
+          />
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <Link to="/login" className="text-on-surface font-body-md text-body-md hover:text-primary-fixed-dim transition-colors hidden sm:block">
+          Connexion
+        </Link>
+        <Link to="/register" className="bg-primary-container text-on-primary-container font-body-md text-body-md px-6 py-2 rounded-full font-bold hover:bg-primary-fixed transition-colors duration-300 active:scale-95">
+          S'inscrire
+        </Link>
       </div>
     </nav>
   );

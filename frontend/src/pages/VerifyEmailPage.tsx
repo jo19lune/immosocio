@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../lib/api';
-import '../styles/pages/AuthPages.css';
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -40,50 +39,69 @@ export default function VerifyEmailPage() {
   }, [token]);
 
   return (
-    <div className="auth-page">
-      <div className="auth-right" style={{ margin: 'auto' }}>
-        <motion.div 
-          className="auth-card card" 
-          style={{ textAlign: 'center' }}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          {loading ? (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    <div className="min-h-screen bg-surface flex items-center justify-center p-gutter md:p-xl">
+      <motion.div 
+        className="w-full max-w-container-max bg-surface-container-lowest rounded-xl shadow-md p-lg md:p-xl flex flex-col gap-lg border border-outline-variant/30 text-center"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        {loading ? (
+          <motion.div
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+          >
+            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-xs text-primary animate-pulse">
+              <span className="material-symbols-outlined text-3xl animate-spin">refresh</span>
+            </div>
+            <h2 className="font-h1 text-h1 text-on-surface">Vérification en cours...</h2>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Veuillez patienter pendant la vérification de votre email.
+            </p>
+          </motion.div>
+        ) : error ? (
+          <motion.div
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }}
+          >
+            <div className="mx-auto w-12 h-12 bg-error-container rounded-full flex items-center justify-center mb-xs text-error">
+              <span className="material-symbols-outlined text-3xl">error</span>
+            </div>
+            <h2 className="font-h1 text-h1 text-on-surface">Erreur de vérification</h2>
+            <p className="font-body-md text-body-md text-error-container bg-error-container/20 px-md py-sm rounded-lg mb-lg mt-sm">
+              {error}
+            </p>
+            <Link 
+              to="/login" 
+              className="inline-flex items-center justify-center gap-sm bg-primary hover:bg-primary-container text-on-primary font-button text-button py-3 px-4 rounded-lg transition-all duration-200 shadow-sm"
             >
-              <div className="spinner" style={{ margin: '0 auto 24px', width: 48, height: 48, borderTopColor: 'var(--primary)' }} />
-              <h2 className="auth-title">Vérification en cours...</h2>
-              <p className="auth-desc">Veuillez patienter pendant la vérification de votre email.</p>
-            </motion.div>
-          ) : error ? (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              Retour à la connexion
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-xs text-green-600">
+              <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            </div>
+            <h2 className="font-h1 text-h1 text-on-surface">Email vérifié !</h2>
+            <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
+              {success}
+            </p>
+            <button 
+              className="w-full bg-primary hover:bg-primary-container text-on-primary font-button text-button py-3 px-4 rounded-lg flex items-center justify-center gap-sm transition-all duration-200 shadow-sm"
+              onClick={() => navigate('/login')}
             >
-              <div style={{ fontSize: 56, marginBottom: 16 }}>❌</div>
-              <h2 className="auth-title">Erreur de vérification</h2>
-              <p className="auth-error" style={{ marginBottom: 24, textAlign: 'center' }}>{error}</p>
-              <Link to="/login" className="btn btn-primary" style={{ display: 'inline-block' }}>Retour à la connexion</Link>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            >
-              <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-              <h2 className="auth-title">Email vérifié !</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{success}</p>
-              <button 
-                className="btn btn-primary btn-lg" 
-                style={{ width: '100%', justifyContent: 'center' }}
-                onClick={() => navigate('/login')}
-              >
-                Aller à la connexion
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-      </div>
+              Aller à la connexion
+              <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </motion.div>
+        )}
+      </motion.div>
     </div>
   );
 }

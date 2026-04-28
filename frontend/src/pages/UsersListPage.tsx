@@ -9,10 +9,11 @@ import {
   faFilter,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
-
+import AppLayout from '../components/layout/AppLayout';
+import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import userLineSvg from '../assets/user_1_line.svg';
-import '../styles/pages/UsersPage.css';
+
 
 interface User {
   id: number;
@@ -42,7 +43,14 @@ export default function UsersListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
-  const Wrapper = ({ children }: any) => <>{children}</>;
+  const Wrapper = currentUser
+    ? AppLayout
+    : ({ children }: any) => (
+        <div>
+          <PublicNavbar />
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>{children}</div>
+        </div>
+      );
 
   const fetchUsers = async (p: number, reset = false) => {
     setLoading(true);

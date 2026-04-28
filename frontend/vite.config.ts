@@ -7,4 +7,7 @@ export default defineConfig({
   define: {
     global: 'window',
   },
+  css: {
+    postcss: './postcss.config.js',
+  },
 })

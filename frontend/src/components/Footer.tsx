@@ -1,218 +1,167 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+/**
+ * Footer.tsx — Footer modernisé
+ * Palette Teal × Ambre · anime.js
+ */
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faFacebook,
-  faInstagram,
-  faLinkedin,
-  faTwitter,
+  faFacebook, faInstagram, faLinkedin, faTwitter,
 } from '@fortawesome/free-brands-svg-icons';
 import {
-  faEnvelope,
-  faPhone,
-  faMapMarkerAlt,
-  faChevronUp,
-  faShieldHalved,
-  faLock,
-  faGlobe,
+  faEnvelope, faPhone, faMapMarkerAlt, faChevronUp,
+  faShieldHalved, faLock, faGlobe,
 } from '@fortawesome/free-solid-svg-icons';
 import { animate } from 'animejs';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from './Logo';
-import '../styles/components/Footer.css';
 
-/**
- * Footer principal - Respecte les règles IHM :
- * - Accessibilité (ARIA, contrastes, navigation clavier)
- * - Hiérarchie visuelle claire
- * - Feedback utilisateur immédiat
- * - Animations subtiles et performantes
- * - Responsive design
- */
 export default function Footer() {
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating,   setIsAnimating]   = useState(false);
   const { user } = useAuth();
   const location = useLocation();
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 400);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
     const footer = document.querySelector('.site-footer');
     if (!footer) return;
-
-    animate(footer, {
-      opacity: [0, 1],
-      translateY: [20, 0],
-      duration: 600,
-      easing: 'easeOutExpo',
-    });
-
-    const navItems = footer.querySelectorAll('.footer-nav-link');
-    if (navItems.length) {
-      navItems.forEach((item, index) => {
-        animate(item, {
-          opacity: [0, 1],
-          translateX: [-10, 0],
-          delay: index * 50,
-          duration: 400,
-          easing: 'easeOutCubic',
-        });
-      });
-    }
+    animate(footer, { opacity: [0, 1], translateY: [20, 0], duration: 600, easing: 'easeOutExpo' });
   }, []);
 
-  const scrollToTop = async () => {
+  const scrollToTop = () => {
     if (isAnimating) return;
     setIsAnimating(true);
-
-    animate(document.documentElement || document.body, {
-      scrollTop: 0,
-      duration: 800,
-      easing: 'easeInOutQuart',
-      complete: () => setIsAnimating(false),
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => setIsAnimating(false), 800);
   };
 
-  const mainNavItems = [
-    { path: '/', label: 'Accueil' },
-    { path: '/annonces', label: 'Annonces' },
-    { path: '/apropos', label: 'À propos' },
-    { path: '/contact', label: 'Contact' },
+  // Si l'utilisateur est connecté, n'afficher que les annonces
+  // Si pas connecté, afficher accueil et annonces
+  const navLinks = user
+    ? [
+        { path: '/annonces', label: 'Annonces' },
+      ]
+    : [
+        { path: '/',        label: 'Accueil'   },
+        { path: '/annonces',label: 'Annonces'  },
+      ];
+  const authLinks = user ? [
+    { path: `/profil/${user.id}`, label: 'Mon profil'        },
+    { path: '/mes-reservations',  label: 'Mes réservations'  },
+    { path: '/parametres',        label: 'Paramètres'        },
+  ] : [
+    { path: '/login',    label: 'Connexion'  },
+    { path: '/register', label: "S'inscrire" },
   ];
-
-  const legalNavItems = [
-    { path: '/cgu', label: 'CGU' },
-    { path: '/cgu', label: 'Conditions générales' },
-    { path: '/confidentialite', label: 'Confidentialité' },
-    { path: '/cookies', label: 'Cookies' },
+  const legalLinks = [
+    { path: '/cgu',              label: 'Conditions générales' },
+    { path: '/confidentialite',  label: 'Confidentialité'      },
+    { path: '/cookies',          label: 'Cookies'              },
   ];
-
-  const supportNavItems = [
-    { path: '/aide', label: 'Aide' },
-    { path: '/faq', label: 'FAQ' },
-    { path: '/signaler', label: 'Signaler un abus' },
-    ...(user ? [{ path: '/support', label: 'Support' }] : []),
-  ];
-
   const socialLinks = [
-    { icon: faFacebook, label: 'Facebook', href: 'https://facebook.com', ariaLabel: 'Facebook' },
-    { icon: faInstagram, label: 'Instagram', href: 'https://instagram.com', ariaLabel: 'Instagram' },
-    { icon: faLinkedin, label: 'LinkedIn', href: 'https://linkedin.com', ariaLabel: 'LinkedIn' },
-    { icon: faTwitter, label: 'Twitter', href: 'https://twitter.com', ariaLabel: 'Twitter' },
+    { icon: faFacebook,  label: 'Facebook',  href: 'https://facebook.com'  },
+    { icon: faInstagram, label: 'Instagram', href: 'https://instagram.com' },
+    { icon: faLinkedin,  label: 'LinkedIn',  href: 'https://linkedin.com'  },
+    { icon: faTwitter,   label: 'Twitter',   href: 'https://twitter.com'   },
   ];
 
   return (
     <footer className="site-footer" role="contentinfo">
+      <div className="footer-ambient" aria-hidden="true" />
+
+      {/* ─ Section principale ─ */}
       <div className="footer-main">
         <div className="footer-container">
-          <div className="footer-brand">
-            <Link to="/" className="footer-logo" aria-label="Accueil - Retour à la page d'accueil">
-              <Logo size={40} />
-            </Link>
-            <p className="footer-description">
-              Votre plateforme de confiance pour trouver des logements de qualité
-              et connecter propriétaires et locataires.
-            </p>
-            <div className="footer-contact">
-              <div className="contact-item">
-                <FontAwesomeIcon icon={faEnvelope} className="contact-icon" aria-hidden="true" />
-                <span>contact@plateforme.com</span>
-              </div>
-              <div className="contact-item">
-                <FontAwesomeIcon icon={faPhone} className="contact-icon" aria-hidden="true" />
-                <span>09 70 00 00 00</span>
+          <div className="footer-grid">
+            {/* Brand */}
+            <div>
+              <Link to="/" className="footer-logo" aria-label="Retour à l'accueil">
+                <Logo size={38} />
+              </Link>
+              <p className="footer-tagline">ImmoSocial</p>
+              <p className="footer-description">
+                La plateforme de confiance pour connecter propriétaires et locataires.
+                Trouvez votre logement idéal, rapidement.
+              </p>
+              <div className="footer-contact">
+                <div className="contact-item">
+                  <FontAwesomeIcon icon={faEnvelope} className="contact-icon" aria-hidden="true" />
+                  <span>contact@immosocial.com</span>
+                </div>
+                <div className="contact-item">
+                  <FontAwesomeIcon icon={faPhone} className="contact-icon" aria-hidden="true" />
+                  <span>+261 20 00 000 00</span>
+                </div>
               </div>
             </div>
+
+            {/* Navigation */}
+            <nav aria-label="Navigation principale">
+              <h3 className="footer-nav-title">Navigation</h3>
+              <ul className="footer-nav-list">
+                {navLinks.map((item) => (
+                  <li key={item.path}>
+                    <Link to={item.path} className={`footer-nav-link ${location.pathname === item.path ? 'active' : ''}`}>
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Mon compte */}
+            <nav aria-label="Mon compte">
+              <h3 className="footer-nav-title">{user ? 'Mon compte' : 'Accès'}</h3>
+              <ul className="footer-nav-list">
+                {authLinks.map((item) => (
+                  <li key={item.path}>
+                    <Link to={item.path} className="footer-nav-link">{item.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Légal */}
+            <nav aria-label="Informations légales">
+              <h3 className="footer-nav-title">Légal</h3>
+              <ul className="footer-nav-list">
+                {legalLinks.map((item) => (
+                  <li key={item.path}>
+                    <Link to={item.path} className="footer-nav-link">{item.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
-
-          <nav className="footer-nav" aria-label="Navigation principale">
-            <h3 className="footer-nav-title">Navigation</h3>
-            <ul className="footer-nav-list">
-              {mainNavItems.map((item) => (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={`footer-nav-link ${location.pathname === item.path ? 'active' : ''}`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <nav className="footer-nav" aria-label="Informations légales">
-            <h3 className="footer-nav-title">Légal</h3>
-            <ul className="footer-nav-list">
-              {legalNavItems.map((item) => (
-                <li key={item.path}>
-                  <Link to={item.path} className="footer-nav-link">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <nav className="footer-nav" aria-label="Support">
-            <h3 className="footer-nav-title">Support</h3>
-            <ul className="footer-nav-list">
-              {supportNavItems.map((item) => (
-                <li key={item.path}>
-                  <Link to={item.path} className="footer-nav-link">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
         </div>
       </div>
 
+      {/* ─ Section secondaire ─ */}
       <div className="footer-secondary">
         <div className="footer-container">
           <div className="footer-location">
-            <FontAwesomeIcon icon={faMapMarkerAlt} className="location-icon" aria-hidden="true" />
-            <span>Paris, France</span>
+            <FontAwesomeIcon icon={faMapMarkerAlt} style={{ color: 'var(--color-danger)', width: 13 }} aria-hidden="true" />
+            <span>Madagascar</span>
           </div>
 
           <div className="footer-social">
             <span className="social-label">Suivez-nous :</span>
             <div className="social-links">
-              {socialLinks.map((social) => (
+              {socialLinks.map((s) => (
                 <a
-                  key={social.label}
-                  href={social.href}
-                  className="social-link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.ariaLabel}
-                  onMouseEnter={(e) => {
-                    animate(e.currentTarget, {
-                      translateY: -3,
-                      duration: 200,
-                      easing: 'easeOutQuad',
-                    });
-                  }}
-                  onMouseLeave={(e) => {
-                    animate(e.currentTarget, {
-                      translateY: 0,
-                      duration: 200,
-                      easing: 'easeOutQuad',
-                    });
-                  }}
+                  key={s.label} href={s.href} className="social-link"
+                  target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                  onMouseEnter={(e) => animate(e.currentTarget, { translateY: -3, duration: 180, easing: 'easeOutQuad' })}
+                  onMouseLeave={(e) => animate(e.currentTarget, { translateY: 0, duration: 180, easing: 'easeOutQuad' })}
                 >
-                  <FontAwesomeIcon icon={social.icon} />
+                  <FontAwesomeIcon icon={s.icon} />
                 </a>
               ))}
             </div>
@@ -225,7 +174,7 @@ export default function Footer() {
             </div>
             <div className="security-badge">
               <FontAwesomeIcon icon={faLock} />
-              <span>Paiement sécurisé</span>
+              <span>Données protégées</span>
             </div>
             <div className="security-badge">
               <FontAwesomeIcon icon={faGlobe} />
@@ -235,24 +184,25 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* ─ Section inférieure ─ */}
       <div className="footer-bottom">
         <div className="footer-container">
           <div className="footer-copyright">
-            <span>© {currentYear} Plateforme. Tous droits réservés.</span>
+            © {currentYear} ImmoSocial. Tous droits réservés.
           </div>
           <div className="footer-lang">
             <button className="lang-btn active" aria-label="Français">FR</button>
             <button className="lang-btn" aria-label="English">EN</button>
-            <button className="lang-btn" aria-label="Español">ES</button>
           </div>
         </div>
       </div>
 
+      {/* ─ Back to top ─ */}
       {showBackToTop && (
         <button
           className={`back-to-top ${isAnimating ? 'animating' : ''}`}
           onClick={scrollToTop}
-          aria-label="Retour en haut de la page"
+          aria-label="Retour en haut"
           title="Retour en haut"
         >
           <FontAwesomeIcon icon={faChevronUp} />

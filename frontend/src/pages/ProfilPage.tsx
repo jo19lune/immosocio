@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-
+import AppLayout from '../components/layout/AppLayout';
 import PublicationCard from '../components/publications/PublicationCard';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
@@ -10,7 +10,6 @@ import settingsLineSvg from '../assets/settings_1_line.svg';
 import messengerLineSvg from '../assets/messenger_line.svg';
 import announcementLineSvg from '../assets/announcement_line.svg';
 import userLineSvg from '../assets/user_1_line.svg';
-import '../styles/pages/ProfilPage.css';
 
 export default function ProfilPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -73,115 +72,97 @@ export default function ProfilPage() {
 
   if (loading) {
     return (
-      
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
-          <div className="spinner" />
+      <AppLayout>
+        <div className="flex justify-center items-center py-32">
+          <div className="w-10 h-10 border-4 border-surface-variant border-t-primary rounded-full animate-spin"></div>
         </div>
-      
+      </AppLayout>
     );
   }
 
   const displayUser = profil || (isOwnProfile ? user : null);
 
   return (
-    
-      <div className="profil-page">
-        <div className="profil-banner card">
-          <div className="profil-banner-bg" />
-          <div className="profil-info">
-            <img
-              src={avatarUrl(displayUser)}
-              alt=""
-              className="profil-avatar"
-              width={96}
-              height={96}
-            />
-
-            <div className="profil-meta">
-              <h1 className="profil-name">
-                {displayUser?.prenom} {displayUser?.nom}
-              </h1>
-              {user?.role && isOwnProfile && (
-                <span
-                  className="badge badge-primary profil-role"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                >
-                  {user.role === 'PROPRIETAIRE' ? (
-                    <>
-                      <img
-                        src={homeLineSvg}
-                        alt=""
-                        width={14}
-                        height={14}
-                        style={{ filter: 'brightness(0) invert(1)' }}
-                      />
-                      Proprietaire
-                    </>
-                  ) : user.role === 'ADMIN' ? (
-                    <>
-                      <img
-                        src={settingsLineSvg}
-                        alt=""
-                        width={14}
-                        height={14}
-                        style={{ filter: 'brightness(0) invert(1)' }}
-                      />
-                      Admin
-                    </>
-                  ) : (
-                    <>
-                      <img
-                        src={userLineSvg}
-                        alt=""
-                        width={14}
-                        height={14}
-                        style={{ filter: 'brightness(0) invert(1)' }}
-                      />
-                      Locataire
-                    </>
-                  )}
-                </span>
-              )}
-              <p className="profil-stats">
-                <strong>{publications.length}</strong> publication
-                {publications.length !== 1 ? 's' : ''}
-              </p>
+    <AppLayout>
+      <div className="w-full max-w-4xl mx-auto p-4 md:p-6 animate-fade-in">
+        <div className="glass-card relative overflow-hidden rounded-3xl mb-8 p-0 border border-surface-variant/50 shadow-xl">
+          {/* Banner Background */}
+          <div className="h-40 md:h-48 w-full relative bg-gradient-to-br from-primary-container via-surface-variant to-background overflow-hidden">
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center md:items-end -mt-16 md:-mt-12 px-6 pb-6 gap-6 relative z-10">
+            {/* Avatar */}
+            <div className="relative group">
+              <img
+                src={avatarUrl(displayUser)}
+                alt=""
+                className="w-32 h-32 rounded-full border-4 border-surface shadow-2xl object-cover bg-surface-container z-10 relative"
+              />
+              <div className="absolute inset-0 rounded-full shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
 
-            <div className="profil-actions">
+            {/* User Info */}
+            <div className="text-center md:text-left flex-1 mb-2 md:mb-0">
+              <h1 className="text-3xl font-bold text-on-surface mb-2">
+                {displayUser?.prenom} {displayUser?.nom}
+              </h1>
+              
+              <div className="flex flex-col md:flex-row items-center md:items-center gap-3">
+                {user?.role && isOwnProfile && (
+                  <span className="bg-primary-container/80 backdrop-blur text-on-primary-container font-medium px-4 py-1.5 rounded-full text-sm inline-flex items-center gap-2 border border-primary/20">
+                    {user.role === 'PROPRIETAIRE' ? (
+                      <>
+                        <img src={homeLineSvg} alt="" className="w-4 h-4 filter-invert opacity-80" />
+                        Propriétaire
+                      </>
+                    ) : user.role === 'ADMIN' ? (
+                      <>
+                        <img src={settingsLineSvg} alt="" className="w-4 h-4 filter-invert opacity-80" />
+                        Admin
+                      </>
+                    ) : (
+                      <>
+                        <img src={userLineSvg} alt="" className="w-4 h-4 filter-invert opacity-80" />
+                        Locataire
+                      </>
+                    )}
+                  </span>
+                )}
+                
+                <p className="text-outline-variant text-sm font-medium">
+                  <strong className="text-on-surface">{publications.length}</strong> publication{publications.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap justify-center md:justify-end gap-3 mt-4 md:mt-0 w-full md:w-auto">
               {isOwnProfile ? (
                 <>
                   <button
-                    className="btn btn-ghost"
+                    className="bg-surface-container-high hover:bg-surface-bright text-on-surface font-medium px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 border border-surface-variant hover:border-outline"
                     onClick={() => navigate('/parametres')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                   >
-                    <img src={settingsLineSvg} alt="" width={16} height={16} />
+                    <img src={settingsLineSvg} alt="" className="w-4 h-4 opacity-70 filter-invert" />
                     Modifier le profil
                   </button>
                   {user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN' && (
                     <button
-                      className="btn btn-secondary"
+                      className="bg-surface-variant hover:bg-surface-container-high text-on-surface font-medium px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 border border-transparent"
                       onClick={() => switchRole()}
-                      style={{ marginLeft: 8 }}
                     >
-                      Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Proprietaire'}
+                      <img src={settingsLineSvg} alt="" className="w-4 h-4 opacity-50 filter-invert" />
+                      Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Propriétaire'}
                     </button>
                   )}
                 </>
               ) : user ? (
                 <button
-                  className="btn btn-primary"
+                  className="bg-primary hover:bg-primary-container text-on-primary font-medium px-6 py-2.5 rounded-full transition-colors flex items-center gap-2 shadow-lg shadow-primary/20"
                   onClick={() => navigate(`/messages/${userId}`)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
                 >
-                  <img
-                    src={messengerLineSvg}
-                    alt=""
-                    width={18}
-                    height={18}
-                    style={{ filter: 'brightness(0) invert(1)' }}
-                  />
+                  <img src={messengerLineSvg} alt="" className="w-5 h-5 filter-invert" />
                   Envoyer un message
                 </button>
               ) : null}
@@ -189,38 +170,44 @@ export default function ProfilPage() {
           </div>
         </div>
 
-        <div className="profil-publications">
-          <h2 className="profil-pubs-title">Publications</h2>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 mb-8 border-b border-surface-variant/50 pb-4">
+            <h2 className="text-xl font-bold text-on-surface">Publications</h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-surface-variant to-transparent"></div>
+          </div>
 
           {publications.length === 0 && (
-            <div className="profil-empty card">
-              <img
-                src={announcementLineSvg}
-                alt=""
-                width={48}
-                height={48}
-                style={{ opacity: 0.3, marginBottom: 12 }}
-              />
-              <p>{isOwnProfile ? "Vous n'avez pas encore publie." : 'Aucune publication.'}</p>
+            <div className="glass-card flex flex-col items-center justify-center py-16 px-4 text-center max-w-xl mx-auto">
+              <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center mb-4">
+                <img src={announcementLineSvg} alt="" className="w-8 h-8 opacity-40 filter-invert" />
+              </div>
+              <p className="text-outline mb-6 text-lg">
+                {isOwnProfile ? "Vous n'avez pas encore publié." : 'Aucune publication.'}
+              </p>
               {isOwnProfile && (
-                <button className="btn btn-primary" onClick={() => navigate('/feed')}>
-                  Creer une publication
+                <button 
+                  className="bg-primary hover:bg-primary-container text-on-primary font-medium px-6 py-2.5 rounded-full transition-colors" 
+                  onClick={() => navigate('/feed')}
+                >
+                  Créer une publication
                 </button>
               )}
             </div>
           )}
 
-          {publications.map((publication) => (
-            <PublicationCard
-              key={publication.id}
-              domId={`publication-${publication.id}`}
-              highlighted={publication.id === focusedPublicationId}
-              publication={publication}
-              onDelete={(id) => setPublications((prev) => prev.filter((item) => item.id !== id))}
-            />
-          ))}
+          <div className="space-y-6">
+            {publications.map((publication) => (
+              <PublicationCard
+                key={publication.id}
+                domId={`publication-${publication.id}`}
+                highlighted={publication.id === focusedPublicationId}
+                publication={publication}
+                onDelete={(id) => setPublications((prev) => prev.filter((item) => item.id !== id))}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    
+    </AppLayout>
   );
 }

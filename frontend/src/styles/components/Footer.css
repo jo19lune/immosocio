@@ -464,3 +464,151 @@
     animation: none;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   DARK MODE - Styles optimisés pour mode sombre
+   ═════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="dark"] .site-footer {
+  background: linear-gradient(180deg, #21262d 0%, #0d1117 100%);
+  border-top-color: rgba(212, 168, 75, 0.2);
+}
+
+[data-theme="dark"] .site-footer::before {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #d4a84b 20%,
+    #d4a84b 80%,
+    transparent 100%
+  );
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .footer-secondary {
+  background: rgba(212, 168, 75, 0.05);
+  border-top-color: rgba(212, 168, 75, 0.2);
+  border-bottom-color: rgba(212, 168, 75, 0.2);
+}
+
+[data-theme="dark"] .footer-description,
+[data-theme="dark"] .footer-contact {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .footer-nav-title {
+  color: #d4a84b;
+}
+
+[data-theme="dark"] .footer-nav-link {
+  color: #8b949e;
+  background: transparent;
+}
+
+[data-theme="dark"] .footer-nav-link::before {
+  background: #d4a84b;
+}
+
+[data-theme="dark"] .footer-nav-link:hover,
+[data-theme="dark"] .footer-nav-link:focus {
+  color: #d4a84b;
+  background: rgba(212, 168, 75, 0.1);
+}
+
+[data-theme="dark"] .footer-nav-link:focus {
+  box-shadow: 0 0 0 2px rgba(212, 168, 75, 0.4);
+}
+
+[data-theme="dark"] .footer-nav-link.active {
+  color: #d4a84b;
+}
+
+[data-theme="dark"] .social-link {
+  background: #30363d;
+  color: #8b949e;
+  border-color: rgba(212, 168, 75, 0.2);
+}
+
+[data-theme="dark"] .social-link:hover,
+[data-theme="dark"] .social-link:focus {
+  background: #d4a84b;
+  color: #0d1117;
+  border-color: #d4a84b;
+  box-shadow: 0 4px 12px rgba(212, 168, 75, 0.4);
+}
+
+[data-theme="dark"] .social-link:focus {
+  box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.5);
+}
+
+[data-theme="dark"] .security-badge {
+  background: #30363d;
+  border-color: rgba(212, 168, 75, 0.2);
+  color: #8b949e;
+}
+
+[data-theme="dark"] .security-badge svg {
+  color: #3fb950;
+}
+
+[data-theme="dark"] .footer-bottom {
+  background: #161b22;
+  border-top-color: rgba(212, 168, 75, 0.2);
+}
+
+[data-theme="dark"] .footer-copyright {
+  color: #6e7681;
+}
+
+[data-theme="dark"] .footer-location {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .social-label {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .footer-lang {
+  background: #30363d;
+}
+
+[data-theme="dark"] .lang-btn {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .lang-btn:hover {
+  background: #21262d;
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .lang-btn:focus {
+  box-shadow: 0 0 0 2px rgba(212, 168, 75, 0.4);
+}
+
+[data-theme="dark"] .lang-btn.active {
+  background: #d4a84b;
+  color: #0d1117;
+}
+
+[data-theme="dark"] .back-to-top {
+  background: #d4a84b;
+  color: #0d1117;
+  box-shadow: 0 4px 16px rgba(212, 168, 75, 0.5);
+}
+
+[data-theme="dark"] .back-to-top:hover {
+  background: #e6c975;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 20px rgba(212, 168, 75, 0.6);
+}
+
+[data-theme="dark"] .back-to-top:focus {
+  box-shadow: 0 0 0 3px rgba(212, 168, 75, 0.6);
+}
+
+[data-theme="dark"] .contact-item {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .contact-icon {
+  color: #d4a84b;
+}
