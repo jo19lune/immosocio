@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
 
 // Helper: get first photo URL from annonce (supports both `photos: string[]` and `images: {url}[]`)
 function getFirstPhoto(annonce: any): string | null {
@@ -26,6 +27,15 @@ export default function FeedPage() {
   const [hasMore, setHasMore] = useState(true);
   const [reservations, setReservations] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+
+  const fetchNextPage = useCallback(() => {
+    if (!hasMore || loading) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchAnnonces(nextPage, false);
+  }, [page, hasMore, loading]);
+
+  const { ref: loadMoreRef } = useIntersectionObserver(fetchNextPage);
 
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
@@ -68,11 +78,8 @@ export default function FeedPage() {
 
   useAutoRefresh(fetchPosts, ['annonces', 'notifications', 'reservations']);
 
-  const loadMore = () => {
-    const next = page + 1;
-    setPage(next);
-    fetchAnnonces(next);
-  };
+  // Remove old loadMore function - replaced by observer
+
 
   return (
     <AppLayout>
@@ -125,96 +132,91 @@ export default function FeedPage() {
               </div>
             )}
 
-            {annonces.map((annonce) => {
-              const photo = getFirstPhoto(annonce);
-              const ownerAvatar = getOwnerAvatar(annonce.proprietaire);
-              return (
-                <article
-                  key={annonce.id}
-                  className="bg-surface-container rounded-xl border border-surface-variant overflow-hidden hover:border-outline-variant transition-colors group"
-                >
-                  {/* Post Header */}
-                  <div className="p-4 border-b border-surface-variant flex items-center gap-3">
-                    <img
-                      src={ownerAvatar}
-                      alt=""
-                      className="w-10 h-10 rounded-full object-cover border border-surface-variant"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-body-md text-body-md font-semibold text-on-surface">
-                        {annonce.proprietaire?.prenom} {annonce.proprietaire?.nom}
-                      </h3>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        Nouvelle annonce • {new Date(annonce.dateCreation).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-                    <button className="text-on-surface-variant hover:text-on-surface transition-colors">
-                      <span className="material-symbols-outlined">more_horiz</span>
-                    </button>
-                  </div>
-
-                  {/* Post Image */}
-                  <Link to={`/annonces/${annonce.id}`} className="block relative h-64 sm:h-80 w-full overflow-hidden">
-                    {photo ? (
+            <div className="space-y-4">
+              {annonces.map((annonce) => {
+                const photo = getFirstPhoto(annonce);
+                const ownerAvatar = getOwnerAvatar(annonce.proprietaire);
+                return (
+                  <article
+                    key={annonce.id}
+                    className="bg-surface-container rounded-xl border border-surface-variant overflow-hidden hover:border-outline-variant transition-colors group"
+                  >
+                    {/* Post Header */}
+                    <div className="p-4 border-b border-surface-variant flex items-center gap-3">
                       <img
-                        alt={annonce.titre}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        src={photo}
+                        src={ownerAvatar}
+                        alt=""
+                        className="w-10 h-10 rounded-full object-cover border border-surface-variant"
                       />
-                    ) : (
-                      <div className="w-full h-full bg-surface-container-high flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[64px] text-on-surface-variant opacity-30">home</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-body-md text-body-md font-semibold text-on-surface">
+                          {annonce.proprietaire?.prenom} {annonce.proprietaire?.nom}
+                        </h3>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant">
+                          Nouvelle annonce • {new Date(annonce.dateCreation).toLocaleDateString('fr-FR')}
+                        </p>
                       </div>
-                    )}
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-primary-fixed-dim text-black font-label-caps text-label-caps rounded-full shadow-lg uppercase font-bold text-xs">
-                      {annonce.typeTransaction === 'VENTE' ? 'À vendre' : 'À louer'}
+                      <button className="text-on-surface-variant hover:text-on-surface transition-colors">
+                        <span className="material-symbols-outlined">more_horiz</span>
+                      </button>
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
-                      <p className="font-bold text-white text-lg leading-tight">{annonce.titre}</p>
-                      <p className="font-body-sm text-sm text-gray-300 flex items-center gap-1 mt-1">
-                        <span className="material-symbols-outlined text-[14px]">location_on</span>
-                        {annonce.ville || annonce.localisation || 'Non spécifié'}
+
+                    {/* Post Image */}
+                    <Link to={`/annonces/${annonce.id}`} className="block relative h-64 sm:h-80 w-full overflow-hidden">
+                      {photo ? (
+                        <img
+                          alt={annonce.titre}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          src={photo}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-surface-container-high flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[64px] text-on-surface-variant opacity-30">home</span>
+                        </div>
+                      )}
+                      <div className="absolute top-4 right-4 px-3 py-1 bg-primary-fixed-dim text-black font-label-caps text-label-caps rounded-full shadow-lg uppercase font-bold text-xs">
+                        {annonce.typeTransaction === 'VENTE' ? 'À vendre' : 'À louer'}
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12">
+                        <p className="font-bold text-white text-lg leading-tight">{annonce.titre}</p>
+                        <p className="font-body-sm text-sm text-gray-300 flex items-center gap-1 mt-1">
+                          <span className="material-symbols-outlined text-[14px]">location_on</span>
+                          {annonce.ville || annonce.localisation || 'Non spécifié'}
+                        </p>
+                      </div>
+                    </Link>
+
+                    {/* Post Footer */}
+                    <div className="p-4 flex justify-between items-center">
+                      <div className="flex gap-4">
+                        <Link
+                          to={`/annonces/${annonce.id}`}
+                          className="flex items-center gap-2 text-on-surface-variant hover:text-primary-fixed-dim transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">open_in_new</span>
+                          <span className="font-body-sm text-body-sm">Voir</span>
+                        </Link>
+                        <Link
+                          to={`/messages/${annonce.proprietaire?.id}`}
+                          className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">chat_bubble</span>
+                          <span className="font-body-sm text-body-sm">Contacter</span>
+                        </Link>
+                      </div>
+                      <p className="font-bold text-primary-fixed-dim text-lg">
+                        {annonce.prix?.toLocaleString('fr-FR')} Ar
                       </p>
                     </div>
-                  </Link>
+                  </article>
+                );
+              })}
+              <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
+                {loading && <div className="w-6 h-6 border-2 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />}
+              </div>
+            </div>
 
-                  {/* Post Footer */}
-                  <div className="p-4 flex justify-between items-center">
-                    <div className="flex gap-4">
-                      <Link
-                        to={`/annonces/${annonce.id}`}
-                        className="flex items-center gap-2 text-on-surface-variant hover:text-primary-fixed-dim transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">open_in_new</span>
-                        <span className="font-body-sm text-body-sm">Voir</span>
-                      </Link>
-                      <Link
-                        to={`/messages/${annonce.proprietaire?.id}`}
-                        className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">chat_bubble</span>
-                        <span className="font-body-sm text-body-sm">Contacter</span>
-                      </Link>
-                    </div>
-                    <p className="font-bold text-primary-fixed-dim text-lg">
-                      {annonce.prix?.toLocaleString('fr-FR')} Ar
-                    </p>
-                  </div>
-                </article>
-              );
-            })}
-
-            {hasMore && !loading && (
-              <button
-                onClick={loadMore}
-                className="w-full py-4 bg-surface-container-low hover:bg-surface-container border border-surface-variant rounded-xl font-label-caps text-label-caps text-on-surface transition-colors uppercase flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[18px]">expand_more</span>
-                Charger plus
-              </button>
-            )}
-
-            {loading && annonces.length > 0 && (
+            {loading && annonces.length === 0 && (
               <div className="flex justify-center py-4">
                 <div className="w-6 h-6 border-2 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />
               </div>

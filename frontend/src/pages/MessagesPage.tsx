@@ -147,7 +147,21 @@ export default function MessagesPage() {
     }
   };
 
+  const markNotificationsAsRead = async (otherId: number) => {
+    try {
+      await api.patch('/api/notifications/marquer-lus-par-route', { 
+        params: { routeCible: `/messages/${otherId}` } 
+      });
+      // Optimistically update local conversation state
+      markConversationAsReadLocally(otherId);
+      emitAppRefresh(['notifications', 'layout'], { source: 'local' });
+    } catch (error) {
+      console.warn('Failed to mark notifications as read:', error);
+    }
+  };
+
   const openConversation = (other: UserInfo) => {
+    markNotificationsAsRead(other.id);
     setActiveUser(other);
     setShowChatList(false);
     navigate(`/messages/${other.id}`, { replace: true });
@@ -166,13 +180,14 @@ export default function MessagesPage() {
         message.expediteur.id === user?.id ? message.destinataire : message.expediteur;
       const activeConversationId = activeUserRef.current?.id;
 
-      if (activeConversationId === otherParticipant.id) {
-        setMessages((prev) => mergeMessages(prev, [message]));
-        markConversationAsReadLocally(otherParticipant.id);
-        if (message.expediteur.id !== user?.id) {
-          api.patch(`/messages/${otherParticipant.id}/lu`).catch(() => undefined);
-        }
+    if (activeConversationId === otherParticipant.id) {
+      setMessages((prev) => mergeMessages(prev, [message]));
+      markConversationAsReadLocally(otherParticipant.id);
+      if (message.expediteur.id !== user?.id) {
+        api.patch(`/messages/${otherParticipant.id}/lu`).catch(() => undefined);
+        markNotificationsAsRead(otherParticipant.id);
       }
+    }
 
       fetchConversations({ showLoader: false });
       emitAppRefresh(['messages', 'notifications', 'layout'], {
@@ -243,6 +258,7 @@ export default function MessagesPage() {
       const other = getOtherUser(existingConversation);
       // Only switch if different user
       if (activeUser?.id !== other.id) {
+        markNotificationsAsRead(other.id);
         setActiveUser(other);
         setShowChatList(false);
         setMessages([]);

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
 
 interface Annonce {
   id: number;
@@ -73,6 +74,15 @@ export default function AnnoncesPage() {
       </main>
     </div>
   );
+
+  const fetchNextPage = useCallback(() => {
+    if (!hasMore || loading) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchAnnonces(nextPage, false);
+  }, [page, hasMore, loading, tri, searchParams]);
+
+  const { ref: loadMoreRef } = useIntersectionObserver(fetchNextPage);
 
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
@@ -235,20 +245,14 @@ export default function AnnoncesPage() {
         )}
 
         {/* Property Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg max-w-container-max mx-auto">
-          {annonces.map(a => <AnnonceCard key={a.id} annonce={a} />)}
-        </div>
-
-        {hasMore && !loading && (
-          <div className="flex justify-center mt-8">
-            <button 
-              onClick={() => fetchAnnonces(page + 1, false)}
-              className="px-8 py-3 bg-surface border border-surface-variant hover:border-primary-fixed-dim text-on-surface rounded-full font-label-caps text-label-caps uppercase transition-colors"
-            >
-              Charger plus
-            </button>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg max-w-container-max mx-auto">
+            {annonces.map(a => <AnnonceCard key={a.id} annonce={a} />)}
           </div>
-        )}
+          <div ref={loadMoreRef} className="h-20 flex items-center justify-center py-8">
+            {loading && <div className="w-8 h-8 border-4 border-surface-variant border-t-primary rounded-full animate-spin" />}
+          </div>
+        </div>
       </div>
     </Wrapper>
   );

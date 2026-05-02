@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
 import { emitAppRefresh } from '../lib/appEvents';
 import { onNotification } from '../lib/websocket';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
 
 interface Notification {
   id: number;
@@ -43,6 +44,15 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+
+  const fetchNextPage = useCallback(() => {
+    if (!hasMore || loading) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchNotifications(nextPage);
+  }, [page, hasMore, loading]);
+
+  const { ref: loadMoreRef } = useIntersectionObserver(fetchNextPage);
 
   useEffect(() => {
     fetchNotifications(0, true);
@@ -292,28 +302,10 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* Load More */}
-        {hasMore && !loading && (
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={() => {
-                const nextPage = page + 1;
-                setPage(nextPage);
-                fetchNotifications(nextPage);
-              }}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl border border-surface-variant text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all font-body-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-              Charger plus
-            </button>
-          </div>
-        )}
-
-        {loading && notifications.length > 0 && (
-          <div className="flex justify-center mt-8">
-            <div className="w-6 h-6 border-4 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />
-          </div>
-        )}
+        {/* Load More Sentinel */}
+        <div ref={loadMoreRef} className="h-20 flex items-center justify-center py-8 mt-8">
+          {loading && <div className="w-8 h-8 border-4 border-surface-variant border-t-primary-fixed rounded-full animate-spin" />}
+        </div>
       </div>
     </AppLayout>
   );

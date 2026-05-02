@@ -114,6 +114,21 @@ public class NotificationController {
         return ResponseEntity.ok(Map.of("message", "Toutes les notifications marquées comme lues"));
     }
 
+    /**
+     * PATCH /api/notifications/marquer-lus-par-route?routeCible=/path
+     * Marque comme lues les notifications d'un utilisateur pour une route spécifique
+     * (ex: auto-read pour chat /messages/123 actif).
+     */
+    @PatchMapping("/marquer-lus-par-route")
+    public ResponseEntity<Map<String, String>> marquerLusParRoute(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String routeCible) {
+
+        Utilisateur user = resolveUtilisateur(userDetails);
+        notificationRepository.marquerLuesParRoute(user, routeCible);
+        return ResponseEntity.ok(Map.of("message", "Notifications de cette route marquées comme lues"));
+    }
+
     // ─── Helper privé ─────────────────────────────────────────────────────────
 
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
