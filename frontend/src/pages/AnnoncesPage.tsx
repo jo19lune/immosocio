@@ -65,6 +65,14 @@ export default function AnnoncesPage() {
   });
 
   const [tri, setTri] = useState(searchParams.get('tri') || 'DATE_DESC');
+  const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    setShowFilters(window.innerWidth >= 1280);
+    const handleResize = () => setShowFilters(window.innerWidth >= 1280);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const Wrapper = user ? AppLayout : ({ children }: any) => (
     <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
@@ -140,19 +148,20 @@ export default function AnnoncesPage() {
     <Wrapper>
       {/* Sticky Filter Bar */}
       <div className={`sticky ${user ? 'top-0' : 'top-20'} z-30 bg-background/90 backdrop-blur-xl border-b border-surface-variant px-4 md:px-lg py-4 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 transition-all duration-300`}>
-        <div className="flex-shrink-0">
-          <h1 className="font-h2 text-h2 text-on-surface tracking-tight">Explorer les biens</h1>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 flex items-center gap-2">
-            {loading && annonces.length === 0 ? (
-              <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
-            ) : (
-              <span className="material-symbols-outlined text-[16px] text-primary">analytics</span>
-            )}
-            {loading && annonces.length === 0 ? 'Recherche en cours...' : `${totalElements} bien${totalElements > 1 ? 's' : ''} trouvé${totalElements > 1 ? 's' : ''}`}
-          </p>
+        <div className="flex items-center gap-3 flex-shrink-0 w-full xl:w-auto">
+          <h1 className="font-h2 text-h2 text-on-surface tracking-tight flex-1">Explorer les biens</h1>
+          {!showFilters && (
+            <button
+              onClick={() => setShowFilters(true)}
+              className="md:hidden bg-surface-container px-4 py-2 rounded-xl border border-surface-variant hover:bg-surface-container-high text-on-surface font-label-caps text-label-caps transition-all"
+            >
+              <span className="material-symbols-outlined mr-1">tune</span>
+              Filtres
+            </button>
+          )}
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 w-full max-w-5xl">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 w-full max-w-5xl overflow-hidden transition-all duration-300 ${showFilters ? 'max-h-[500px] md:max-h-none opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'}`}>
           {/* Ville */}
           <div className="relative group">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] group-focus-within:text-primary transition-colors">location_on</span>
@@ -173,6 +182,7 @@ export default function AnnoncesPage() {
             <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
+              aria-label="Type de logement"
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none text-body-sm font-medium text-on-surface appearance-none"
             >
               <option value="">Tous les types</option>
@@ -216,6 +226,7 @@ export default function AnnoncesPage() {
             <select
               value={tri}
               onChange={handleTriChange}
+              aria-label="Trier par"
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-surface-variant bg-surface-container-low focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none text-body-sm font-medium text-on-surface appearance-none"
             >
               {sortOptions.map((opt) => (
@@ -224,6 +235,15 @@ export default function AnnoncesPage() {
             </select>
           </div>
         </div>
+        {showFilters && (
+          <button
+            onClick={() => setShowFilters(false)}
+            className="md:hidden self-end mt-2 text-primary text-sm font-medium flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-[16px]">close</span>
+            Masquer
+          </button>
+        )}
       </div>
 
       <div className="p-6 pb-24 lg:pb-6">
