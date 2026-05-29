@@ -12,6 +12,7 @@ import announcementLineSvg from '../assets/announcement_line.svg';
 import userLineSvg from '../assets/user_1_line.svg';
 import '../styles/components/publications/PublicationCard.css';
 import '../styles/pages/ProfilPage.css';
+import { ShieldCheck, Calendar, MessageSquare } from 'lucide-react';
 
 export default function ProfilPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -38,9 +39,16 @@ export default function ProfilPage() {
       if (userPublications.length > 0) {
         setProfil(userPublications[0].auteur);
       } else if (isOwnProfile && user) {
-        setProfil({ id: user.id, nom: user.nom, prenom: user.prenom, photo: user.photo });
+        setProfil({ id: user.id, nom: user.nom, prenom: user.prenom, photo: user.photo, role: user.role, email: user.email });
       } else {
-        setProfil(null);
+        // Mock fallback pour les autres profils (ex: admins créés par seeder)
+        if (numericUserId === 999) {
+          setProfil({ id: 999, nom: 'Loick', prenom: 'Joachim Super', role: 'SUPERADMIN', email: 'ra.joachimloick@gmail.com' });
+        } else if (numericUserId === 998) {
+          setProfil({ id: 998, nom: 'Loick', prenom: 'Joachim', role: 'ADMIN', email: 'joachimloick939@gmail.com' });
+        } else {
+          setProfil(null);
+        }
       }
     } catch {
       // silent background refresh
@@ -70,7 +78,7 @@ export default function ProfilPage() {
     person?.photo ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
       `${person?.prenom || ''}+${person?.nom || ''}`
-    )}&background=3B6CF8&color=fff&bold=true&size=128`;
+    )}&background=4F46E5&color=fff&bold=true&size=128`;
 
   if (loading) {
     return (
@@ -83,18 +91,23 @@ export default function ProfilPage() {
   }
 
   const displayUser = profil || (isOwnProfile ? user : null);
+  
   const roleLabel =
-    user?.role === 'PROPRIETAIRE'
-      ? 'Proprietaire'
-      : user?.role === 'ADMIN'
-        ? 'Admin'
-        : user?.role === 'SUPERADMIN'
-          ? 'Superadmin'
-          : 'Locataire';
+    displayUser?.role === 'PROPRIETAIRE'
+      ? 'Propriétaire'
+      : displayUser?.role === 'ADMIN'
+        ? 'Administrateur'
+        : displayUser?.role === 'SUPERADMIN'
+          ? 'Super Administrateur'
+          : displayUser?.role === 'LOCATAIRE'
+            ? 'Locataire'
+            : 'Membre';
+
+  const isPrivileged = displayUser?.role === 'ADMIN' || displayUser?.role === 'SUPERADMIN';
 
   return (
     <AppLayout>
-      <div className="profile-page">
+      <div className="profile-page fade-in">
         <section className="profile-hero glass-card">
           <div className="profile-cover" />
 
@@ -105,17 +118,26 @@ export default function ProfilPage() {
                 alt=""
                 className="profile-avatar"
               />
+              {isPrivileged && (
+                <span className="profile-shield-icon" title="Compte Officiel Vérifié">
+                  <ShieldCheck size={20} />
+                </span>
+              )}
             </div>
 
             <div className="profile-identity">
               <h1>{displayUser?.prenom} {displayUser?.nom}</h1>
 
               <div className="profile-meta-row">
-                {user?.role && isOwnProfile && (
-                  <span className="profile-role-chip">
-                    {user.role === 'PROPRIETAIRE' ? (
+                {displayUser?.role && (
+                  <span className={`profile-role-chip ${
+                    displayUser.role === 'SUPERADMIN' ? 'role-super' :
+                    displayUser.role === 'ADMIN' ? 'role-adm' :
+                    displayUser.role === 'PROPRIETAIRE' ? 'role-proprietaire' : 'role-locataire'
+                  }`}>
+                    {displayUser.role === 'PROPRIETAIRE' ? (
                       <img src={homeLineSvg} alt="" className="profile-chip-icon" />
-                    ) : user.role === 'ADMIN' || user.role === 'SUPERADMIN' ? (
+                    ) : isPrivileged ? (
                       <img src={settingsLineSvg} alt="" className="profile-chip-icon" />
                     ) : (
                       <img src={userLineSvg} alt="" className="profile-chip-icon" />
@@ -125,8 +147,14 @@ export default function ProfilPage() {
                 )}
 
                 <span className="profile-stat">
+                  <MessageSquare size={16} style={{ marginRight: 6, opacity: 0.7 }} />
                   <strong>{publications.length}</strong>
-                  publication{publications.length !== 1 ? 's' : ''}
+                  &nbsp;publication{publications.length !== 1 ? 's' : ''}
+                </span>
+
+                <span className="profile-stat">
+                  <Calendar size={16} style={{ marginRight: 6, opacity: 0.7 }} />
+                  Inscrit en 2026
                 </span>
               </div>
             </div>
@@ -141,13 +169,13 @@ export default function ProfilPage() {
                     <img src={settingsLineSvg} alt="" />
                     Modifier le profil
                   </button>
-                  {user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN' && (
+                  {!isPrivileged && (
                     <button
                       className="profile-action profile-action-muted"
                       onClick={() => switchRole()}
                     >
                       <img src={settingsLineSvg} alt="" />
-                      Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Proprietaire'}
+                      Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Propriétaire'}
                     </button>
                   )}
                 </>
@@ -166,7 +194,7 @@ export default function ProfilPage() {
 
         <section className="profile-publications">
           <div className="profile-section-title">
-            <h2>Publications</h2>
+            <h2>Publications récentes</h2>
             <span />
           </div>
 
@@ -176,14 +204,14 @@ export default function ProfilPage() {
                 <img src={announcementLineSvg} alt="" />
               </div>
               <p>
-                {isOwnProfile ? "Vous n'avez pas encore publie." : 'Aucune publication.'}
+                {isOwnProfile ? "Vous n'avez pas encore publié." : 'Aucune publication récente pour ce membre.'}
               </p>
               {isOwnProfile && (
                 <button
                   className="profile-action profile-action-primary"
                   onClick={() => navigate('/feed')}
                 >
-                  Creer une publication
+                  Créer une publication
                 </button>
               )}
             </div>

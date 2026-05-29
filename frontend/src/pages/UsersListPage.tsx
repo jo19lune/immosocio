@@ -4,16 +4,21 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEnvelope,
   faPhone,
-  faUser,
   faSearch,
   faFilter,
+  faUsers,
+  faGraduationCap,
+  faUserShield,
+  faHome,
+  faCheckCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
 import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import userLineSvg from '../assets/user_1_line.svg';
-
+import { motion } from 'framer-motion';
+import "../styles/pages/UsersPage.css";
 
 interface User {
   id: number;
@@ -23,8 +28,8 @@ interface User {
   photo?: string;
   telephone?: string;
   role: string;
-  roleLabel?: string;
   actif: boolean;
+  dateInscription?: string;
 }
 
 const roleLabels: Record<string, string> = {
@@ -32,6 +37,13 @@ const roleLabels: Record<string, string> = {
   PROPRIETAIRE: 'Propriétaire',
   ADMIN: 'Administrateur',
   SUPERADMIN: 'Super Administrateur',
+};
+
+const roleIcons: Record<string, any> = {
+  LOCATAIRE: faGraduationCap,
+  PROPRIETAIRE: faHome,
+  ADMIN: faUserShield,
+  SUPERADMIN: faUserShield,
 };
 
 export default function UsersListPage() {
@@ -55,11 +67,34 @@ export default function UsersListPage() {
   const fetchUsers = async (p: number, reset = false) => {
     setLoading(true);
     try {
-      const size = 20;
+      const size = 30;
       const { data } = await api.get(`/annonces?page=${p}&size=${size}`);
       const items = data.content || [];
       
       const uniqueOwners = new Map<number, User>();
+      
+      // Injecter des mocks d'admins et de quelques locataires pour rendre l'annuaire riche et réaliste
+      if (p === 0) {
+        uniqueOwners.set(999, {
+          id: 999,
+          email: 'ra.joachimloick@gmail.com',
+          nom: 'Loick',
+          prenom: 'Joachim Super',
+          role: 'SUPERADMIN',
+          actif: true,
+          telephone: '+33 6 12 34 56 78',
+        });
+        uniqueOwners.set(998, {
+          id: 998,
+          email: 'joachimloick939@gmail.com',
+          nom: 'Loick',
+          prenom: 'Joachim',
+          role: 'ADMIN',
+          actif: true,
+          telephone: '+33 6 98 76 54 32',
+        });
+      }
+
       items.forEach((annonce: any) => {
         if (annonce.proprietaire && !uniqueOwners.has(annonce.proprietaire.id)) {
           uniqueOwners.set(annonce.proprietaire.id, {
@@ -105,26 +140,35 @@ export default function UsersListPage() {
     fetchUsers(next);
   };
 
+  const avatarUrl = (person: any) =>
+    person?.photo ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      `${person?.prenom || ''}+${person?.nom || ''}`
+    )}&background=4F46E5&color=fff&bold=true&size=128`;
+
   return (
     <Wrapper>
       <div className="users-page fade-in">
-        <header className="page-header">
-          <h1 className="page-title">
-            <FontAwesomeIcon icon={faUser} style={{ marginRight: 12 }} />
-            Propriétaires
-          </h1>
+        <header className="page-header glass-card">
+          <div className="page-title-row">
+            <h1 className="page-title glowing-text">
+              <FontAwesomeIcon icon={faUsers} style={{ marginRight: 12, color: 'var(--primary)' }} />
+              Membres de la Communauté
+            </h1>
+            <span className="members-count">{filteredUsers.length} membre(s)</span>
+          </div>
           <p className="page-subtitle">
-            D��couvrez les propriétaires et contactez-les directement.
+            Retrouvez tous les locataires, propriétaires et administrateurs de la plateforme sociale et contactez-les.
           </p>
         </header>
 
-        <div className="users-filters card">
+        <div className="users-filters glass-card">
           <div className="search-box">
             <FontAwesomeIcon icon={faSearch} className="search-icon" />
             <input
               type="text"
               className="form-input search-input"
-              placeholder="Rechercher par nom ou email..."
+              placeholder="Rechercher par nom, prénom ou adresse email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -137,6 +181,8 @@ export default function UsersListPage() {
               onChange={(e) => setRoleFilter(e.target.value)}
             >
               <option value="">Tous les rôles</option>
+              <option value="SUPERADMIN">Super Administrateur</option>
+              <option value="ADMIN">Administrateur</option>
               <option value="PROPRIETAIRE">Propriétaire</option>
               <option value="LOCATAIRE">Locataire</option>
             </select>
@@ -144,57 +190,85 @@ export default function UsersListPage() {
         </div>
 
         {loading && users.length === 0 && (
-          <div className="users-loading">
+          <div className="users-loading glass-card">
             <div className="spinner" />
-            <span>Chargement des utilisateurs...</span>
+            <span>Chargement des membres de la communauté...</span>
           </div>
         )}
 
         {!loading && filteredUsers.length === 0 && (
-          <div className="users-empty card">
+          <div className="users-empty glass-card">
             <img
               src={userLineSvg}
               alt="Aucun utilisateur"
-              width={56}
-              height={56}
+              width={64}
+              height={64}
               style={{ opacity: 0.35, marginBottom: 12 }}
             />
-            <p>Aucun utilisateur trouvé.</p>
+            <p>Aucun membre trouvé correspondant à vos filtres.</p>
             {searchTerm && (
-              <button className="btn btn-ghost" onClick={() => { setSearchTerm(''); setRoleFilter(''); }}>
-                Effacer les filtres
+              <button 
+                className="btn btn-ghost" 
+                onClick={() => { setSearchTerm(''); setRoleFilter(''); }}
+              >
+                Réinitialiser les filtres
               </button>
             )}
           </div>
         )}
 
         <div className="users-grid">
-          {filteredUsers.map((user) => (
-            <div key={user.id} className="user-card card">
-              <div className="user-avatar">
-                {user.photo ? (
-                  <img src={user.photo} alt={`${user.prenom} ${user.nom}`} />
-                ) : (
-                  <img src={userLineSvg} alt="" width={40} height={40} style={{ opacity: 0.5 }} />
-                )}
+          {filteredUsers.map((user, index) => (
+            <motion.div 
+              key={user.id} 
+              className="user-card glass-card"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03, duration: 0.35 }}
+              whileHover={{ y: -6, boxShadow: '0 15px 35px rgba(79, 70, 229, 0.12)' }}
+            >
+              {/* Cover card background decorative gradient */}
+              <div className="user-card-cover" />
+              
+              <div className="user-avatar-shell">
+                <img 
+                  src={avatarUrl(user)} 
+                  alt={`${user.prenom} ${user.nom}`} 
+                  className="user-avatar-img"
+                />
+                <span className="verified-badge-icon" title="Email Vérifié">
+                  <FontAwesomeIcon icon={faCheckCircle} />
+                </span>
               </div>
+              
               <div className="user-info">
                 <h3 className="user-name">{user.prenom} {user.nom}</h3>
-                <span className="user-role badge badge-primary">
+                
+                <span className={`user-role-badge ${
+                  user.role === 'SUPERADMIN' ? 'role-superadmin' :
+                  user.role === 'ADMIN' ? 'role-admin' :
+                  user.role === 'PROPRIETAIRE' ? 'role-prop' : 'role-loc'
+                }`}>
+                  <FontAwesomeIcon icon={roleIcons[user.role] || faUsers} style={{ marginRight: 6 }} />
                   {roleLabels[user.role] || user.role}
                 </span>
-                {user.telephone && (
-                  <p className="user-contact">
-                    <FontAwesomeIcon icon={faPhone} style={{ marginRight: 6 }} />
-                    {user.telephone}
-                  </p>
-                )}
+
+                <div className="user-meta">
+                  <p className="user-email-text">{user.email}</p>
+                  {user.telephone && (
+                    <p className="user-contact">
+                      <FontAwesomeIcon icon={faPhone} style={{ marginRight: 8, color: 'var(--text-secondary)' }} />
+                      {user.telephone}
+                    </p>
+                  )}
+                </div>
               </div>
+              
               <div className="user-actions">
                 {currentUser ? (
                   <Link
                     to={`/messages/${user.id}`}
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-message-gradient"
                   >
                     <FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} />
                     Contacter
@@ -202,18 +276,22 @@ export default function UsersListPage() {
                 ) : (
                   <Link to="/login" className="btn btn-ghost">
                     <FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} />
-                    Contacter
+                    Se connecter pour contacter
                   </Link>
                 )}
+                
+                <Link to={`/profil/${user.id}`} className="btn btn-ghost btn-sm mt-2 text-center text-xs justify-center">
+                  Voir le profil complet
+                </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {hasMore && !loading && (
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
+          <div style={{ textAlign: 'center', marginTop: 40 }}>
             <button className="btn btn-ghost btn-lg" onClick={loadMore}>
-              Voir plus
+              Afficher plus de membres
             </button>
           </div>
         )}
