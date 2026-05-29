@@ -19,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -77,7 +78,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ] : []),
   ];
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  const mobileMoreItems: NavItem[] = [
+    { path: '/notifications', icon: 'notifications', label: 'Notifications', badge: unreadNotifs },
+    ...(isProprietaire ? [
+      { path: '/mes-annonces', icon: 'storefront', label: 'Mes annonces' },
+      { path: '/demandes-reservations', icon: 'check_circle', label: 'Demandes' },
+    ] : []),
+    ...(!isProprietaire && !isAdmin ? [
+      { path: '/mes-reservations', icon: 'event_available', label: 'Reservations' },
+    ] : []),
+    ...bottomItems,
+  ];
+
+  const isRouteActive = (path: string) => (
+    path === '/feed' ? location.pathname === '/feed' : location.pathname.startsWith(path)
+  );
+
+  const hasActiveMoreItem = mobileMoreItems.some((item) => isRouteActive(item.path));
+
+  const handleLogout = () => {
+    setMobileMoreOpen(false);
+    logout();
+    navigate('/');
+  };
+
+  useEffect(() => {
+    setMobileMoreOpen(false);
+  }, [location.pathname]);
 
   const avatarUrl = user?.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent((user?.prenom || '') + '+' + (user?.nom || ''))}&background=fabd00&color=000&bold=true`;
 
@@ -168,8 +195,78 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
+      {mobileMoreOpen && (
+        <button
+          type="button"
+          aria-label="Fermer le menu"
+          className="md:hidden fixed inset-0 bottom-16 z-40 bg-inverse-surface/30 backdrop-blur-[2px]"
+          onClick={() => setMobileMoreOpen(false)}
+        />
+      )}
+
+      <div
+        id="mobile-more-menu"
+        className={`md:hidden fixed left-3 right-3 bottom-20 z-50 rounded-2xl border border-outline bg-surface-container-low shadow-2xl transition-all duration-200 ${
+          mobileMoreOpen
+            ? 'translate-y-0 opacity-100 pointer-events-auto'
+            : 'translate-y-4 opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center justify-between border-b border-outline px-4 py-3">
+          <div>
+            <p className="font-h3 text-sm font-semibold text-on-surface">Options</p>
+            <p className="font-body-sm text-xs text-on-surface-variant">Acces rapide a votre espace</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Fermer les options"
+            className="grid h-9 w-9 place-items-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+            onClick={() => setMobileMoreOpen(false)}
+          >
+            <span className="material-symbols-outlined text-[22px]">close</span>
+          </button>
+        </div>
+
+        <div className="max-h-[52vh] overflow-y-auto p-2">
+          {mobileMoreItems.map((item) => {
+            const active = isRouteActive(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center justify-between rounded-xl px-3 py-3 transition-colors ${
+                  active
+                    ? 'bg-primary-fixed-dim/10 text-primary-fixed-dim'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="material-symbols-outlined" style={active ? { fontVariationSettings: "'FILL' 1" } : {}}>{item.icon}</span>
+                  <span className="truncate font-h3 text-sm font-semibold">{item.label}</span>
+                </span>
+                {item.badge != null && item.badge > 0 && (
+                  <span className="ml-3 rounded-full bg-primary-container px-2 py-0.5 text-[10px] font-bold text-on-primary-container">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-on-surface-variant transition-colors hover:bg-error-container/30 hover:text-error"
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-h3 text-sm font-semibold">Deconnexion</span>
+          </button>
+        </div>
+      </div>
+
       {/* Mobile Bottom NavBar */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-surface-container-highest z-50 h-16 flex justify-around items-center px-4">
+      <nav className="md:hidden fixed bottom-0 left-0 z-50 h-16 w-full border-t border-surface-container-highest bg-surface/90 px-2 backdrop-blur-xl">
+        <div className="grid h-full grid-cols-5 items-center">
         <Link to="/feed" className={`flex flex-col items-center gap-1 ${location.pathname === '/feed' ? 'text-primary-fixed-dim' : 'text-on-surface-variant hover:text-on-surface transition-colors'}`}>
           <span className="material-symbols-outlined" style={location.pathname === '/feed' ? { fontVariationSettings: "'FILL' 1" } : {}}>dynamic_feed</span>
           <span className="font-label-caps text-[10px]">Actualité</span>
@@ -187,6 +284,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="material-symbols-outlined" style={location.pathname.startsWith('/profil') ? { fontVariationSettings: "'FILL' 1" } : {}}>person</span>
           <span className="font-label-caps text-[10px]">Profil</span>
         </Link>
+        <button
+          type="button"
+          aria-label="Afficher les autres options"
+          aria-expanded={mobileMoreOpen}
+          aria-controls="mobile-more-menu"
+          className={`relative flex flex-col items-center gap-1 ${mobileMoreOpen || hasActiveMoreItem ? 'text-primary-fixed-dim' : 'text-on-surface-variant hover:text-on-surface transition-colors'}`}
+          onClick={() => setMobileMoreOpen((open) => !open)}
+        >
+          <span className="material-symbols-outlined" style={mobileMoreOpen || hasActiveMoreItem ? { fontVariationSettings: "'FILL' 1" } : {}}>apps</span>
+          <span className="font-label-caps text-[10px]">Plus</span>
+          {(unreadNotifs > 0 || hasActiveMoreItem) && (
+            <span className="absolute top-0 right-4 h-2 w-2 rounded-full bg-primary-fixed-dim" />
+          )}
+        </button>
+        </div>
       </nav>
     </div>
   );

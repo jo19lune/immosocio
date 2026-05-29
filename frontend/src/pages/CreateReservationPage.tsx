@@ -124,6 +124,7 @@ export default function CreateReservationPage() {
         <div className="card reservation-card">
           <div className="reservation-title-row">
             <div>
+              <span className="reservation-kicker">Demande de reservation</span>
               <h2>
                 <FontAwesomeIcon icon={faHouse} />
                 Reserver : {annonce.titre}
@@ -147,18 +148,21 @@ export default function CreateReservationPage() {
           )}
 
           <div className="reservation-summary">
-            <p>
-              <strong>Prix unitaire :</strong> {Number(annonce.prix).toLocaleString('fr-FR')} Ar
+            <p className="reservation-summary-item">
+              <span>Prix unitaire</span>
+              <strong>{Number(annonce.prix).toLocaleString('fr-FR')} Ar</strong>
             </p>
-            <p>
-              <strong>Disponibilite :</strong> {annonce.quantiteDisponible} unite(s)
+            <p className="reservation-summary-item">
+              <span>Disponibilite</span>
+              <strong>{annonce.quantiteDisponible} unite(s)</strong>
             </p>
-            <p>
-              <strong>Statut :</strong> {annonce.statut}
+            <p className="reservation-summary-item">
+              <span>Statut</span>
+              <strong>{annonce.statut}</strong>
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="create-annonce-form">
+          <form onSubmit={handleSubmit} className="create-annonce-form reservation-form">
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Date de debut *</label>

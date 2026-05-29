@@ -55,7 +55,6 @@ export default function AnnoncesPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [totalElements, setTotalElements] = useState(0);
 
   const [filters, setFilters] = useState({
     ville:   searchParams.get('ville')   || '',
@@ -108,7 +107,6 @@ export default function AnnoncesPage() {
 
       setAnnonces(prev => (reset ? items : [...prev, ...items]));
       setHasMore(!data.last);
-      setTotalElements(data.totalElements || items.length);
       setPage(p);
     } catch (err) {
       console.error('Erreur chargement annonces', err);
