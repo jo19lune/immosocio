@@ -230,7 +230,7 @@ public class AnnonceController {
     }
 
     @GetMapping("/mes-annonces")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Page<Annonce>> mesAnnonces(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -249,7 +249,7 @@ public class AnnonceController {
      * Crée une nouvelle annonce et notifie tous les abonnés du propriétaire.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Annonce> creerAnnonce(
             @Valid @RequestBody AnnonceRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -285,7 +285,7 @@ public class AnnonceController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Annonce> modifierAnnonce(
             @PathVariable Long id,
             @Valid @RequestBody AnnonceRequest request,
