@@ -7,7 +7,7 @@ import {
   Trash2, Globe, Server, CheckCircle2, Lock, Unlock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import "../styles/pages/SuperadminDashboard.css";
+
 
 interface MockUser {
   id: number;

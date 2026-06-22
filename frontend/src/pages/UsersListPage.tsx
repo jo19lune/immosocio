@@ -18,7 +18,7 @@ import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import userLineSvg from '../assets/user_1_line.svg';
 import { motion } from 'framer-motion';
-import "../styles/pages/UsersPage.css";
+
 
 interface User {
   id: number;

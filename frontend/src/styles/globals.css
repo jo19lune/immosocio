@@ -5,91 +5,191 @@
 @layer base {
   :root {
     /* Aura Light Social */
-    --background: #F8F9FA;
-    --on-background: #0F172A;
+    --background: 248 249 250;
+    --on-background: 15 23 42;
     
-    --surface: #FFFFFF;
-    --surface-dim: #F1F5F9;
-    --surface-bright: #FFFFFF;
-    --surface-container-lowest: #FFFFFF;
-    --surface-container-low: #F8FAFC;
-    --surface-container: #F1F5F9;
-    --surface-container-high: #E2E8F0;
-    --surface-container-highest: #CBD5E1;
+    --surface: 255 255 255;
+    --surface-dim: 241 245 249;
+    --surface-bright: 255 255 255;
+    --surface-container-lowest: 255 255 255;
+    --surface-container-low: 248 250 252;
+    --surface-container: 241 245 249;
+    --surface-container-high: 226 232 240;
+    --surface-container-highest: 203 213 225;
     
-    --on-surface: #0F172A;
-    --on-surface-variant: #64748B;
-    --outline: #E2E8F0;
-    --outline-variant: #CBD5E1;
+    --on-surface: 15 23 42;
+    --on-surface-variant: 100 116 139;
+    --outline: 226 232 240;
+    --outline-variant: 203 213 225;
     
-    --primary: #FFB300;
-    --on-primary: #FFFFFF;
-    --primary-container: #FFB300;
-    --on-primary-container: #452C00;
-    --primary-fixed: #FFE4AF;
-    --primary-fixed-dim: #FFB300;
+    --primary: 255 179 0;
+    --on-primary: 255 255 255;
+    --primary-container: 255 179 0;
+    --on-primary-container: 69 44 0;
+    --primary-fixed: 255 228 175;
+    --primary-fixed-dim: 255 179 0;
     
-    --secondary: #64748B;
-    --on-secondary: #FFFFFF;
-    --secondary-container: #E2E8F0;
-    --on-secondary-container: #1E293B;
+    --secondary: 100 116 139;
+    --on-secondary: 255 255 255;
+    --secondary-container: 226 232 240;
+    --on-secondary-container: 30 41 59;
     
-    --error: #EF4444;
-    --on-error: #FFFFFF;
-    --error-container: #FEE2E2;
-    --on-error-container: #991B1B;
+    --error: 239 68 68;
+    --on-error: 255 255 255;
+    --error-container: 254 226 226;
+    --on-error-container: 153 27 27;
     
-    --surface-variant: #F1F5F9;
-    --inverse-surface: #1E293B;
-    --inverse-on-surface: #F8FAFC;
-    --surface-tint: #FFB300;
+    --surface-variant: 241 245 249;
+    --inverse-surface: 30 41 59;
+    --inverse-on-surface: 248 250 252;
+    --surface-tint: 255 179 0;
   }
 
   .dark {
     /* Aura Dark Social */
-    --background: #131313;
-    --on-background: #e5e2e1;
+    --background: 19 19 19;
+    --on-background: 229 226 225;
     
-    --surface: #131313;
-    --surface-dim: #131313;
-    --surface-bright: #393939;
-    --surface-container-lowest: #0e0e0e;
-    --surface-container-low: #1c1b1b;
-    --surface-container: #201f1f;
-    --surface-container-high: #2a2a2a;
-    --surface-container-highest: #353534;
+    --surface: 19 19 19;
+    --surface-dim: 19 19 19;
+    --surface-bright: 57 57 57;
+    --surface-container-lowest: 14 14 14;
+    --surface-container-low: 28 27 27;
+    --surface-container: 32 31 31;
+    --surface-container-high: 42 42 42;
+    --surface-container-highest: 53 53 52;
     
-    --on-surface: #e5e2e1;
-    --on-surface-variant: #d4c5ab;
-    --outline: #9c8f78;
-    --outline-variant: #4f4632;
+    --on-surface: 229 226 225;
+    --on-surface-variant: 212 197 171;
+    --outline: 156 143 120;
+    --outline-variant: 79 70 50;
     
-    --primary: #ffe4af;
-    --on-primary: #3f2e00;
-    --primary-container: #ffc107;
-    --on-primary-container: #6d5100;
-    --primary-fixed: #ffdf9e;
-    --primary-fixed-dim: #fabd00;
+    --primary: 255 228 175;
+    --on-primary: 63 46 0;
+    --primary-container: 255 193 7;
+    --on-primary-container: 109 81 0;
+    --primary-fixed: 255 223 158;
+    --primary-fixed-dim: 250 189 0;
     
-    --secondary: #c8c6c8;
-    --on-secondary: #303032;
-    --secondary-container: #474649;
-    --on-secondary-container: #b6b4b7;
+    --secondary: 200 198 200;
+    --on-secondary: 48 48 50;
+    --secondary-container: 71 70 73;
+    --on-secondary-container: 182 180 183;
     
-    --error: #ffb4ab;
-    --on-error: #690005;
-    --error-container: #93000a;
-    --on-error-container: #ffdad6;
+    --error: 255 180 171;
+    --on-error: 105 0 5;
+    --error-container: 147 0 10;
+    --on-error-container: 255 218 214;
     
-    --surface-variant: #353534;
-    --inverse-surface: #e5e2e1;
-    --inverse-on-surface: #313030;
-    --surface-tint: #fabd00;
+    --surface-variant: 53 53 52;
+    --inverse-surface: 229 226 225;
+    --inverse-on-surface: 49 48 48;
+    --surface-tint: 250 189 0;
   }
 
   body {
     @apply bg-background text-on-background font-body-md antialiased min-h-screen selection:bg-primary-container selection:text-on-primary-container;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all cursor-pointer border-none whitespace-nowrap select-none shadow-sm;
+  }
+  .btn:active {
+    @apply scale-95;
+  }
+  .btn:hover:not(:disabled) {
+    @apply -translate-y-0.5;
+  }
+  .btn-lg {
+    @apply px-7 py-3.5 text-base rounded-xl font-semibold;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded;
+  }
+  .btn-primary {
+    @apply bg-primary text-white;
+  }
+  .btn-primary:hover:not(:disabled) {
+    @apply brightness-110;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-secondary border border-outline;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    @apply bg-surface-dim border-outline-variant text-on-surface;
+  }
+  .btn-accent {
+    @apply bg-blue-500 text-white shadow-md;
+  }
+  .btn-accent:hover:not(:disabled) {
+    @apply bg-blue-600;
+  }
+  .btn-danger {
+    @apply bg-error text-white shadow-md;
+  }
+  .btn-danger:hover:not(:disabled) {
+    @apply brightness-110;
+  }
+  .btn:disabled {
+    @apply opacity-50 cursor-not-allowed transform-none;
+  }
+  .card {
+    @apply bg-surface rounded-lg shadow-sm border border-outline overflow-hidden;
+  }
+  .form-group {
+    @apply flex flex-col gap-1.5 mb-4;
+  }
+  .form-label {
+    @apply text-sm font-semibold text-secondary tracking-wide uppercase;
+  }
+  .form-input {
+    @apply px-4 py-2.5 border-[1.5px] border-outline rounded text-base text-on-surface bg-surface transition-all outline-none w-full;
+  }
+  .form-input:focus {
+    @apply border-primary ring-2 ring-primary/20;
+  }
+  .form-input::placeholder {
+    @apply text-on-surface-variant;
+  }
+  .form-error {
+    @apply text-xs text-error mt-1;
+  }
+  .avatar {
+    @apply rounded-full object-cover bg-primary-container shrink-0;
+  }
+  .badge {
+    @apply inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide;
+  }
+  .badge-primary {
+    @apply bg-primary-container text-on-primary-container;
+  }
+  .badge-accent {
+    @apply bg-blue-100 text-blue-700;
+  }
+  .badge-success {
+    @apply bg-green-100 text-green-700;
+  }
+  .badge-danger {
+    @apply bg-error-container text-on-error-container;
+  }
+}
+
+@layer utilities {
+  .fade-in {
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .notif-dot {
+    @apply absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-error rounded-full border-[1.5px] border-surface;
+  }
+  .logo-text {
+    @apply font-bold text-lg text-on-surface tracking-tight;
   }
 }
 

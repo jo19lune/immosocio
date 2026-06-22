@@ -8,7 +8,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
-import '../styles/pages/CreateReservationPage.css';
+
 
 interface Annonce {
   id: number;
