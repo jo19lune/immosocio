@@ -23,7 +23,7 @@ export default function PublicFeedPage() {
   };
 
   return (
-    <div className="relative bg-[url('/fond.jpg')] bg-cover bg-center bg-no-repeat bg-gray-900 text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
+    <div className="relative bg-cover bg-center bg-no-repeat bg-gray-900 text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
       {/* Overlay assombri pour la lisibilité */}
       <div className="absolute inset-0 bg-black/60 pointer-events-none z-0"></div>
       
@@ -37,7 +37,7 @@ export default function PublicFeedPage() {
             <img 
               alt="Hero Background" 
               className="w-full h-full object-cover opacity-30" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTxDqF4j4qbM45X6kuWbZU-OWY9kb9UszfWsSeRYjHneErkxWPzjAFNJknkhnYl_6SpSt5-gQ_IBjsmh2Drda8ARPLVzKoTRq1f0t48vuBUd54VBQpZ0Kw4YXfvSaCwgsnXTpWMpKdnYPPN7jocDhc_fu0ieGCGaidPnSScyFLO9ofVHUlC5SizpEOich6kIfqhjv0wkUWMHNM5O4C_wFenif1BV7pFd4tbdIqn_J8M_-8gL2pGlO9mKEr4vaQJONW6XZyPsKViU_n"
+              src="/fond.jpg"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
           </div>

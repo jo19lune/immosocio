@@ -3,7 +3,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../contexts/AuthContext';
 import api, { uploadImage } from '../lib/api';
 import { applyTheme } from '../lib/theme';
-import { Settings, PersonStanding, Camera, Save, Bell, Shield, Lock, CheckCircle2, User } from 'lucide-react';
+import { Settings, Camera, Save, Shield, Lock, CheckCircle2, User } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
