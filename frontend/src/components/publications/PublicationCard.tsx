@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
 import { emitAppRefresh } from '../../lib/appEvents';
+import { CommentItem } from './CommentItem';
 
 
 interface Auteur {
@@ -141,18 +142,21 @@ export default function PublicationCard({
 
   const toggleComments = async () => {
     if (!showComments && comments.length === 0) {
-      setLoadingComments(true);
-      try {
-        const { data } = await api.get(`/publications/${publication.id}/commentaires`);
-        setComments(data.content || []);
-      } catch {
-        // silent background refresh
-      } finally {
-        setLoadingComments(false);
-      }
+      loadComments();
     }
-
     setShowComments(!showComments);
+  };
+
+  const loadComments = async () => {
+    setLoadingComments(true);
+    try {
+      const { data } = await api.get(`/publications/${publication.id}/commentaires`);
+      setComments(data.content || []);
+    } catch {
+      // silent background refresh
+    } finally {
+      setLoadingComments(false);
+    }
   };
 
   const handleComment = async (event: React.FormEvent) => {
@@ -382,22 +386,12 @@ export default function PublicationCard({
           {loadingComments && <div className="spinner" style={{ margin: '12px auto' }} />}
 
           {comments.map((comment) => (
-            <div key={comment.id} className="comment">
-              <img
-                src={avatarUrl(comment.auteur)}
-                alt=""
-                className="avatar"
-                width={32}
-                height={32}
-              />
-              <div className="comment-bubble">
-                <span className="comment-author">
-                  {comment.auteur.prenom} {comment.auteur.nom}
-                </span>
-                <span className="comment-text">{comment.contenu}</span>
-                <span className="comment-time">{formatDate(comment.dateCreation)}</span>
-              </div>
-            </div>
+            <CommentItem 
+              key={comment.id} 
+              comment={comment} 
+              publicationId={publication.id} 
+              onReplyAdded={loadComments} 
+            />
           ))}
 
           {user ? (

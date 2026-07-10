@@ -11,6 +11,7 @@ import {
   faUserShield,
   faHome,
   faCheckCircle,
+  faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
@@ -18,6 +19,7 @@ import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import userLineSvg from '../assets/user_1_line.svg';
 import { motion } from 'framer-motion';
+import { DashboardStats } from '../components/admin/DashboardStats';
 
 
 interface User {
@@ -55,6 +57,7 @@ export default function UsersListPage() {
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
   const Wrapper = currentUser
     ? AppLayout
@@ -175,6 +178,25 @@ export default function UsersListPage() {
     fetchUsers(next);
   };
 
+  const handleToggleSelectUser = (id: number) => {
+    setSelectedUsers(prev => prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedUsers.length === 0) return;
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.length} utilisateur(s) ?`)) return;
+
+    try {
+      await api.delete('/admin/utilisateurs/batch', { data: selectedUsers });
+      setUsers(prev => prev.filter(u => !selectedUsers.includes(u.id)));
+      setSelectedUsers([]);
+      alert('Utilisateurs supprimés avec succès.');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la suppression.');
+    }
+  };
+
   const avatarUrl = (person: any) =>
     person?.photo ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -184,6 +206,10 @@ export default function UsersListPage() {
   return (
     <Wrapper>
       <div className="users-page fade-in">
+        {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMIN') && (
+          <DashboardStats />
+        )}
+
         <header className="page-header glass-card">
           <div className="page-title-row">
             <h1 className="page-title glowing-text">
@@ -222,6 +248,16 @@ export default function UsersListPage() {
               <option value="LOCATAIRE">Locataire</option>
             </select>
           </div>
+          {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMIN') && selectedUsers.length > 0 && (
+            <button
+              className="btn btn-primary"
+              style={{ backgroundColor: 'red', borderColor: 'red' }}
+              onClick={handleDeleteSelected}
+            >
+              <FontAwesomeIcon icon={faTrash} style={{ marginRight: 8 }} />
+              Supprimer ({selectedUsers.length})
+            </button>
+          )}
         </div>
 
         {loading && users.length === 0 && (
@@ -265,6 +301,17 @@ export default function UsersListPage() {
               {/* Cover card background decorative gradient */}
               <div className="user-card-cover" />
               
+              {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMIN') && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={() => handleToggleSelectUser(user.id)}
+                    style={{ width: 20, height: 20, cursor: 'pointer' }}
+                  />
+                </div>
+              )}
+
               <div className="user-avatar-shell">
                 <img 
                   src={avatarUrl(user)} 

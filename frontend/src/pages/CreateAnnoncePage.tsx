@@ -21,6 +21,7 @@ export default function CreateAnnoncePage() {
     typeLogement: 'APPARTEMENT',
     quantiteDisponible: '1',
   });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -29,8 +30,13 @@ export default function CreateAnnoncePage() {
 
   const set =
     (key: string) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       setForm((f) => ({ ...f, [key]: e.target.value }));
+      // Clear error when user types
+      if (formErrors[key]) {
+        setFormErrors((prev) => ({ ...prev, [key]: '' }));
+      }
+    };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -49,8 +55,38 @@ export default function CreateAnnoncePage() {
 
   const removePhoto = (index: number) => setPhotos((p) => p.filter((_, i) => i !== index));
 
+  const validate = () => {
+    const errors: { [key: string]: string } = {};
+    if (!form.titre || form.titre.trim().length < 5 || form.titre.trim().length > 120) {
+      errors.titre = 'Le titre doit faire entre 5 et 120 caractères.';
+    }
+    if (!form.adresse || !form.adresse.trim()) {
+      errors.adresse = 'L\'adresse est requise.';
+    }
+    if (!form.ville || !form.ville.trim()) {
+      errors.ville = 'La ville est requise.';
+    }
+    if (!form.prix || Number(form.prix) <= 0) {
+      errors.prix = 'Le prix doit être supérieur à 0.';
+    }
+    if (form.nombrePieces && Number(form.nombrePieces) < 1) {
+      errors.nombrePieces = 'Le nombre de pièces doit être d\'au moins 1.';
+    }
+    if (form.superficie && Number(form.superficie) <= 0) {
+      errors.superficie = 'La superficie doit être supérieure à 0.';
+    }
+    if (!form.quantiteDisponible || Number(form.quantiteDisponible) < 1) {
+      errors.quantiteDisponible = 'La quantité doit être d\'au moins 1.';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+    
     setError('');
     setSubmitting(true);
     try {
@@ -89,7 +125,7 @@ export default function CreateAnnoncePage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Section: Informations principales */}
           <div className="bg-surface-container-low border border-surface-variant rounded-2xl overflow-hidden">
             <div className="flex items-center gap-3 px-6 py-4 border-b border-surface-variant bg-surface-container/50">
@@ -100,15 +136,14 @@ export default function CreateAnnoncePage() {
               <div>
                 <label className={LABEL_CLASS}>Titre de l'annonce *</label>
                 <input
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${formErrors.titre ? 'border-error focus:border-error focus:ring-error' : ''}`}
                   required
-                  minLength={5}
-                  maxLength={120}
                   value={form.titre}
                   onChange={set('titre')}
                   placeholder="Ex: Bel appartement en plein centre"
                   autoFocus
                 />
+                {formErrors.titre && <p className="text-error text-xs mt-1">{formErrors.titre}</p>}
               </div>
 
               <div>
@@ -138,12 +173,13 @@ export default function CreateAnnoncePage() {
                   <label className={LABEL_CLASS}>Quantité disponible</label>
                   <input
                     type="number"
-                    className={INPUT_CLASS}
+                    className={`${INPUT_CLASS} ${formErrors.quantiteDisponible ? 'border-error focus:border-error focus:ring-error' : ''}`}
                     min={1}
                     value={form.quantiteDisponible}
                     onChange={set('quantiteDisponible')}
                     placeholder="Ex: 1"
                   />
+                  {formErrors.quantiteDisponible && <p className="text-error text-xs mt-1">{formErrors.quantiteDisponible}</p>}
                 </div>
               </div>
             </div>
@@ -159,23 +195,25 @@ export default function CreateAnnoncePage() {
               <div>
                 <label className={LABEL_CLASS}>Adresse *</label>
                 <input
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} ${formErrors.adresse ? 'border-error focus:border-error focus:ring-error' : ''}`}
                   required
                   value={form.adresse}
                   onChange={set('adresse')}
                   placeholder="Adresse précise"
                 />
+                {formErrors.adresse && <p className="text-error text-xs mt-1">{formErrors.adresse}</p>}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={LABEL_CLASS}>Ville *</label>
                   <input
-                    className={INPUT_CLASS}
+                    className={`${INPUT_CLASS} ${formErrors.ville ? 'border-error focus:border-error focus:ring-error' : ''}`}
                     required
                     value={form.ville}
                     onChange={set('ville')}
                     placeholder="Ex: Antananarivo"
                   />
+                  {formErrors.ville && <p className="text-error text-xs mt-1">{formErrors.ville}</p>}
                 </div>
                 <div>
                   <label className={LABEL_CLASS}>Pays</label>
@@ -202,7 +240,7 @@ export default function CreateAnnoncePage() {
                   <label className={LABEL_CLASS}>Prix (Ar) *</label>
                   <input
                     type="number"
-                    className={INPUT_CLASS}
+                    className={`${INPUT_CLASS} ${formErrors.prix ? 'border-error focus:border-error focus:ring-error' : ''}`}
                     required
                     min={0.01}
                     step="0.01"
@@ -210,29 +248,32 @@ export default function CreateAnnoncePage() {
                     onChange={set('prix')}
                     placeholder="Ex: 500000"
                   />
+                  {formErrors.prix && <p className="text-error text-xs mt-1">{formErrors.prix}</p>}
                 </div>
                 <div>
                   <label className={LABEL_CLASS}>Nb. de pièces</label>
                   <input
                     type="number"
-                    className={INPUT_CLASS}
+                    className={`${INPUT_CLASS} ${formErrors.nombrePieces ? 'border-error focus:border-error focus:ring-error' : ''}`}
                     min={1}
                     value={form.nombrePieces}
                     onChange={set('nombrePieces')}
                     placeholder="Ex: 2"
                   />
+                  {formErrors.nombrePieces && <p className="text-error text-xs mt-1">{formErrors.nombrePieces}</p>}
                 </div>
                 <div>
                   <label className={LABEL_CLASS}>Superficie (m²)</label>
                   <input
                     type="number"
-                    className={INPUT_CLASS}
+                    className={`${INPUT_CLASS} ${formErrors.superficie ? 'border-error focus:border-error focus:ring-error' : ''}`}
                     min={1}
                     step="0.1"
                     value={form.superficie}
                     onChange={set('superficie')}
                     placeholder="Ex: 50"
                   />
+                  {formErrors.superficie && <p className="text-error text-xs mt-1">{formErrors.superficie}</p>}
                 </div>
               </div>
             </div>
