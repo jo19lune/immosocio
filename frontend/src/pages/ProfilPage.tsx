@@ -5,14 +5,7 @@ import PublicationCard from '../components/publications/PublicationCard';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
-import homeLineSvg from '../assets/home_1_line.svg';
-import settingsLineSvg from '../assets/settings_1_line.svg';
-import messengerLineSvg from '../assets/messenger_line.svg';
-import announcementLineSvg from '../assets/announcement_line.svg';
-import userLineSvg from '../assets/user_1_line.svg';
-
-
-import { ShieldCheck, Calendar, MessageSquare } from 'lucide-react';
+import { ShieldCheck, Calendar, MessageSquare, Settings, Repeat, MessageCircle } from 'lucide-react';
 
 export default function ProfilPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -83,8 +76,8 @@ export default function ProfilPage() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="profile-loading">
-          <div className="profile-spinner" />
+        <div className="flex justify-center items-center h-64">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </AppLayout>
     );
@@ -107,108 +100,103 @@ export default function ProfilPage() {
 
   return (
     <AppLayout>
-      <div className="profile-page fade-in">
-        <section className="profile-hero glass-card">
-          <div className="profile-cover" />
+      <div className="max-w-4xl mx-auto p-4 md:p-8 flex flex-col gap-8">
+        <section className="card overflow-hidden">
+          <div className="h-32 bg-surface-variant/50 w-full" />
 
-          <div className="profile-head">
-            <div className="profile-avatar-shell">
-              <img
-                src={avatarUrl(displayUser)}
-                alt=""
-                className="profile-avatar"
-              />
-              {isPrivileged && (
-                <span className="profile-shield-icon" title="Compte Officiel Vérifié">
-                  <ShieldCheck size={20} />
-                </span>
-              )}
+          <div className="px-6 pb-6 pt-12 relative flex flex-col md:flex-row gap-6 md:items-start">
+            <div className="absolute -top-16 left-6 relative-avatar">
+              <div className="relative inline-block">
+                <img
+                  src={avatarUrl(displayUser)}
+                  alt=""
+                  className="w-32 h-32 rounded-full border-4 border-surface bg-surface object-cover shadow-sm"
+                />
+                {isPrivileged && (
+                  <span className="absolute bottom-1 right-1 bg-primary text-on-primary p-1.5 rounded-full border-2 border-surface" title="Compte Officiel Vérifié">
+                    <ShieldCheck size={16} />
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="profile-identity">
-              <h1>{displayUser?.prenom} {displayUser?.nom}</h1>
+            <div className="mt-16 md:mt-0 flex-1">
+              <h1 className="text-2xl font-bold text-on-surface">{displayUser?.prenom} {displayUser?.nom}</h1>
 
-              <div className="profile-meta-row">
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-on-surface-variant">
                 {displayUser?.role && (
-                  <span className={`profile-role-chip ${
-                    displayUser.role === 'SUPERADMIN' ? 'role-super' :
-                    displayUser.role === 'ADMIN' ? 'role-adm' :
-                    displayUser.role === 'PROPRIETAIRE' ? 'role-proprietaire' : 'role-locataire'
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                    displayUser.role === 'SUPERADMIN' ? 'bg-error/10 text-error' :
+                    displayUser.role === 'ADMIN' ? 'bg-warning/10 text-warning' :
+                    displayUser.role === 'PROPRIETAIRE' ? 'bg-primary/10 text-primary' : 'bg-surface-variant text-on-surface-variant'
                   }`}>
-                    {displayUser.role === 'PROPRIETAIRE' ? (
-                      <img src={homeLineSvg} alt="" className="profile-chip-icon" />
-                    ) : isPrivileged ? (
-                      <img src={settingsLineSvg} alt="" className="profile-chip-icon" />
-                    ) : (
-                      <img src={userLineSvg} alt="" className="profile-chip-icon" />
-                    )}
                     {roleLabel}
                   </span>
                 )}
 
-                <span className="profile-stat">
-                  <MessageSquare size={16} style={{ marginRight: 6, opacity: 0.7 }} />
+                <span className="flex items-center gap-1.5 font-medium">
+                  <MessageSquare size={16} className="opacity-70" />
                   <strong>{publications.length}</strong>
                   &nbsp;publication{publications.length !== 1 ? 's' : ''}
                 </span>
 
-                <span className="profile-stat">
-                  <Calendar size={16} style={{ marginRight: 6, opacity: 0.7 }} />
+                <span className="flex items-center gap-1.5">
+                  <Calendar size={16} className="opacity-70" />
                   Inscrit en 2026
                 </span>
               </div>
             </div>
 
-            <div className="profile-actions">
+            <div className="flex flex-wrap gap-3 mt-4 md:mt-0">
               {isOwnProfile ? (
                 <>
                   <button
-                    className="profile-action profile-action-secondary"
+                    className="btn btn-ghost border border-outline flex items-center gap-2"
                     onClick={() => navigate('/parametres')}
                   >
-                    <img src={settingsLineSvg} alt="" />
-                    Modifier le profil
+                    <Settings size={18} />
+                    Modifier
                   </button>
                   {!isPrivileged && (
                     <button
-                      className="profile-action profile-action-muted"
+                      className="btn btn-ghost border border-outline flex items-center gap-2"
                       onClick={() => switchRole()}
                     >
-                      <img src={settingsLineSvg} alt="" />
+                      <Repeat size={18} />
                       Passer en {user?.role === 'PROPRIETAIRE' ? 'Locataire' : 'Propriétaire'}
                     </button>
                   )}
                 </>
               ) : user ? (
                 <button
-                  className="profile-action profile-action-primary"
+                  className="btn btn-primary flex items-center gap-2"
                   onClick={() => navigate(`/messages/${userId}`)}
                 >
-                  <img src={messengerLineSvg} alt="" />
-                  Envoyer un message
+                  <MessageCircle size={18} />
+                  Message
                 </button>
               ) : null}
             </div>
           </div>
         </section>
 
-        <section className="profile-publications">
-          <div className="profile-section-title">
-            <h2>Publications récentes</h2>
-            <span />
+        <section className="flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold text-on-surface">Publications récentes</h2>
+            <div className="h-px bg-outline flex-1" />
           </div>
 
           {publications.length === 0 && (
-            <div className="profile-empty glass-card">
-              <div className="profile-empty-icon">
-                <img src={announcementLineSvg} alt="" />
+            <div className="card p-12 flex flex-col items-center justify-center text-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-surface-variant/30 flex items-center justify-center text-on-surface-variant">
+                <MessageSquare size={32} />
               </div>
-              <p>
+              <p className="text-on-surface-variant max-w-sm">
                 {isOwnProfile ? "Vous n'avez pas encore publié." : 'Aucune publication récente pour ce membre.'}
               </p>
               {isOwnProfile && (
                 <button
-                  className="profile-action profile-action-primary"
+                  className="btn btn-primary mt-2"
                   onClick={() => navigate('/feed')}
                 >
                   Créer une publication
@@ -217,7 +205,7 @@ export default function ProfilPage() {
             </div>
           )}
 
-          <div className="profile-feed">
+          <div className="flex flex-col gap-6">
             {publications.map((publication) => (
               <PublicationCard
                 key={publication.id}

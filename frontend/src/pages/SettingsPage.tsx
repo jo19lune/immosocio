@@ -3,6 +3,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { useAuth } from '../contexts/AuthContext';
 import api, { uploadImage } from '../lib/api';
 import { applyTheme } from '../lib/theme';
+import { Settings, PersonStanding, Camera, Save, Bell, Shield, Lock, CheckCircle2, User } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
@@ -30,7 +31,7 @@ export default function SettingsPage() {
     user?.photo ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
       (user?.prenom || '') + '+' + (user?.nom || '')
-    )}&background=fabd00&color=000&bold=true&size=80`;
+    )}&background=4F46E5&color=fff&bold=true&size=80`;
 
   useEffect(() => {
     api
@@ -134,10 +135,6 @@ export default function SettingsPage() {
     }
   };
 
-  const inputClass =
-    'w-full bg-surface-container border border-surface-variant rounded-xl p-3 text-on-surface focus:outline-none focus:border-primary-fixed-dim focus:ring-1 focus:ring-primary-fixed-dim transition-all placeholder:text-on-surface-variant/50';
-  const labelClass = 'block text-sm font-medium text-on-surface-variant mb-2';
-
   const SectionCard = ({
     title,
     icon,
@@ -145,18 +142,18 @@ export default function SettingsPage() {
     footer,
   }: {
     title: string;
-    icon: string;
+    icon: React.ReactNode;
     children: React.ReactNode;
     footer?: React.ReactNode;
   }) => (
-    <div className="bg-surface-container-low border border-surface-variant rounded-2xl overflow-hidden mb-6">
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-surface-variant bg-surface-container/50">
-        <span className="material-symbols-outlined text-primary-fixed-dim text-[20px]">{icon}</span>
-        <h2 className="font-h3 text-[18px] font-bold text-on-surface">{title}</h2>
+    <div className="card overflow-hidden mb-6 flex flex-col">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-outline bg-surface-variant/30">
+        <div className="text-primary">{icon}</div>
+        <h2 className="text-lg font-bold text-on-surface">{title}</h2>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-6 flex-1">{children}</div>
       {footer && (
-        <div className="px-6 py-4 border-t border-surface-variant/50 bg-surface-container/30 flex justify-end">
+        <div className="px-6 py-4 border-t border-outline bg-surface-variant/20 flex justify-end">
           {footer}
         </div>
       )}
@@ -176,12 +173,12 @@ export default function SettingsPage() {
       type={onClick ? 'button' : 'submit'}
       onClick={onClick}
       disabled={loading}
-      className="flex items-center gap-2 bg-primary-fixed-dim text-black font-bold px-6 py-2.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
+      className="btn btn-primary flex items-center gap-2"
     >
       {loading ? (
-        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
       ) : (
-        <span className="material-symbols-outlined text-[18px]">save</span>
+        <Save size={18} />
       )}
       {label}
     </button>
@@ -201,22 +198,22 @@ export default function SettingsPage() {
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <div className="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-fixed-dim" />
+      <div className="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
     </label>
   );
 
   return (
     <AppLayout>
-      <div className="w-full max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
-        <h1 className="font-h1 text-h1 text-on-surface mb-2">Paramètres</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mb-8">
+      <div className="w-full max-w-3xl mx-auto p-4 md:p-8">
+        <h1 className="text-3xl font-bold text-on-surface mb-2">Paramètres</h1>
+        <p className="text-on-surface-variant mb-8">
           Gérez votre profil, vos préférences et votre sécurité.
         </p>
 
         {/* Success Toast */}
         {success && (
-          <div className="flex items-center gap-3 bg-primary-fixed-dim/20 border border-primary-fixed-dim text-primary-fixed-dim px-4 py-3 rounded-xl mb-6 animate-pulse">
-            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+          <div className="flex items-center gap-3 bg-success/10 border border-success/30 text-success px-4 py-3 rounded-xl mb-6 font-medium">
+            <CheckCircle2 size={20} />
             {success}
           </div>
         )}
@@ -224,7 +221,7 @@ export default function SettingsPage() {
         {/* ── Profil ── */}
         <SectionCard
           title="Mon profil"
-          icon="person"
+          icon={<User size={20} />}
           footer={
             <SaveButton onClick={saveProfile} loading={loadingProfile} label="Sauvegarder" />
           }
@@ -238,15 +235,13 @@ export default function SettingsPage() {
               <img
                 src={avatarUrl}
                 alt=""
-                className="w-20 h-20 rounded-full object-cover border-2 border-surface-variant group-hover:border-primary-fixed-dim transition-colors"
+                className="w-20 h-20 rounded-full object-cover border-2 border-outline group-hover:border-primary transition-colors"
               />
-              <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {uploadingAvatar ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span className="material-symbols-outlined text-white text-[22px]">
-                    photo_camera
-                  </span>
+                  <Camera size={24} className="text-white" />
                 )}
               </div>
             </div>
@@ -270,25 +265,25 @@ export default function SettingsPage() {
           {/* Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className={labelClass}>Prénom</label>
+              <label className="block text-sm font-medium text-on-surface mb-1.5">Prénom</label>
               <input
-                className={inputClass}
+                className="form-input"
                 value={profile.prenom}
                 onChange={(e) => setProfile((p) => ({ ...p, prenom: e.target.value }))}
               />
             </div>
             <div>
-              <label className={labelClass}>Nom</label>
+              <label className="block text-sm font-medium text-on-surface mb-1.5">Nom</label>
               <input
-                className={inputClass}
+                className="form-input"
                 value={profile.nom}
                 onChange={(e) => setProfile((p) => ({ ...p, nom: e.target.value }))}
               />
             </div>
             <div className="md:col-span-2">
-              <label className={labelClass}>Téléphone</label>
+              <label className="block text-sm font-medium text-on-surface mb-1.5">Téléphone</label>
               <input
-                className={inputClass}
+                className="form-input"
                 placeholder="+261 XX XXX XX"
                 value={profile.telephone}
                 onChange={(e) => setProfile((p) => ({ ...p, telephone: e.target.value }))}
@@ -300,30 +295,30 @@ export default function SettingsPage() {
         {/* ── Préférences ── */}
         <SectionCard
           title="Préférences"
-          icon="tune"
+          icon={<Settings size={20} />}
           footer={
             <SaveButton onClick={saveParams} loading={loadingParams} label="Enregistrer" />
           }
         >
           {/* Theme Selector */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-surface-variant/50 mb-6 gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-outline mb-6 gap-4">
             <div>
               <div className="font-semibold text-on-surface">Thème</div>
               <div className="text-sm text-on-surface-variant mt-0.5">
                 Apparence de l'interface
               </div>
             </div>
-            <div className="flex gap-2 bg-surface-container p-1 rounded-xl border border-surface-variant">
+            <div className="flex gap-2 p-1 rounded-xl border border-outline bg-surface-variant/30">
               {[
-                { key: 'CLAIR', icon: 'light_mode', label: 'Clair' },
-                { key: 'SOMBRE', icon: 'dark_mode', label: 'Sombre' },
-                { key: 'SYSTEME', icon: 'devices', label: 'Système' },
-              ].map(({ key, icon, label }) => (
+                { key: 'CLAIR', label: 'Clair' },
+                { key: 'SOMBRE', label: 'Sombre' },
+                { key: 'SYSTEME', label: 'Système' },
+              ].map(({ key, label }) => (
                 <button
                   key={key}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     params.theme === key
-                      ? 'bg-surface-bright text-on-surface shadow-sm'
+                      ? 'bg-surface text-on-surface shadow-sm border border-outline'
                       : 'text-on-surface-variant hover:text-on-surface'
                   }`}
                   onClick={() => {
@@ -331,15 +326,14 @@ export default function SettingsPage() {
                     applyTheme(key);
                   }}
                 >
-                  <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                  <span className="hidden sm:inline">{label}</span>
+                  {label}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Visibility */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-surface-variant/50 mb-6 gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-outline mb-6 gap-4">
             <div>
               <div className="font-semibold text-on-surface">Visibilité par défaut</div>
               <div className="text-sm text-on-surface-variant mt-0.5">
@@ -347,7 +341,7 @@ export default function SettingsPage() {
               </div>
             </div>
             <select
-              className="bg-surface-container border border-surface-variant rounded-xl p-2.5 text-on-surface focus:outline-none focus:border-primary-fixed-dim min-w-[160px]"
+              className="form-input min-w-[160px]"
               value={params.visibiliteParDefaut}
               onChange={(e) =>
                 setParams((p) => ({ ...p, visibiliteParDefaut: e.target.value }))
@@ -359,7 +353,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Notifications Email */}
-          <div className="flex items-center justify-between pb-6 border-b border-surface-variant/50 mb-6">
+          <div className="flex items-center justify-between pb-6 border-b border-outline mb-6">
             <div>
               <div className="font-semibold text-on-surface">Notifications par email</div>
               <div className="text-sm text-on-surface-variant mt-0.5">
@@ -388,27 +382,26 @@ export default function SettingsPage() {
         </SectionCard>
 
         {/* ── Sécurité ── */}
-        <SectionCard title="Sécurité" icon="lock">
+        <SectionCard title="Sécurité" icon={<Shield size={20} />}>
           <form onSubmit={handlePwdSubmit}>
             {pwdError && (
-              <div className="bg-error/20 border border-error text-error px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">error</span>
+              <div className="bg-error/10 border border-error/30 text-error px-4 py-3 rounded-xl mb-5 flex items-center gap-2 font-medium">
                 {pwdError}
               </div>
             )}
             {pwdSuccess && (
-              <div className="bg-primary-fixed-dim/20 border border-primary-fixed-dim text-primary-fixed-dim px-4 py-3 rounded-xl mb-5 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+              <div className="bg-primary/10 border border-primary/30 text-primary px-4 py-3 rounded-xl mb-5 flex items-center gap-2 font-medium">
+                <CheckCircle2 size={20} />
                 {pwdSuccess}
               </div>
             )}
 
             <div className="space-y-5">
               <div>
-                <label className={labelClass}>Mot de passe actuel</label>
+                <label className="block text-sm font-medium text-on-surface mb-1.5">Mot de passe actuel</label>
                 <input
                   type="password"
-                  className={inputClass}
+                  className="form-input"
                   placeholder="••••••••"
                   value={pwdForm.ancien}
                   onChange={(e) => setPwdForm((p) => ({ ...p, ancien: e.target.value }))}
@@ -416,10 +409,10 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Nouveau mot de passe</label>
+                <label className="block text-sm font-medium text-on-surface mb-1.5">Nouveau mot de passe</label>
                 <input
                   type="password"
-                  className={inputClass}
+                  className="form-input"
                   placeholder="Min. 8 caractères"
                   value={pwdForm.nouveau}
                   onChange={(e) => setPwdForm((p) => ({ ...p, nouveau: e.target.value }))}
@@ -428,10 +421,10 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Confirmer le nouveau mot de passe</label>
+                <label className="block text-sm font-medium text-on-surface mb-1.5">Confirmer le nouveau mot de passe</label>
                 <input
                   type="password"
-                  className={inputClass}
+                  className="form-input"
                   placeholder="••••••••"
                   value={pwdForm.confirm}
                   onChange={(e) => setPwdForm((p) => ({ ...p, confirm: e.target.value }))}
@@ -443,9 +436,9 @@ export default function SettingsPage() {
             <div className="mt-6 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-surface-variant hover:bg-surface-bright text-on-surface font-medium px-6 py-2.5 rounded-xl transition-colors border border-surface-variant hover:border-outline"
+                className="btn btn-ghost flex items-center gap-2 border border-outline hover:bg-surface-variant"
               >
-                <span className="material-symbols-outlined text-[18px]">key</span>
+                <Lock size={18} />
                 Changer le mot de passe
               </button>
             </div>

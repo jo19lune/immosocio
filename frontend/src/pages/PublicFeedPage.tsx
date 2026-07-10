@@ -23,8 +23,12 @@ export default function PublicFeedPage() {
   };
 
   return (
-    <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
-      <PublicNavbar />
+    <div className="relative bg-[url('/fond.jpg')] bg-cover bg-center bg-no-repeat bg-gray-900 text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
+      {/* Overlay assombri pour la lisibilité */}
+      <div className="absolute inset-0 bg-black/60 pointer-events-none z-0"></div>
+      
+      <div className="relative z-10 flex flex-col flex-grow w-full">
+        <PublicNavbar />
       
       <main className="flex-grow pt-20">
         {/* Hero Section */}
@@ -213,6 +217,7 @@ export default function PublicFeedPage() {
           © 2026 ImmoSocial. Tous droits réservés.
         </div>
       </footer>
+      </div>
     </div>
   );
 }

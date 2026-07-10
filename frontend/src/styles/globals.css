@@ -4,238 +4,48 @@
 
 @layer base {
   :root {
-    /* Aura Light Social */
-    --background: 248 249 250;
-    --on-background: 15 23 42;
-    
-    --surface: 255 255 255;
-    --surface-dim: 241 245 249;
-    --surface-bright: 255 255 255;
-    --surface-container-lowest: 255 255 255;
-    --surface-container-low: 248 250 252;
-    --surface-container: 241 245 249;
-    --surface-container-high: 226 232 240;
-    --surface-container-highest: 203 213 225;
-    
-    --on-surface: 15 23 42;
-    --on-surface-variant: 100 116 139;
-    --outline: 226 232 240;
-    --outline-variant: 203 213 225;
-    
-    --primary: 255 179 0;
+    --background: 255 255 255;
+    --on-background: 9 9 11;
+    --surface: 250 250 250;
+    --on-surface: 9 9 11;
+    --on-surface-variant: 113 113 122;
+    --outline: 228 228 231;
+    --primary: 37 99 235;
     --on-primary: 255 255 255;
-    --primary-container: 255 179 0;
-    --on-primary-container: 69 44 0;
-    --primary-fixed: 255 228 175;
-    --primary-fixed-dim: 255 179 0;
-    
-    --secondary: 100 116 139;
-    --on-secondary: 255 255 255;
-    --secondary-container: 226 232 240;
-    --on-secondary-container: 30 41 59;
-    
-    --error: 239 68 68;
-    --on-error: 255 255 255;
-    --error-container: 254 226 226;
-    --on-error-container: 153 27 27;
-    
-    --surface-variant: 241 245 249;
-    --inverse-surface: 30 41 59;
-    --inverse-on-surface: 248 250 252;
-    --surface-tint: 255 179 0;
+    --error: 220 38 38;
   }
 
   .dark {
-    /* Aura Dark Social */
-    --background: 19 19 19;
-    --on-background: 229 226 225;
-    
-    --surface: 19 19 19;
-    --surface-dim: 19 19 19;
-    --surface-bright: 57 57 57;
-    --surface-container-lowest: 14 14 14;
-    --surface-container-low: 28 27 27;
-    --surface-container: 32 31 31;
-    --surface-container-high: 42 42 42;
-    --surface-container-highest: 53 53 52;
-    
-    --on-surface: 229 226 225;
-    --on-surface-variant: 212 197 171;
-    --outline: 156 143 120;
-    --outline-variant: 79 70 50;
-    
-    --primary: 255 228 175;
-    --on-primary: 63 46 0;
-    --primary-container: 255 193 7;
-    --on-primary-container: 109 81 0;
-    --primary-fixed: 255 223 158;
-    --primary-fixed-dim: 250 189 0;
-    
-    --secondary: 200 198 200;
-    --on-secondary: 48 48 50;
-    --secondary-container: 71 70 73;
-    --on-secondary-container: 182 180 183;
-    
-    --error: 255 180 171;
-    --on-error: 105 0 5;
-    --error-container: 147 0 10;
-    --on-error-container: 255 218 214;
-    
-    --surface-variant: 53 53 52;
-    --inverse-surface: 229 226 225;
-    --inverse-on-surface: 49 48 48;
-    --surface-tint: 250 189 0;
+    --background: 9 9 11;
+    --on-background: 250 250 250;
+    --surface: 24 24 27;
+    --on-surface: 250 250 250;
+    --on-surface-variant: 161 161 170;
+    --outline: 39 39 42;
+    --primary: 59 130 246;
+    --on-primary: 255 255 255;
+    --error: 248 113 113;
   }
 
   body {
-    @apply bg-background text-on-background font-body-md antialiased min-h-screen selection:bg-primary-container selection:text-on-primary-container;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    @apply bg-background text-on-background font-sans antialiased;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all cursor-pointer border-none whitespace-nowrap select-none shadow-sm;
-  }
-  .btn:active {
-    @apply scale-95;
-  }
-  .btn:hover:not(:disabled) {
-    @apply -translate-y-0.5;
-  }
-  .btn-lg {
-    @apply px-7 py-3.5 text-base rounded-xl font-semibold;
-  }
-  .btn-sm {
-    @apply px-3 py-1.5 text-xs rounded;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply bg-primary text-white;
-  }
-  .btn-primary:hover:not(:disabled) {
-    @apply brightness-110;
+    @apply bg-primary text-on-primary border-transparent hover:bg-primary/90;
   }
   .btn-ghost {
-    @apply bg-transparent text-secondary border border-outline;
-  }
-  .btn-ghost:hover:not(:disabled) {
-    @apply bg-surface-dim border-outline-variant text-on-surface;
-  }
-  .btn-accent {
-    @apply bg-blue-500 text-white shadow-md;
-  }
-  .btn-accent:hover:not(:disabled) {
-    @apply bg-blue-600;
-  }
-  .btn-danger {
-    @apply bg-error text-white shadow-md;
-  }
-  .btn-danger:hover:not(:disabled) {
-    @apply brightness-110;
-  }
-  .btn:disabled {
-    @apply opacity-50 cursor-not-allowed transform-none;
+    @apply bg-transparent text-on-surface border-outline hover:bg-surface hover:text-on-background;
   }
   .card {
-    @apply bg-surface rounded-lg shadow-sm border border-outline overflow-hidden;
-  }
-  .form-group {
-    @apply flex flex-col gap-1.5 mb-4;
-  }
-  .form-label {
-    @apply text-sm font-semibold text-secondary tracking-wide uppercase;
+    @apply bg-surface rounded-xl border border-outline shadow-sm overflow-hidden;
   }
   .form-input {
-    @apply px-4 py-2.5 border-[1.5px] border-outline rounded text-base text-on-surface bg-surface transition-all outline-none w-full;
+    @apply px-3 py-2 border border-outline rounded-md text-sm text-on-surface bg-background transition-colors outline-none w-full focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant;
   }
-  .form-input:focus {
-    @apply border-primary ring-2 ring-primary/20;
-  }
-  .form-input::placeholder {
-    @apply text-on-surface-variant;
-  }
-  .form-error {
-    @apply text-xs text-error mt-1;
-  }
-  .avatar {
-    @apply rounded-full object-cover bg-primary-container shrink-0;
-  }
-  .badge {
-    @apply inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide;
-  }
-  .badge-primary {
-    @apply bg-primary-container text-on-primary-container;
-  }
-  .badge-accent {
-    @apply bg-blue-100 text-blue-700;
-  }
-  .badge-success {
-    @apply bg-green-100 text-green-700;
-  }
-  .badge-danger {
-    @apply bg-error-container text-on-error-container;
-  }
-}
-
-@layer utilities {
-  .fade-in {
-    animation: fadeIn 0.3s ease;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .notif-dot {
-    @apply absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-error rounded-full border-[1.5px] border-surface;
-  }
-  .logo-text {
-    @apply font-bold text-lg text-on-surface tracking-tight;
-  }
-}
-
-/* Material Symbols CSS */
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-/* Essential utilities */
-.spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--outline); border-top-color: var(--primary); animation: spin 0.75s linear infinite; flex-shrink: 0; }
-.spinner-sm { width: 20px; height: 20px; border-width: 2px; }
-.spinner-lg { width: 56px; height: 56px; border-width: 4px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Fixes for toasts */
-.Toaster > div {
-  background: var(--surface-container-high) !important;
-  color: var(--on-surface) !important;
-  border: 1px solid var(--outline) !important;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--background); }
-::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--outline); }
-
-.glass-card { 
-  background: var(--surface-container-low);
-  backdrop-filter: blur(16px); 
-  -webkit-backdrop-filter: blur(16px); 
-  border: 1px solid var(--outline); 
-}
-
-.dark .glass-card {
-  background: rgba(28, 28, 30, 0.7);
-  border: 1px solid rgba(58, 58, 60, 0.5);
 }
