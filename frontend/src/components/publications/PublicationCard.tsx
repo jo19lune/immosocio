@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
 import { emitAppRefresh } from '../../lib/appEvents';
-import '../../styles/components/publications/PublicationCard.css';
+
 
 interface Auteur {
   id: number;

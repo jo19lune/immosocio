@@ -61,7 +61,7 @@ public class ReservationController {
      */
     @PostMapping
     @Transactional
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Reservation> creerReservation(
             @Valid @RequestBody ReservationRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -162,7 +162,7 @@ public class ReservationController {
      * Retourne les réservations du locataire connecté, paginées.
      */
     @GetMapping("/mes-reservations")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Page<Reservation>> mesReservations(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -179,7 +179,7 @@ public class ReservationController {
      * Retourne les demandes de réservation reçues par le propriétaire connecté, paginées.
      */
     @GetMapping("/demandes")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Page<Reservation>> demandesReservation(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -200,7 +200,7 @@ public class ReservationController {
      */
     @PatchMapping("/{id}/confirmer")
     @Transactional
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Reservation> confirmer(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -247,7 +247,7 @@ public class ReservationController {
      */
     @PatchMapping("/{id}/annuler")
     @Transactional
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Reservation> annuler(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -340,7 +340,7 @@ public class ReservationController {
      */
     @PatchMapping("/{id}/terminer")
     @Transactional
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Reservation> terminer(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {

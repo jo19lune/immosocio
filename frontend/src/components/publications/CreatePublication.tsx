@@ -9,7 +9,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import api, { uploadImage } from '../../lib/api';
 import { emitAppRefresh } from '../../lib/appEvents';
-import '../../styles/components/publications/CreatePublication.css';
+
 
 interface Props {
   onCreated: (pub: any) => void;

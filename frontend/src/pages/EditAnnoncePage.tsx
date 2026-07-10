@@ -2,18 +2,26 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import api, { uploadImage } from '../lib/api';
-import settingsLineSvg from '../assets/settings_1_line.svg';
-import closeLineSvg from '../assets/close_line.svg';
-import sendPlaneFillSvg from '../assets/send_plane_fill.svg';
-import '../styles/pages/CreateAnnoncePage.css';
+
+const INPUT_CLASS =
+  'w-full bg-surface-container border border-surface-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary-fixed-dim focus:ring-1 focus:ring-primary-fixed-dim transition-all placeholder:text-on-surface-variant/50';
+const LABEL_CLASS = 'block text-sm font-semibold text-on-surface-variant mb-2';
 
 export default function EditAnnoncePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    titre: '', description: '', adresse: '', ville: '', pays: 'Madagascar',
-    prix: '', nombrePieces: '', superficie: '', typeLogement: 'APPARTEMENT', quantiteDisponible: '1'
+    titre: '',
+    description: '',
+    adresse: '',
+    ville: '',
+    pays: 'Madagascar',
+    prix: '',
+    nombrePieces: '',
+    superficie: '',
+    typeLogement: 'APPARTEMENT',
+    quantiteDisponible: '1',
   });
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -48,25 +56,27 @@ export default function EditAnnoncePage() {
     fetchAnnonce();
   }, [id]);
 
-  const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [key]: e.target.value }));
+  const set =
+    (key: string) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setUploading(true);
     try {
-      const urls = await Promise.all(files.map(f => uploadImage(f, 'annonce')));
-      setPhotos(prev => [...prev, ...urls].slice(0, 10));
+      const urls = await Promise.all(files.map((f) => uploadImage(f, 'annonce')));
+      setPhotos((prev) => [...prev, ...urls].slice(0, 10));
     } catch {
-      alert('Erreur lors de l\'upload d\'image.');
+      alert("Erreur lors de l'upload d'image.");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
     }
   };
 
-  const removePhoto = (index: number) => setPhotos(p => p.filter((_, i) => i !== index));
+  const removePhoto = (index: number) => setPhotos((p) => p.filter((_, i) => i !== index));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +93,8 @@ export default function EditAnnoncePage() {
       });
       navigate('/mes-annonces');
     } catch (err: any) {
-      const errorData = err.response?.data;
-      const errorMessage = typeof errorData === 'string' 
-        ? errorData 
-        : (errorData?.message || errorData?.erreur || 'Erreur lors de la modification.');
-      setError(errorMessage);
+      const d = err.response?.data;
+      setError(typeof d === 'string' ? d : d?.message || d?.erreur || 'Erreur lors de la modification.');
     } finally {
       setSubmitting(false);
     }
@@ -96,8 +103,8 @@ export default function EditAnnoncePage() {
   if (loadingAnnonce) {
     return (
       <AppLayout>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
-          <div className="spinner" />
+        <div className="flex justify-center items-center py-24">
+          <div className="w-10 h-10 border-4 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />
         </div>
       </AppLayout>
     );
@@ -105,101 +112,258 @@ export default function EditAnnoncePage() {
 
   return (
     <AppLayout>
-      <div className="create-annonce-container">
-        <div className="card create-annonce-card">
-          <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={settingsLineSvg} alt="" width={24} height={24} /> Modifier l'annonce
-          </h2>
-          {error && <div className="auth-error">{error}</div>}
+      <div className="w-full max-w-3xl mx-auto p-4 md:p-6 lg:p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            type="button"
+            onClick={() => navigate('/mes-annonces')}
+            className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors mb-4 font-medium"
+          >
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            Mes annonces
+          </button>
+          <h1 className="font-h1 text-h1 text-on-surface mb-2">Modifier l'annonce</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Mettez à jour les informations de votre bien.
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="create-annonce-form">
-            <div className="form-group">
-              <label className="form-label">Titre de l'annonce *</label>
-              <input className="form-input" required minLength={5} maxLength={120} value={form.titre} onChange={set('titre')} placeholder="Ex: Bel appartement en plein centre" />
+        {error && (
+          <div className="flex items-center gap-3 bg-error/20 border border-error text-error px-4 py-3 rounded-xl mb-6">
+            <span className="material-symbols-outlined text-[18px]">error</span>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section: Informations principales */}
+          <div className="bg-surface-container-low border border-surface-variant rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-surface-variant bg-surface-container/50">
+              <span className="material-symbols-outlined text-primary-fixed-dim text-[20px]">home</span>
+              <h2 className="font-bold text-[16px] text-on-surface">Informations du bien</h2>
             </div>
-
-            <div className="form-group">
-              <label className="form-label">Description</label>
-              <textarea className="form-input" rows={5} maxLength={2000} value={form.description} onChange={set('description')} placeholder="Détails du logement, commodités, proximité..." />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 2 }}>
-                <label className="form-label">Adresse *</label>
-                <input className="form-input" required value={form.adresse} onChange={set('adresse')} placeholder="Adresse précise" />
+            <div className="p-6 space-y-5">
+              <div>
+                <label className={LABEL_CLASS}>Titre de l'annonce *</label>
+                <input
+                  className={INPUT_CLASS}
+                  required
+                  minLength={5}
+                  maxLength={120}
+                  value={form.titre}
+                  onChange={set('titre')}
+                  placeholder="Ex: Bel appartement en plein centre"
+                />
               </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label">Type de logement</label>
-                <select className="form-input" value={form.typeLogement} onChange={set('typeLogement')}>
-                  <option value="APPARTEMENT">Appartement</option>
-                  <option value="MAISON">Maison</option>
-                  <option value="STUDIO">Studio</option>
-                  <option value="VILLA">Villa</option>
-                  <option value="CHAMBRE">Chambre</option>
-                </select>
+              <div>
+                <label className={LABEL_CLASS}>Description</label>
+                <textarea
+                  className={INPUT_CLASS}
+                  rows={5}
+                  maxLength={2000}
+                  value={form.description}
+                  onChange={set('description')}
+                  placeholder="Détails du logement, commodités, proximité..."
+                />
               </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Ville *</label>
-                <input className="form-input" required value={form.ville} onChange={set('ville')} placeholder="Ex: Antananarivo" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Pays</label>
-                <input className="form-input" value={form.pays} onChange={set('pays')} placeholder="Ex: Madagascar" />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Prix mensuel ou de vente (Ar) *</label>
-                <input type="number" className="form-input" required min={0.01} step="0.01" value={form.prix} onChange={set('prix')} placeholder="Ex: 500000" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Nb. de pièces</label>
-                <input type="number" className="form-input" min={1} value={form.nombrePieces} onChange={set('nombrePieces')} placeholder="Ex: 2" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Superficie (m²)</label>
-                <input type="number" className="form-input" min={1} step="0.1" value={form.superficie} onChange={set('superficie')} placeholder="Ex: 50" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Quantité dispo.</label>
-                <input type="number" className="form-input" min={1} value={form.quantiteDisponible} onChange={set('quantiteDisponible')} placeholder="Ex: 1" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className={LABEL_CLASS}>Type de logement</label>
+                  <select className={INPUT_CLASS} value={form.typeLogement} onChange={set('typeLogement')}>
+                    <option value="APPARTEMENT">Appartement</option>
+                    <option value="MAISON">Maison</option>
+                    <option value="STUDIO">Studio</option>
+                    <option value="VILLA">Villa</option>
+                    <option value="CHAMBRE">Chambre</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={LABEL_CLASS}>Quantité disponible</label>
+                  <input
+                    type="number"
+                    className={INPUT_CLASS}
+                    min={1}
+                    value={form.quantiteDisponible}
+                    onChange={set('quantiteDisponible')}
+                    placeholder="Ex: 1"
+                  />
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="form-group">
-              <label className="form-label">Photos ({photos.length}/10)</label>
-              <div className="create-annonce-photos">
+          {/* Section: Localisation */}
+          <div className="bg-surface-container-low border border-surface-variant rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-surface-variant bg-surface-container/50">
+              <span className="material-symbols-outlined text-primary-fixed-dim text-[20px]">location_on</span>
+              <h2 className="font-bold text-[16px] text-on-surface">Localisation</h2>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className={LABEL_CLASS}>Adresse *</label>
+                <input
+                  className={INPUT_CLASS}
+                  required
+                  value={form.adresse}
+                  onChange={set('adresse')}
+                  placeholder="Adresse précise"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className={LABEL_CLASS}>Ville *</label>
+                  <input
+                    className={INPUT_CLASS}
+                    required
+                    value={form.ville}
+                    onChange={set('ville')}
+                    placeholder="Ex: Antananarivo"
+                  />
+                </div>
+                <div>
+                  <label className={LABEL_CLASS}>Pays</label>
+                  <input
+                    className={INPUT_CLASS}
+                    value={form.pays}
+                    onChange={set('pays')}
+                    placeholder="Ex: Madagascar"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Prix & Caractéristiques */}
+          <div className="bg-surface-container-low border border-surface-variant rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-surface-variant bg-surface-container/50">
+              <span className="material-symbols-outlined text-primary-fixed-dim text-[20px]">payments</span>
+              <h2 className="font-bold text-[16px] text-on-surface">Prix & Caractéristiques</h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div>
+                  <label className={LABEL_CLASS}>Prix (Ar) *</label>
+                  <input
+                    type="number"
+                    className={INPUT_CLASS}
+                    required
+                    min={0.01}
+                    step="0.01"
+                    value={form.prix}
+                    onChange={set('prix')}
+                    placeholder="Ex: 500000"
+                  />
+                </div>
+                <div>
+                  <label className={LABEL_CLASS}>Nb. de pièces</label>
+                  <input
+                    type="number"
+                    className={INPUT_CLASS}
+                    min={1}
+                    value={form.nombrePieces}
+                    onChange={set('nombrePieces')}
+                    placeholder="Ex: 2"
+                  />
+                </div>
+                <div>
+                  <label className={LABEL_CLASS}>Superficie (m²)</label>
+                  <input
+                    type="number"
+                    className={INPUT_CLASS}
+                    min={1}
+                    step="0.1"
+                    value={form.superficie}
+                    onChange={set('superficie')}
+                    placeholder="Ex: 50"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Photos */}
+          <div className="bg-surface-container-low border border-surface-variant rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-surface-variant bg-surface-container/50">
+              <span className="material-symbols-outlined text-primary-fixed-dim text-[20px]">photo_library</span>
+              <h2 className="font-bold text-[16px] text-on-surface">Photos</h2>
+              <span className="ml-auto font-label-caps text-label-caps text-on-surface-variant">{photos.length}/10</span>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {photos.map((url, idx) => (
-                  <div key={idx} className="photo-preview">
-                    <img src={url} alt="Aperçu" className="preview-img" />
-                    <button type="button" className="remove-photo-btn" onClick={() => removePhoto(idx)}>
-                      <img src={closeLineSvg} alt="" width={12} height={12} style={{ filter: 'brightness(0) invert(1)' }} />
+                  <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-surface-variant">
+                    <img src={url} alt="Aperçu" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(idx)}
+                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
+                    {idx === 0 && (
+                      <span className="absolute bottom-1.5 left-1.5 bg-primary-fixed-dim text-black font-label-caps text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">
+                        Principale
+                      </span>
+                    )}
                   </div>
                 ))}
                 {photos.length < 10 && (
-                  <button type="button" className="add-photo-btn" onClick={() => fileRef.current?.click()} disabled={uploading}>
-                    {uploading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : '+ Photo'}
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="aspect-square rounded-xl border-2 border-dashed border-surface-variant hover:border-primary-fixed-dim text-on-surface-variant hover:text-primary-fixed-dim transition-all flex flex-col items-center justify-center gap-2"
+                  >
+                    {uploading ? (
+                      <div className="w-6 h-6 border-2 border-on-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[28px]">add_photo_alternate</span>
+                        <span className="text-xs font-medium">Ajouter</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
-              <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleImageSelect} style={{ display: 'none' }} />
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              <p className="text-xs text-on-surface-variant mt-3">
+                La première photo sera la photo principale de l'annonce.
+              </p>
             </div>
+          </div>
 
-            <div className="form-actions" style={{ marginTop: '24px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn btn-ghost" onClick={() => navigate('/mes-annonces')} disabled={submitting}>Annuler</button>
-              <button type="submit" className="btn btn-primary" disabled={submitting || uploading} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                {submitting ? 'Enregistrement...' : (
-                  <><img src={sendPlaneFillSvg} alt="" width={18} height={18} style={{ filter: 'brightness(0) invert(1)' }} /> Enregistrer les modifications</>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-2 pb-8">
+            <button
+              type="button"
+              onClick={() => navigate('/mes-annonces')}
+              disabled={submitting}
+              className="px-6 py-3 rounded-xl border border-surface-variant text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all font-medium"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || uploading}
+              className="flex items-center gap-2 bg-primary-fixed-dim text-black font-bold px-8 py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-primary-fixed-dim/20"
+            >
+              {submitting ? (
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <span className="material-symbols-outlined text-[20px]">save</span>
+              )}
+              {submitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+            </button>
+          </div>
+        </form>
       </div>
     </AppLayout>
   );

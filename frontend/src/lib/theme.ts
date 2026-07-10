@@ -3,19 +3,21 @@
  */
 export function applyTheme(theme: string) {
   const root = document.documentElement;
+  
+  // Remove data-theme attribute if it exists (cleanup legacy)
+  root.removeAttribute('data-theme');
+  
   if (theme === 'SOMBRE') {
-    root.setAttribute('data-theme', 'dark');
-    root.classList.remove('theme-lifestyle', 'theme-voyage', 'theme-community');
+    root.classList.add('dark');
   } else if (theme === 'CLAIR') {
-    root.removeAttribute('data-theme');
-    root.classList.remove('theme-lifestyle', 'theme-voyage', 'theme-community');
+    root.classList.remove('dark');
   } else {
     // SYSTEME — follows browser preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) root.setAttribute('data-theme', 'dark');
-    else root.removeAttribute('data-theme');
-    root.classList.remove('theme-lifestyle', 'theme-voyage', 'theme-community');
+    if (prefersDark) root.classList.add('dark');
+    else root.classList.remove('dark');
   }
+  
   localStorage.setItem('theme', theme);
 }
 
@@ -26,7 +28,7 @@ export function applyTheme(theme: string) {
 export function applyUserSegmentTheme(segment: string | null) {
   const root = document.documentElement;
   
-  // Remove all theme classes first
+  // Remove all segment classes first
   root.classList.remove('theme-lifestyle', 'theme-voyage', 'theme-community');
   root.removeAttribute('data-user-segment');
 
@@ -91,8 +93,8 @@ export function initTheme() {
   // Listen for system theme changes if SYSTEME is selected
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
     if (localStorage.getItem('theme') === 'SYSTEME') {
-      if (e.matches) document.documentElement.setAttribute('data-theme', 'dark');
-      else document.documentElement.removeAttribute('data-theme');
+      if (e.matches) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
     }
   });
 }

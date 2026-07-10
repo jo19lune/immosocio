@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 255 255 255;
+    --on-background: 9 9 11;
+    --surface: 250 250 250;
+    --on-surface: 9 9 11;
+    --on-surface-variant: 113 113 122;
+    --outline: 228 228 231;
+    --primary: 37 99 235;
+    --on-primary: 255 255 255;
+    --error: 220 38 38;
+  }
+
+  .dark {
+    --background: 9 9 11;
+    --on-background: 250 250 250;
+    --surface: 24 24 27;
+    --on-surface: 250 250 250;
+    --on-surface-variant: 161 161 170;
+    --outline: 39 39 42;
+    --primary: 59 130 246;
+    --on-primary: 255 255 255;
+    --error: 248 113 113;
+  }
+
+  body {
+    @apply bg-background text-on-background font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-primary text-on-primary border-transparent hover:bg-primary/90;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-on-surface border-outline hover:bg-surface hover:text-on-background;
+  }
+  .card {
+    @apply bg-surface rounded-xl border border-outline shadow-sm overflow-hidden;
+  }
+  .form-input {
+    @apply px-3 py-2 border border-outline rounded-md text-sm text-on-surface bg-background transition-colors outline-none w-full focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant;
+  }
+}

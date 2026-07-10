@@ -30,13 +30,13 @@ if not exist "%FRONTEND_DIR%\package.json" (
     pause
     exit /b 1
 )
-where node >nul 2>&1
+where.exe node >nul 2>&1
 if errorlevel 1 (
     echo [ERREUR] Node.js non installe.
     pause
     exit /b 1
 )
-where java >nul 2>&1
+where.exe java >nul 2>&1
 if errorlevel 1 (
     echo [ERREUR] Java non installe.
     pause
@@ -62,7 +62,7 @@ goto :EOF
 :BUILD_BACKEND
 echo [BUILD] Compilation du backend (clean package)...
 pushd "%BACKEND_DIR%"
-call mvnw.cmd clean package
+call mvn clean package
 if errorlevel 1 (
     echo [ERREUR] La compilation a echoue.
     popd

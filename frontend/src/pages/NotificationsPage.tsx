@@ -1,23 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowRight,
-  faBell,
-  faCalendarCheck,
-  faCalendarXmark,
-  faCommentDots,
-  faHeart,
-  faHouse,
-  faMessage,
-} from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import AppLayout from '../components/layout/AppLayout';
 import api from '../lib/api';
 import { emitAppRefresh } from '../lib/appEvents';
 import { onNotification } from '../lib/websocket';
-import notificationLineSvg from '../assets/notification_line.svg';
-import '../styles/pages/NotificationsPage.css';
+import useIntersectionObserver from '../hooks/useIntersectionObserver';
 
 interface Notification {
   id: number;
@@ -27,21 +14,6 @@ interface Notification {
   dateCreation: string;
   routeCible?: string;
 }
-
-const typeIcons: Record<string, IconDefinition> = {
-  NOUVEAU_LIKE: faHeart,
-  NOUVEAU_COMMENTAIRE: faCommentDots,
-  MESSAGE: faMessage,
-  NOUVEAU_MESSAGE: faMessage,
-  RESERVATION_CONFIRMEE: faCalendarCheck,
-  RESERVATION_CREEE: faCalendarCheck,
-  NOUVELLE_RESERVATION: faCalendarCheck,
-  RESERVATION_ANNULEE: faCalendarXmark,
-  NOUVELLE_ANNONCE: faHouse,
-  SYSTEME: faBell,
-  VERIFICATION_EMAIL: faBell,
-  REINITIALISATION_MDP: faBell,
-};
 
 const fallbackRoutes: Record<string, string> = {
   NOUVEAU_LIKE: '/feed',
@@ -73,6 +45,15 @@ export default function NotificationsPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
+  const fetchNextPage = useCallback(() => {
+    if (!hasMore || loading) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchNotifications(nextPage);
+  }, [page, hasMore, loading]);
+
+  const { ref: loadMoreRef } = useIntersectionObserver(fetchNextPage);
+
   useEffect(() => {
     fetchNotifications(0, true);
   }, []);
@@ -98,9 +79,7 @@ export default function NotificationsPage() {
           routeCible: payload.routeCible,
         };
         setNotifications((prev) => {
-          if (prev.some((notif) => notif.id === incoming.id)) {
-            return prev;
-          }
+          if (prev.some((notif) => notif.id === incoming.id)) return prev;
           return [incoming, ...prev];
         });
       }
@@ -166,7 +145,7 @@ export default function NotificationsPage() {
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.max(0, (now.getTime() - date.getTime()) / 1000);
-    if (diff < 60) return "A l'instant";
+    if (diff < 60) return "À l'instant";
     if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
     if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
     return date.toLocaleDateString('fr-FR', {
@@ -177,85 +156,156 @@ export default function NotificationsPage() {
     });
   };
 
+  const toneIconMap: Record<string, string> = {
+    message: 'chat_bubble',
+    social: 'favorite',
+    reservation: 'event_available',
+    housing: 'home',
+    system: 'notifications',
+  };
+
+  const toneColorMap: Record<string, string> = {
+    message: 'text-primary-fixed-dim',
+    social: 'text-error',
+    reservation: 'text-primary-fixed-dim',
+    housing: 'text-primary',
+    system: 'text-on-surface-variant',
+  };
+
   return (
     <AppLayout>
-      <div className="notifs-page">
-        <div className="notifs-header">
+      <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8">
+
+        {/* Page Header */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="notifs-title">Notifications</h1>
-            {unreadCount > 0 && (
-              <span className="badge badge-danger">{unreadCount} non lues</span>
-            )}
+            <h1 className="font-h1 text-h1 text-on-surface mb-2">Notifications</h1>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              {unreadCount > 0 ? (
+                <span className="text-primary-fixed-dim font-semibold">
+                  {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
+                </span>
+              ) : (
+                'Restez informé de vos propriétés et connexions.'
+              )}
+            </p>
           </div>
           {unreadCount > 0 && (
-            <button className="btn btn-ghost btn-sm" onClick={markAllRead}>
+            <button
+              onClick={markAllRead}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-surface-variant text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all font-body-sm text-body-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">done_all</span>
               Tout marquer comme lu
             </button>
           )}
         </div>
 
+        {/* Loading Skeleton */}
         {loading && notifications.length === 0 && (
-          <div className="notifs-loading">
-            <div className="spinner" />
-          </div>
-        )}
-
-        {!loading && notifications.length === 0 && (
-          <div className="notifs-empty card">
-            <img
-              src={notificationLineSvg}
-              alt=""
-              width={56}
-              height={56}
-              style={{ opacity: 0.3, marginBottom: 12 }}
-            />
-            <h3>Aucune notification</h3>
-            <p>Les messages, commentaires, suivis et reservations apparaissent ici.</p>
-          </div>
-        )}
-
-        <div className="notifs-list">
-          {notifications.map((notification) => {
-            const icon = typeIcons[notification.type] || faBell;
-            const tone = getNotificationTone(notification.type);
-            return (
-              <button
-                key={notification.id}
-                type="button"
-                className={`notif-item card ${!notification.lue ? 'unread' : ''}`}
-                onClick={() => openNotification(notification)}
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-surface-container border border-surface-variant rounded-xl p-6 flex gap-4 animate-pulse"
               >
-                <div className={`notif-icon ${tone}`}>
-                  <FontAwesomeIcon icon={icon} />
+                <div className="w-12 h-12 rounded-full bg-surface-variant flex-shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-4 bg-surface-variant rounded w-3/4" />
+                  <div className="h-3 bg-surface-variant rounded w-1/2" />
                 </div>
-                <div className="notif-body">
-                  <p className="notif-message">{notification.message}</p>
-                  <div className="notif-meta">
-                    <span className="notif-time">{formatDate(notification.dateCreation)}</span>
-                    <span className="notif-link">
-                      Ouvrir
-                      <FontAwesomeIcon icon={faArrowRight} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && notifications.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-6 border border-surface-variant">
+              <span className="material-symbols-outlined text-[40px] text-on-surface-variant opacity-50">
+                notifications_off
+              </span>
+            </div>
+            <h3 className="font-h3 text-h3 text-on-surface mb-2">Aucune notification</h3>
+            <p className="text-on-surface-variant max-w-sm">
+              Les messages, commentaires, suivis et réservations apparaissent ici.
+            </p>
+          </div>
+        )}
+
+        {/* Notifications List */}
+        {notifications.length > 0 && (
+          <div className="space-y-3">
+            {notifications.map((notification) => {
+              const tone = getNotificationTone(notification.type);
+              const iconName = toneIconMap[tone] || 'notifications';
+              const iconColor = toneColorMap[tone] || 'text-on-surface-variant';
+
+              return (
+                <button
+                  key={notification.id}
+                  type="button"
+                  onClick={() => openNotification(notification)}
+                  className={`w-full text-left bg-surface-container-low border rounded-xl p-5 flex flex-col sm:flex-row gap-5 items-start transition-all hover:border-outline-variant group relative overflow-hidden ${
+                    !notification.lue
+                      ? 'border-surface-container-high'
+                      : 'border-surface-variant/50'
+                  }`}
+                >
+                  {/* Unread left accent */}
+                  {!notification.lue && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-fixed-dim rounded-l-xl" />
+                  )}
+
+                  {/* Icon */}
+                  <div
+                    className={`w-12 h-12 rounded-full bg-surface-container flex items-center justify-center shrink-0 border border-surface-variant ${iconColor}`}
+                  >
+                    <span
+                      className="material-symbols-outlined text-[22px]"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {iconName}
                     </span>
                   </div>
-                </div>
-                {!notification.lue && <div className="notif-unread-indicator" />}
-              </button>
-            );
-          })}
-        </div>
 
-        {hasMore && !loading && (
-          <button
-            className="btn btn-ghost notifs-load-more"
-            onClick={() => {
-              const nextPage = page + 1;
-              setPage(nextPage);
-              fetchNotifications(nextPage);
-            }}
-          >
-            Charger plus
-          </button>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 pl-1 sm:pl-0">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                      <p
+                        className={`font-body-md text-body-md leading-relaxed ${
+                          !notification.lue
+                            ? 'text-on-surface font-semibold'
+                            : 'text-on-surface-variant'
+                        }`}
+                      >
+                        {notification.message}
+                      </p>
+                      <span className="font-label-caps text-label-caps text-on-surface-variant shrink-0 uppercase">
+                        {formatDate(notification.dateCreation)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-on-surface-variant group-hover:text-primary-fixed-dim transition-colors">
+                      <span className="font-label-caps text-label-caps uppercase">Voir</span>
+                      <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    </div>
+                  </div>
+
+                  {/* Unread dot */}
+                  {!notification.lue && (
+                    <div className="w-2.5 h-2.5 bg-primary-fixed-dim rounded-full flex-shrink-0 mt-1 hidden sm:block" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
+
+        {/* Load More Sentinel */}
+        <div ref={loadMoreRef} className="h-20 flex items-center justify-center py-8 mt-8">
+          {loading && <div className="w-8 h-8 border-4 border-surface-variant border-t-primary-fixed rounded-full animate-spin" />}
+        </div>
       </div>
     </AppLayout>
   );

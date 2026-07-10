@@ -46,8 +46,17 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      *
      * @param destinataire utilisateur dont on marque les notifications
      */
-    @Modifying
+@Modifying
     @Transactional
     @Query("UPDATE Notification n SET n.lue = true WHERE n.destinataire = :dest AND n.lue = false")
     void marquerToutesLues(@Param("dest") Utilisateur destinataire);
+
+    /**
+     * Marque comme lues les notifications d'un utilisateur pour une route spécifique
+     * (ex: /messages/123 pour auto-read dans chat actif).
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE Notification n SET n.lue = true WHERE n.destinataire = :dest AND n.routeCible = :route AND n.lue = false")
+    void marquerLuesParRoute(@Param("dest") Utilisateur destinataire, @Param("route") String routeCible);
 }

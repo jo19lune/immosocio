@@ -83,9 +83,11 @@ public class AnnonceController {
                     annonceRepository.findByStatutIn(List.of(StatutAnnonce.DISPONIBLE, StatutAnnonce.SUSPENDU), pageable)
                             .map(annonce -> enrichAnnonce(annonce, viewer))
             );
+        } catch (ApiException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des annonces", e);
-            throw e;
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "Erreur lors de la récupération des annonces");
         }
     }
 
@@ -228,7 +230,7 @@ public class AnnonceController {
     }
 
     @GetMapping("/mes-annonces")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Page<Annonce>> mesAnnonces(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -247,7 +249,7 @@ public class AnnonceController {
      * Crée une nouvelle annonce et notifie tous les abonnés du propriétaire.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Annonce> creerAnnonce(
             @Valid @RequestBody AnnonceRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -283,7 +285,7 @@ public class AnnonceController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE','LOCATAIRE','ADMIN','SUPERADMIN')")
     public ResponseEntity<Annonce> modifierAnnonce(
             @PathVariable Long id,
             @Valid @RequestBody AnnonceRequest request,
@@ -652,8 +654,10 @@ public class AnnonceController {
     }
 
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        return utilisateurRepository.findByEmail(Objects.requireNonNull(email))
+        if (userDetails == null || userDetails.getUsername() == null) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié");
+        }
+        return utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
     }
 

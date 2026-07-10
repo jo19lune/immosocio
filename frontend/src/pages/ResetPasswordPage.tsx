@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../lib/api';
-import '../styles/pages/AuthPages.css';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -14,17 +14,30 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (!token) {
     return (
-      <div className="auth-page">
-        <div className="auth-right" style={{ margin: 'auto' }}>
-          <div className="auth-card card" style={{ textAlign: 'center' }}>
-            <h2 className="auth-title">Lien invalide</h2>
-            <p className="auth-desc">Aucun token de réinitialisation fourni.</p>
-            <Link to="/mot-de-passe-oublie" className="btn btn-primary" style={{ display: 'inline-block', marginTop: 16 }}>Demander un nouveau lien</Link>
+      <div className="min-h-screen bg-surface flex items-center justify-center p-gutter md:p-xl">
+        <motion.div 
+          className="w-full max-w-container-max bg-surface-container-lowest rounded-xl shadow-md p-lg md:p-xl flex flex-col gap-lg border border-outline-variant/30 text-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="mx-auto w-12 h-12 bg-error-container rounded-full flex items-center justify-center mb-xs text-error">
+            <span className="material-symbols-outlined text-3xl">error</span>
           </div>
-        </div>
+          <h2 className="font-h1 text-h1 text-on-surface">Lien invalide</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant">Aucun token de réinitialisation fourni.</p>
+          <Link 
+            to="/mot-de-passe-oublie" 
+            className="w-full bg-primary hover:bg-primary-container text-on-primary font-button text-button py-3 px-4 rounded-lg inline-flex items-center justify-center gap-sm transition-all duration-200 shadow-sm"
+          >
+            Demander un nouveau lien
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </Link>
+        </motion.div>
       </div>
     );
   }
@@ -58,57 +71,142 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="auth-page">
-        <div className="auth-right" style={{ margin: 'auto' }}>
-          <div className="auth-card card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-            <h2 className="auth-title">Lien vérifié</h2>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{success}</p>
-            <button className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }}
-              onClick={() => navigate('/login')}>
-              Aller à la connexion
-            </button>
+      <div className="min-h-screen bg-surface flex items-center justify-center p-gutter md:p-xl">
+        <motion.div 
+          className="w-full max-w-container-max bg-surface-container-lowest rounded-xl shadow-md p-lg md:p-xl flex flex-col gap-lg border border-outline-variant/30 text-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-xs text-green-600">
+            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
           </div>
-        </div>
+          <h2 className="font-h1 text-h1 text-on-surface">Réinitialisation réussie</h2>
+          <p className="font-body-md text-body-md text-on-surface-variant">{success}</p>
+          <button 
+            className="w-full bg-primary hover:bg-primary-container text-on-primary font-button text-button py-3 px-4 rounded-lg flex items-center justify-center gap-sm transition-all duration-200 shadow-sm"
+            onClick={() => navigate('/login')}
+          >
+            Aller à la connexion
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-right" style={{ margin: 'auto' }}>
-        <div className="auth-card card">
-          <h2 className="auth-title">Nouveau mot de passe</h2>
-          <p className="auth-desc">Choisissez un nouveau mot de passe sécurisé.</p>
+    <div className="min-h-screen bg-surface flex items-center justify-center p-gutter md:p-xl relative overflow-hidden">
+      {/* Ambient Background Element */}
+      <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10"></div>
 
-          {error && <div className="auth-error">{error}</div>}
+      <motion.div 
+        className="w-full max-w-container-max bg-surface-container-lowest rounded-xl shadow-md p-lg md:p-xl flex flex-col gap-lg border border-outline-variant/30"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Header Section */}
+        <header className="text-center flex flex-col gap-sm items-center">
+          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-xs text-primary">
+            <span className="material-symbols-outlined text-3xl">lock</span>
+          </div>
+          <h1 className="font-h1 text-h1 text-on-surface">Nouveau mot de passe</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant">Choisissez un nouveau mot de passe sécurisé.</p>
+        </header>
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label">Nouveau mot de passe</label>
-              <div className="password-field">
-                <input type={showPwd ? 'text' : 'password'} className="form-input"
-                  placeholder="Min. 8 caractères" value={nouveauMotDePasse}
-                  onChange={(e) => setNouveauMotDePasse(e.target.value)} required minLength={8} autoFocus />
-                <button type="button" className="pwd-toggle" onClick={() => setShowPwd(!showPwd)}>
-                  {showPwd ? '🙈' : '👁️'}
-                </button>
-              </div>
+        {error && (
+          <div className="bg-error-container border border-error text-on-error-container px-md py-sm rounded-lg text-body-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-md">
+          {/* New Password Input */}
+          <div className="flex flex-col gap-xs">
+            <label className="font-label-bold text-label-bold text-on-surface" htmlFor="password">
+              Nouveau mot de passe
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
+                <span className="material-symbols-outlined text-xl">lock</span>
+              </span>
+              <input
+                id="password"
+                type={showPwd ? 'text' : 'password'}
+                className="w-full pl-10 pr-10 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-200"
+                placeholder="Min. 8 caractères"
+                value={nouveauMotDePasse}
+                onChange={(e) => setNouveauMotDePasse(e.target.value)}
+                minLength={8}
+                required
+                autoFocus
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-outline hover:text-on-surface-variant transition-colors"
+                onClick={() => setShowPwd(!showPwd)}
+                aria-label={showPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showPwd ? 'visibility' : 'visibility_off'}
+                </span>
+              </button>
             </div>
+          </div>
 
-            <div className="form-group">
-              <label className="form-label">Confirmer le mot de passe</label>
-              <input type="password" className="form-input" placeholder="••••••••" value={confirm}
-                onChange={(e) => setConfirm(e.target.value)} required />
+          {/* Confirm Password Input */}
+          <div className="flex flex-col gap-xs">
+            <label className="font-label-bold text-label-bold text-on-surface" htmlFor="confirm">
+              Confirmer le mot de passe
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-outline">
+                <span className="material-symbols-outlined text-xl">lock_reset</span>
+              </span>
+              <input
+                id="confirm"
+                type={showConfirm ? 'text' : 'password'}
+                className="w-full pl-10 pr-10 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-200"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                minLength={8}
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-outline hover:text-on-surface-variant transition-colors"
+                onClick={() => setShowConfirm(!showConfirm)}
+                aria-label={showConfirm ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showConfirm ? 'visibility' : 'visibility_off'}
+                </span>
+              </button>
             </div>
+          </div>
 
-            <button type="submit" className="btn btn-primary btn-lg"
-              style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
-              {loading ? <span className="spinner" /> : 'Réinitialiser'}
-            </button>
-          </form>
-        </div>
-      </div>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-primary hover:bg-primary-container text-on-primary font-button text-button py-3 px-4 rounded-lg flex items-center justify-center gap-sm transition-all duration-200 shadow-sm disabled:opacity-55 disabled:cursor-not-allowed mt-sm"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin"></div>
+                Réinitialisation...
+              </>
+            ) : (
+              <>
+                Réinitialiser
+                <span className="material-symbols-outlined">check</span>
+              </>
+            )}
+          </button>
+        </form>
+      </motion.div>
     </div>
   );
 }
