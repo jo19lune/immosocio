@@ -6,6 +6,8 @@ import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { StateManager } from '../components/ui/state';
+import { useDelayedLoading } from '../hooks/useDelayedLoading';
 
 interface Annonce {
   id: number;
@@ -53,6 +55,7 @@ export default function AnnoncesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
@@ -93,6 +96,7 @@ export default function AnnoncesPage() {
 
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
+    if (reset) setError(null);
     try {
       const queryParams = new URLSearchParams(searchParams);
       queryParams.set('page', String(p));
@@ -108,8 +112,9 @@ export default function AnnoncesPage() {
       setAnnonces(prev => (reset ? items : [...prev, ...items]));
       setHasMore(!data.last);
       setPage(p);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erreur chargement annonces', err);
+      if (reset) setError(err);
     } finally {
       setLoading(false);
     }
@@ -141,6 +146,8 @@ export default function AnnoncesPage() {
     setTri(e.target.value);
     applyFilters(filters, e.target.value);
   };
+
+  const isLoadingDelayed = useDelayedLoading(loading && annonces.length === 0);
 
   return (
     <Wrapper>
@@ -245,32 +252,32 @@ export default function AnnoncesPage() {
       </div>
 
       <div className="p-6 pb-24 lg:pb-6">
-        {loading && annonces.length === 0 && (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin"></div>
-          </div>
-        )}
-
-        {!loading && annonces.length === 0 && (
-          <div className="bg-surface-container rounded-xl border border-surface-variant p-16 flex flex-col items-center justify-center text-center max-w-2xl mx-auto mt-8">
-            <span className="material-symbols-outlined text-[64px] text-surface-variant mb-4">search_off</span>
-            <h3 className="font-h2 text-h2 text-on-surface mb-2">Aucun résultat</h3>
-            <p className="font-body-md text-body-md text-on-surface-variant mb-6">Nous n'avons trouvé aucune annonce correspondant à vos critères de recherche.</p>
-            <button onClick={() => applyFilters({ville: '', type: '', prixMin: '', prixMax: ''}, 'DATE_DESC')} className="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-label-caps uppercase transition-colors hover:bg-primary-fixed">
-              Effacer les filtres
-            </button>
-          </div>
-        )}
-
+        <StateManager
+          isLoading={isLoadingDelayed}
+          isError={!!error}
+          isEmpty={!loading && annonces.length === 0}
+          errorProps={{ onRetry: () => fetchAnnonces(0, true) }}
+          emptyProps={{
+            title: "Aucun résultat",
+            description: "Nous n'avons trouvé aucune annonce correspondant à vos critères de recherche.",
+            icon: "search_off",
+            action: (
+              <button onClick={() => applyFilters({ville: '', type: '', prixMin: '', prixMax: ''}, 'DATE_DESC')} className="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-label-caps uppercase transition-colors hover:bg-primary-fixed mt-4">
+                Effacer les filtres
+              </button>
+            )
+          }}
+        >
         {/* Property Grid */}
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg max-w-container-max mx-auto">
             {annonces.map(a => <AnnonceCard key={a.id} annonce={a} />)}
           </div>
           <div ref={loadMoreRef} className="h-20 flex items-center justify-center py-8">
-            {loading && <div className="w-8 h-8 border-4 border-surface-variant border-t-primary rounded-full animate-spin" />}
+            {loading && annonces.length > 0 && <div className="w-8 h-8 border-4 border-surface-variant border-t-primary rounded-full animate-spin" />}
           </div>
         </div>
+        </StateManager>
       </div>
     </Wrapper>
   );
