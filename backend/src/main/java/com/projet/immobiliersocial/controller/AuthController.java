@@ -81,6 +81,11 @@ public class AuthController {
                     .body(new ErreurSimple("Compte désactivé. Contactez l'assistance."));
         }
 
+        if (!user.isEmailVerifie()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErreurSimple("Veuillez vérifier votre adresse email avant de vous connecter."));
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String token = jwtUtils.generateToken(userDetails);
 
