@@ -1,49 +1,58 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
+/**
+ * Hook pour retarder l'affichage d'un état de chargement et garantir une durée minimale d'affichage
+ * @param isLoading L'état de chargement réel
+ * @param delayMs Le délai avant d'afficher l'indicateur de chargement (pour éviter le flickering)
+ * @param minDisplayMs La durée minimale pendant laquelle l'indicateur doit rester affiché une fois apparu
+ * @returns true s'il faut afficher l'indicateur de chargement, false sinon
+ */
 export function useDelayedLoading(
   isLoading: boolean,
   delayMs: number = 200,
   minDisplayMs: number = 500
 ): boolean {
-  const [shouldShow, setShouldShow] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
     let minDisplayTimeoutId: ReturnType<typeof setTimeout>;
-    let startTimestamp: number;
 
     if (isLoading) {
-      // Start the delay timer
+      // Démarrer un délai avant d'afficher le loader
       timeoutId = setTimeout(() => {
-        setShouldShow(true);
-        startTimestamp = Date.now();
+        startTimeRef.current = Date.now();
+        setShowLoading(true);
       }, delayMs);
     } else {
-      if (shouldShow) {
-        // We are currently showing the loader. Calculate how long it's been shown.
-        const elapsed = Date.now() - (startTimestamp! || Date.now());
-        const remainingMinDisplayTime = minDisplayMs - elapsed;
+      // Si on arrête de charger
+      if (showLoading) {
+        const elapsedTime = Date.now() - (startTimeRef.current || Date.now());
+        const remainingTime = minDisplayMs - elapsedTime;
 
-        if (remainingMinDisplayTime > 0) {
-          // Keep showing until minDisplayMs has passed
+        if (remainingTime > 0) {
+          // Attendre que le temps minimum d'affichage soit écoulé
           minDisplayTimeoutId = setTimeout(() => {
-            setShouldShow(false);
-          }, remainingMinDisplayTime);
+            setShowLoading(false);
+            startTimeRef.current = null;
+          }, remainingTime);
         } else {
-          // Already shown long enough
-          setShouldShow(false);
+          // Temps minimum déjà écoulé
+          setShowLoading(false);
+          startTimeRef.current = null;
         }
       } else {
-        // Loader wasn't shown yet (or at all)
-        setShouldShow(false);
+        // Le loader n'a pas encore été affiché, annuler le délai
+        clearTimeout(timeoutId!);
       }
     }
 
     return () => {
-      clearTimeout(timeoutId);
-      clearTimeout(minDisplayTimeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
+      if (minDisplayTimeoutId) clearTimeout(minDisplayTimeoutId);
     };
-  }, [isLoading, delayMs, minDisplayMs, shouldShow]);
+  }, [isLoading, delayMs, minDisplayMs, showLoading]);
 
-  return shouldShow;
+  return showLoading;
 }

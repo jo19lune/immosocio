@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Spinner } from '../loading/Spinner';
 import type { LoadingStateProps } from './types';
 
 export function LoadingState({ message = 'Chargement en cours...', className = '' }: LoadingStateProps) {
@@ -9,7 +9,7 @@ export function LoadingState({ message = 'Chargement en cours...', className = '
       aria-live="polite"
       aria-busy="true"
     >
-      <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" aria-hidden="true" />
+      <Spinner size="lg" className="mb-4" />
       <span className="text-on-surface-variant font-medium text-sm">{message}</span>
     </div>
   );
