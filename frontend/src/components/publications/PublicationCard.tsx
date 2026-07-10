@@ -113,7 +113,14 @@ export default function PublicationCard({
       return;
     }
 
+    const prevLiked = liked;
+    const prevCount = likeCount;
+
+    // Optimistic update
+    setLiked(!prevLiked);
+    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
     setLoadingLike(true);
+
     try {
       const { data } = await api.post(`/publications/${publication.id}/like`);
       setLiked(data.liked);
@@ -122,8 +129,11 @@ export default function PublicationCard({
         source: 'local',
         payload: { publicationId: publication.id, liked: data.liked, likeCount: data.total },
       });
-    } catch {
-      // silent background refresh
+    } catch (error) {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+      console.error('Like action failed:', error);
+      alert('Erreur lors de l\'action J\'aime.');
     } finally {
       setLoadingLike(false);
     }
@@ -155,20 +165,35 @@ export default function PublicationCard({
       return;
     }
 
+    const newCommentText = commentText.trim();
+    setCommentText('');
+
+    const tempId = Date.now();
+    const tempComment = {
+      id: tempId,
+      contenu: newCommentText,
+      dateCreation: new Date().toISOString(),
+      auteur: { id: user.id, nom: user.nom, prenom: user.prenom, photo: user.photo }
+    };
+
+    setComments((prev) => [...prev, tempComment]);
+    setCommentCount((prev) => prev + 1);
+
     try {
       const { data } = await api.post(`/publications/${publication.id}/commentaires`, {
-        contenu: commentText,
+        contenu: newCommentText,
       });
-      const nextCommentCount = commentCount + 1;
-      setComments((prev) => [...prev, data]);
-      setCommentCount(nextCommentCount);
-      setCommentText('');
+      setComments((prev) => prev.map((c) => c.id === tempId ? data : c));
       emitAppRefresh(['publications', 'profile'], {
         source: 'local',
-        payload: { publicationId: publication.id, commentCount: nextCommentCount },
+        payload: { publicationId: publication.id, commentCount: commentCount + 1 },
       });
-    } catch {
-      // silent background refresh
+    } catch (error) {
+      setComments((prev) => prev.filter((c) => c.id !== tempId));
+      setCommentCount((prev) => Math.max(0, prev - 1));
+      setCommentText(newCommentText);
+      console.error('Comment action failed:', error);
+      alert('Erreur lors de l\'ajout du commentaire.');
     }
   };
 

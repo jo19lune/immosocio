@@ -20,6 +20,9 @@ export default function ProfilPage() {
   const focusedPublicationId = Number(searchParams.get('publicationId') || 0);
   const isOwnProfile = user?.id === numericUserId;
 
+  const [following, setFollowing] = useState(false);
+  const [updatingFollow, setUpdatingFollow] = useState(false);
+
   const fetchProfil = async () => {
     setLoading(true);
     try {
@@ -43,10 +46,35 @@ export default function ProfilPage() {
           setProfil(null);
         }
       }
+
+      if (!isOwnProfile && user) {
+        api.get(`/utilisateurs/${numericUserId}/suivi`)
+          .then(({ data }) => setFollowing(Boolean(data?.suivi)))
+          .catch(() => {});
+      }
     } catch {
       // silent background refresh
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    const previousState = following;
+    setFollowing(!previousState); // Optimistic update
+    setUpdatingFollow(true);
+    try {
+      const { data } = await api.post(`/utilisateurs/${numericUserId}/suivre`);
+      setFollowing(Boolean(data?.suivi));
+    } catch (err) {
+      setFollowing(previousState); // Revert on failure
+      alert('Erreur lors de la modification de l\'abonnement.');
+    } finally {
+      setUpdatingFollow(false);
     }
   };
 
@@ -168,13 +196,22 @@ export default function ProfilPage() {
                   )}
                 </>
               ) : user ? (
-                <button
-                  className="btn btn-primary flex items-center gap-2"
-                  onClick={() => navigate(`/messages/${userId}`)}
-                >
-                  <MessageCircle size={18} />
-                  Message
-                </button>
+                <>
+                  <button
+                    className={`btn ${following ? 'btn-ghost border border-outline' : 'btn-primary'} flex items-center gap-2`}
+                    onClick={handleFollowToggle}
+                    disabled={updatingFollow}
+                  >
+                    {following ? 'Abonné' : 'S\'abonner'}
+                  </button>
+                  <button
+                    className="btn btn-ghost border border-outline flex items-center gap-2"
+                    onClick={() => navigate(`/messages/${userId}`)}
+                  >
+                    <MessageCircle size={18} />
+                    Message
+                  </button>
+                </>
               ) : null}
             </div>
           </div>

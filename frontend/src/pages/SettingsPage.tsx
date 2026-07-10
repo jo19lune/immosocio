@@ -18,7 +18,6 @@ export default function SettingsPage() {
     prenom: user?.prenom || '',
     telephone: user?.telephone || '',
   });
-  const [loadingParams, setLoadingParams] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [success, setSuccess] = useState('');
@@ -53,16 +52,33 @@ export default function SettingsPage() {
     setTimeout(() => setSuccess(''), 3000);
   };
 
-  const saveParams = async () => {
-    setLoadingParams(true);
+  const handleTogglePreference = async (key: string, value: boolean) => {
+    const previousParams = { ...params };
+    const newParams = { ...params, [key]: value };
+    setParams(newParams);
     try {
-      await api.put('/parametres', params);
-      applyTheme(params.theme);
-      showSuccess('Préférences enregistrées !');
+      await api.put('/parametres', newParams);
     } catch {
-      /* silencieux */
-    } finally {
-      setLoadingParams(false);
+      setParams(previousParams);
+      showSuccess('Erreur lors de la mise à jour de la préférence');
+    }
+  };
+
+  const handleSelectPreference = async (key: string, value: string) => {
+    const previousParams = { ...params };
+    const newParams = { ...params, [key]: value };
+    setParams(newParams);
+    if (key === 'theme') {
+      applyTheme(value);
+    }
+    try {
+      await api.put('/parametres', newParams);
+    } catch {
+      setParams(previousParams);
+      if (key === 'theme') {
+        applyTheme(previousParams.theme);
+      }
+      showSuccess('Erreur lors de la mise à jour de la préférence');
     }
   };
 
@@ -296,9 +312,6 @@ export default function SettingsPage() {
         <SectionCard
           title="Préférences"
           icon={<Settings size={20} />}
-          footer={
-            <SaveButton onClick={saveParams} loading={loadingParams} label="Enregistrer" />
-          }
         >
           {/* Theme Selector */}
           <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-outline mb-6 gap-4">
@@ -321,10 +334,7 @@ export default function SettingsPage() {
                       ? 'bg-surface text-on-surface shadow-sm border border-outline'
                       : 'text-on-surface-variant hover:text-on-surface'
                   }`}
-                  onClick={() => {
-                    setParams((p) => ({ ...p, theme: key }));
-                    applyTheme(key);
-                  }}
+                  onClick={() => handleSelectPreference('theme', key)}
                 >
                   {label}
                 </button>
@@ -343,9 +353,7 @@ export default function SettingsPage() {
             <select
               className="form-input min-w-[160px]"
               value={params.visibiliteParDefaut}
-              onChange={(e) =>
-                setParams((p) => ({ ...p, visibiliteParDefaut: e.target.value }))
-              }
+              onChange={(e) => handleSelectPreference('visibiliteParDefaut', e.target.value)}
             >
               <option value="PUBLIC">🌍 Public</option>
               <option value="MEMBRES">👥 Membres</option>
@@ -362,7 +370,7 @@ export default function SettingsPage() {
             </div>
             <ToggleSwitch
               checked={params.notificationsEmail}
-              onChange={(v) => setParams((p) => ({ ...p, notificationsEmail: v }))}
+              onChange={(v) => handleTogglePreference('notificationsEmail', v)}
             />
           </div>
 
@@ -376,7 +384,7 @@ export default function SettingsPage() {
             </div>
             <ToggleSwitch
               checked={params.notificationsPush}
-              onChange={(v) => setParams((p) => ({ ...p, notificationsPush: v }))}
+              onChange={(v) => handleTogglePreference('notificationsPush', v)}
             />
           </div>
         </SectionCard>

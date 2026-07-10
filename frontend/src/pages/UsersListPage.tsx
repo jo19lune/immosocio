@@ -30,6 +30,7 @@ interface User {
   role: string;
   actif: boolean;
   dateInscription?: string;
+  suivi?: boolean;
 }
 
 const roleLabels: Record<string, string> = {
@@ -111,12 +112,46 @@ export default function UsersListPage() {
       });
       
       const usersList = Array.from(uniqueOwners.values());
-      setUsers(prev => reset ? usersList : [...prev, ...usersList]);
+      
+      // Fetch follow states for unique owners
+      if (currentUser) {
+        const followPromises = usersList.map(async u => {
+           if (u.id === currentUser.id) return { ...u, suivi: false };
+           try {
+             const res = await api.get(`/utilisateurs/${u.id}/suivi`);
+             return { ...u, suivi: Boolean(res.data?.suivi) };
+           } catch {
+             return { ...u, suivi: false };
+           }
+        });
+        const usersWithFollow = await Promise.all(followPromises);
+        setUsers(prev => reset ? usersWithFollow : [...prev, ...usersWithFollow]);
+      } else {
+        setUsers(prev => reset ? usersList : [...prev, ...usersList]);
+      }
+      
       setHasMore(!data.last && items.length > 0);
     } catch (err) {
       console.error('Erreur chargement utilisateurs', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async (userId: number, currentState: boolean) => {
+    if (!currentUser) return;
+    
+    // Optimistic UI Update
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, suivi: !currentState } : u));
+    
+    try {
+      const { data } = await api.post(`/utilisateurs/${userId}/suivre`);
+      // Update with actual response just in case
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, suivi: Boolean(data?.suivi) } : u));
+    } catch (err) {
+      // Revert on error
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, suivi: currentState } : u));
+      alert('Erreur lors de la mise à jour de l\'abonnement.');
     }
   };
 
@@ -266,13 +301,23 @@ export default function UsersListPage() {
               
               <div className="user-actions">
                 {currentUser ? (
-                  <Link
-                    to={`/messages/${user.id}`}
-                    className="btn btn-primary btn-message-gradient"
-                  >
-                    <FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} />
-                    Contacter
-                  </Link>
+                  <div className="flex gap-2">
+                    {currentUser.id !== user.id && (
+                      <button
+                        className={`btn ${user.suivi ? 'btn-ghost border border-outline' : 'btn-primary'} flex-1 flex justify-center items-center gap-2`}
+                        onClick={() => handleFollowToggle(user.id, user.suivi || false)}
+                      >
+                        {user.suivi ? 'Abonné' : 'S\'abonner'}
+                      </button>
+                    )}
+                    <Link
+                      to={`/messages/${user.id}`}
+                      className="btn btn-ghost border border-outline flex-1 flex justify-center items-center gap-2"
+                      title="Contacter"
+                    >
+                      <FontAwesomeIcon icon={faEnvelope} />
+                    </Link>
+                  </div>
                 ) : (
                   <Link to="/login" className="btn btn-ghost">
                     <FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} />
@@ -280,7 +325,7 @@ export default function UsersListPage() {
                   </Link>
                 )}
                 
-                <Link to={`/profil/${user.id}`} className="btn btn-ghost btn-sm mt-2 text-center text-xs justify-center">
+                <Link to={`/profil/${user.id}`} className="btn btn-ghost btn-sm mt-2 text-center text-xs justify-center w-full">
                   Voir le profil complet
                 </Link>
               </div>

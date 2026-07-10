@@ -203,7 +203,7 @@ export default function AnnonceDetailsPage() {
     const prevLiked = liked;
     const prevCount = likeCount;
     setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+    setLikeCount(liked ? Math.max(0, likeCount - 1) : likeCount + 1);
     setLoadingLike(true);
     try {
       const { data } = await api.post(`/annonces/${annonce.id}/like`);
@@ -211,9 +211,11 @@ export default function AnnonceDetailsPage() {
       setLikeCount(data?.total ?? prevCount);
       setAnnonce(prev => prev ? { ...prev, liked: Boolean(data?.liked), likeCount: data?.total } : prev);
       emitAppRefresh('annonces', { source: 'local', payload: { annonceId: annonce.id } });
-    } catch {
+    } catch (error) {
       setLiked(prevLiked);
       setLikeCount(prevCount);
+      console.error('Like action failed:', error);
+      alert('Erreur lors de l\'action J\'aime.');
     } finally {
       setLoadingLike(false);
     }
@@ -223,13 +225,34 @@ export default function AnnonceDetailsPage() {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
     if (!commentText.trim()) return;
+
+    const newCommentText = commentText.trim();
+    setCommentText('');
+
+    const tempId = Date.now();
+    const tempComment = {
+      id: tempId,
+      contenu: newCommentText,
+      dateCreation: new Date().toISOString(),
+      auteur: { id: user.id, nom: user.nom, prenom: user.prenom, photo: user.photo },
+      reponseCount: 0
+    };
+
+    setComments(prev => [...prev, tempComment]);
+    setCommentCount(c => c + 1);
+    setAnnonce(prev => prev ? { ...prev, commentCount: (prev.commentCount || 0) + 1 } : prev);
+
     try {
-      const { data } = await api.post(`/annonces/${annonce!.id}/commentaires`, { contenu: commentText });
-      setComments(prev => [...prev, { ...data, reponseCount: 0 }]);
-      setCommentCount(c => c + 1);
-      setCommentText('');
-      setAnnonce(prev => prev ? { ...prev, commentCount: (prev.commentCount || 0) + 1 } : prev);
-    } catch { /* silent */ }
+      const { data } = await api.post(`/annonces/${annonce!.id}/commentaires`, { contenu: newCommentText });
+      setComments(prev => prev.map(c => c.id === tempId ? { ...data, reponseCount: 0 } : c));
+    } catch (error) {
+      setComments(prev => prev.filter(c => c.id !== tempId));
+      setCommentCount(c => Math.max(0, c - 1));
+      setAnnonce(prev => prev ? { ...prev, commentCount: Math.max(0, (prev.commentCount || 1) - 1) } : prev);
+      setCommentText(newCommentText);
+      console.error('Comment action failed:', error);
+      alert('Erreur lors de l\'ajout du commentaire.');
+    }
   };
 
   const handleEditSave = async (commentaireId: number) => {
@@ -256,14 +279,40 @@ export default function AnnonceDetailsPage() {
   const handleReplySubmit = async (e: React.FormEvent, parentId: number) => {
     e.preventDefault();
     if (!replyText.trim()) return;
+
+    const newReplyText = replyText.trim();
+    setReplyText('');
+    setReplyToId(null);
+    setExpandedReplies(prev => ({ ...prev, [parentId]: true }));
+
+    const tempId = Date.now();
+    const tempReply = {
+      id: tempId,
+      contenu: newReplyText,
+      dateCreation: new Date().toISOString(),
+      auteur: { id: user?.id || 0, nom: user?.nom || '', prenom: user?.prenom || '', photo: user?.photo }
+    };
+
+    setReplies(prev => ({ ...prev, [parentId]: [...(prev[parentId] || []), tempReply] }));
+    setComments(prev => prev.map(c => c.id === parentId ? { ...c, reponseCount: (c.reponseCount || 0) + 1 } : c));
+
     try {
-      const { data } = await api.post(`/annonces/${annonce!.id}/commentaires/${parentId}/reponses`, { contenu: replyText });
-      setReplies(prev => ({ ...prev, [parentId]: [...(prev[parentId] || []), data] }));
-      setComments(prev => prev.map(c => c.id === parentId ? { ...c, reponseCount: (c.reponseCount || 0) + 1 } : c));
-      setReplyText('');
-      setReplyToId(null);
-      setExpandedReplies(prev => ({ ...prev, [parentId]: true }));
-    } catch { /* silent */ }
+      const { data } = await api.post(`/annonces/${annonce!.id}/commentaires/${parentId}/reponses`, { contenu: newReplyText });
+      setReplies(prev => ({
+        ...prev,
+        [parentId]: prev[parentId].map(r => r.id === tempId ? data : r)
+      }));
+    } catch (error) {
+      setReplies(prev => ({
+        ...prev,
+        [parentId]: prev[parentId].filter(r => r.id !== tempId)
+      }));
+      setComments(prev => prev.map(c => c.id === parentId ? { ...c, reponseCount: Math.max(0, (c.reponseCount || 1) - 1) } : c));
+      setReplyText(newReplyText);
+      setReplyToId(parentId);
+      console.error('Reply action failed:', error);
+      alert('Erreur lors de l\'ajout de la réponse.');
+    }
   };
 
   const loadReplies = async (parentId: number) => {

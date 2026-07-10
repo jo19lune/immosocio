@@ -306,15 +306,17 @@ export function AnnonceCard({ annonce }: { annonce: Annonce }) {
     const prevLiked = liked;
     const prevCount = likeCount;
     setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+    setLikeCount(liked ? Math.max(0, likeCount - 1) : likeCount + 1);
     setLoadingLike(true);
     try {
       const { data } = await api.post(`/annonces/${annonce.id}/like`);
       setLiked(Boolean(data?.liked));
       setLikeCount(data?.total ?? prevCount);
-    } catch {
+    } catch (error) {
       setLiked(prevLiked);
       setLikeCount(prevCount);
+      console.error('Like action failed:', error);
+      alert('Erreur lors de l\'action J\'aime.');
     } finally {
       setLoadingLike(false);
     }
