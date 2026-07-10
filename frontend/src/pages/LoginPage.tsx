@@ -21,10 +21,14 @@ export default function LoginPage() {
       await login(email, motDePasse);
       navigate('/feed');
     } catch (err: any) {
-      if (err.response?.data?.champs) {
+      if (err.response?.status === 403) {
+        setError(err.response?.data?.message || err.response?.data?.erreur || 'Veuillez vérifier votre adresse email avant de vous connecter.');
+      } else if (err.response?.data?.champs) {
         setFieldErrors(err.response.data.champs);
       } else if (err.response?.data?.erreur) {
         setError(err.response.data.erreur);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
         setError('Email ou mot de passe incorrect.');
       }

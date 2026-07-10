@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../lib/api';
 import { emitAppRefresh } from '../../lib/appEvents';
+import { CommentItem } from './CommentItem';
 
 
 interface Auteur {
@@ -113,7 +114,14 @@ export default function PublicationCard({
       return;
     }
 
+    const prevLiked = liked;
+    const prevCount = likeCount;
+
+    // Optimistic update
+    setLiked(!prevLiked);
+    setLikeCount(prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1);
     setLoadingLike(true);
+
     try {
       const { data } = await api.post(`/publications/${publication.id}/like`);
       setLiked(data.liked);
@@ -122,8 +130,11 @@ export default function PublicationCard({
         source: 'local',
         payload: { publicationId: publication.id, liked: data.liked, likeCount: data.total },
       });
-    } catch {
-      // silent background refresh
+    } catch (error) {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+      console.error('Like action failed:', error);
+      alert('Erreur lors de l\'action J\'aime.');
     } finally {
       setLoadingLike(false);
     }
@@ -131,18 +142,21 @@ export default function PublicationCard({
 
   const toggleComments = async () => {
     if (!showComments && comments.length === 0) {
-      setLoadingComments(true);
-      try {
-        const { data } = await api.get(`/publications/${publication.id}/commentaires`);
-        setComments(data.content || []);
-      } catch {
-        // silent background refresh
-      } finally {
-        setLoadingComments(false);
-      }
+      loadComments();
     }
-
     setShowComments(!showComments);
+  };
+
+  const loadComments = async () => {
+    setLoadingComments(true);
+    try {
+      const { data } = await api.get(`/publications/${publication.id}/commentaires`);
+      setComments(data.content || []);
+    } catch {
+      // silent background refresh
+    } finally {
+      setLoadingComments(false);
+    }
   };
 
   const handleComment = async (event: React.FormEvent) => {
@@ -155,20 +169,35 @@ export default function PublicationCard({
       return;
     }
 
+    const newCommentText = commentText.trim();
+    setCommentText('');
+
+    const tempId = Date.now();
+    const tempComment = {
+      id: tempId,
+      contenu: newCommentText,
+      dateCreation: new Date().toISOString(),
+      auteur: { id: user.id, nom: user.nom, prenom: user.prenom, photo: user.photo }
+    };
+
+    setComments((prev) => [...prev, tempComment]);
+    setCommentCount((prev) => prev + 1);
+
     try {
       const { data } = await api.post(`/publications/${publication.id}/commentaires`, {
-        contenu: commentText,
+        contenu: newCommentText,
       });
-      const nextCommentCount = commentCount + 1;
-      setComments((prev) => [...prev, data]);
-      setCommentCount(nextCommentCount);
-      setCommentText('');
+      setComments((prev) => prev.map((c) => c.id === tempId ? data : c));
       emitAppRefresh(['publications', 'profile'], {
         source: 'local',
-        payload: { publicationId: publication.id, commentCount: nextCommentCount },
+        payload: { publicationId: publication.id, commentCount: commentCount + 1 },
       });
-    } catch {
-      // silent background refresh
+    } catch (error) {
+      setComments((prev) => prev.filter((c) => c.id !== tempId));
+      setCommentCount((prev) => Math.max(0, prev - 1));
+      setCommentText(newCommentText);
+      console.error('Comment action failed:', error);
+      alert('Erreur lors de l\'ajout du commentaire.');
     }
   };
 
@@ -357,22 +386,12 @@ export default function PublicationCard({
           {loadingComments && <div className="spinner" style={{ margin: '12px auto' }} />}
 
           {comments.map((comment) => (
-            <div key={comment.id} className="comment">
-              <img
-                src={avatarUrl(comment.auteur)}
-                alt=""
-                className="avatar"
-                width={32}
-                height={32}
-              />
-              <div className="comment-bubble">
-                <span className="comment-author">
-                  {comment.auteur.prenom} {comment.auteur.nom}
-                </span>
-                <span className="comment-text">{comment.contenu}</span>
-                <span className="comment-time">{formatDate(comment.dateCreation)}</span>
-              </div>
-            </div>
+            <CommentItem 
+              key={comment.id} 
+              comment={comment} 
+              publicationId={publication.id} 
+              onReplyAdded={loadComments} 
+            />
           ))}
 
           {user ? (

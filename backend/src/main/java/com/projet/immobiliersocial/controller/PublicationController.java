@@ -252,7 +252,7 @@ public class PublicationController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Publication introuvable"));
 
         return ResponseEntity.ok(
-            commentaireRepository.findByPublicationOrderByDateCreationAsc(
+            commentaireRepository.findByPublicationAndParentIsNullOrderByDateCreationAsc(
                 pub, PageRequest.of(page, size))
         );
     }

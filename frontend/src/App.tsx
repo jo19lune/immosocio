@@ -59,7 +59,7 @@ function AppRoutes() {
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/mot-de-passe-oublie" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
       <Route path="/auth/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
-      <Route path="/auth/verify-email" element={<PublicRoute><VerifyEmailPage /></PublicRoute>} />
+      <Route path="/verify-email" element={<PublicRoute><VerifyEmailPage /></PublicRoute>} />
 
       {/* ── Pages membres ────────────────────────────── */}
       <Route path="/feed" element={<PrivateRoute><FeedPage /></PrivateRoute>} />

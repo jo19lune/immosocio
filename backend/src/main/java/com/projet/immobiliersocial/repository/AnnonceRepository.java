@@ -107,4 +107,7 @@ public interface AnnonceRepository
         WHERE a.id = :id
     """)
     Optional<Annonce> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("SELECT COUNT(a) FROM Annonce a WHERE a.statut = 'ACTIVE'")
+    long countAnnoncesActives();
 }

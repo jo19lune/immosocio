@@ -5,6 +5,8 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import useIntersectionObserver from '../hooks/useIntersectionObserver';
+import { StateManager } from '../components/ui/state';
+import { useDelayedLoading } from '../hooks/useDelayedLoading';
 
 // Helper: get first photo URL from annonce (supports both `photos: string[]` and `images: {url}[]`)
 function getFirstPhoto(annonce: any): string | null {
@@ -23,6 +25,7 @@ export default function FeedPage() {
   const { user } = useAuth();
   const [annonces, setAnnonces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [reservations, setReservations] = useState<any[]>([]);
@@ -39,13 +42,14 @@ export default function FeedPage() {
 
   const fetchAnnonces = async (p: number, reset = false) => {
     setLoading(true);
+    if (reset) setError(null);
     try {
       const { data } = await api.get(`/annonces?page=${p}&size=10`);
       const items = data.content || [];
       setAnnonces((prev) => (reset ? items : [...prev, ...items]));
       setHasMore(!data.last);
-    } catch {
-      // ignore
+    } catch (err: any) {
+      if (reset) setError(err);
     } finally {
       setLoading(false);
     }
@@ -80,14 +84,20 @@ export default function FeedPage() {
 
   // Remove old loadMore function - replaced by observer
 
+  const isLoadingDelayed = useDelayedLoading(loading && annonces.length === 0);
 
   return (
     <AppLayout>
-      <div className="p-4 md:p-6 space-y-6 max-w-[1280px] mx-auto">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <StateManager 
+        isLoading={isLoadingDelayed}
+        isError={!!error}
+        errorProps={{ onRetry: fetchPosts }}
+      >
+        <div className="p-4 md:p-6 space-y-6 max-w-[1280px] mx-auto">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-          {/* Left Column: Social Feed */}
-          <div className="xl:col-span-8 flex flex-col gap-6">
+            {/* Left Column: Social Feed */}
+            <div className="xl:col-span-8 flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <h2 className="font-h2 text-h2 text-on-surface">Fil d'actualité</h2>
               <Link
@@ -216,14 +226,14 @@ export default function FeedPage() {
               </div>
             </div>
 
-            {loading && annonces.length === 0 && (
-              <div className="flex justify-center py-4">
-                <div className="w-6 h-6 border-2 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />
-              </div>
-            )}
-          </div>
+              {loading && annonces.length === 0 && !isLoadingDelayed && (
+                <div className="flex justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-surface-variant border-t-primary-fixed-dim rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
 
-          {/* Right Column: Widgets */}
+            {/* Right Column: Widgets */}
           <div className="xl:col-span-4 flex flex-col gap-6">
 
             {/* Quick Actions */}
@@ -344,6 +354,7 @@ export default function FeedPage() {
           </div>
         </div>
       </div>
+      </StateManager>
     </AppLayout>
   );
 }

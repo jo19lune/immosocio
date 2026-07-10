@@ -11,6 +11,7 @@ import {
   faUserShield,
   faHome,
   faCheckCircle,
+  faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/layout/AppLayout';
@@ -18,6 +19,7 @@ import PublicNavbar from '../components/layout/PublicNavbar';
 import api from '../lib/api';
 import userLineSvg from '../assets/user_1_line.svg';
 import { motion } from 'framer-motion';
+import { DashboardStats } from '../components/admin/DashboardStats';
 
 
 interface User {
@@ -30,6 +32,7 @@ interface User {
   role: string;
   actif: boolean;
   dateInscription?: string;
+  suivi?: boolean;
 }
 
 const roleLabels: Record<string, string> = {
@@ -54,6 +57,7 @@ export default function UsersListPage() {
   const [hasMore, setHasMore] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
   const Wrapper = currentUser
     ? AppLayout
@@ -111,12 +115,46 @@ export default function UsersListPage() {
       });
       
       const usersList = Array.from(uniqueOwners.values());
-      setUsers(prev => reset ? usersList : [...prev, ...usersList]);
+      
+      // Fetch follow states for unique owners
+      if (currentUser) {
+        const followPromises = usersList.map(async u => {
+           if (u.id === currentUser.id) return { ...u, suivi: false };
+           try {
+             const res = await api.get(`/utilisateurs/${u.id}/suivi`);
+             return { ...u, suivi: Boolean(res.data?.suivi) };
+           } catch {
+             return { ...u, suivi: false };
+           }
+        });
+        const usersWithFollow = await Promise.all(followPromises);
+        setUsers(prev => reset ? usersWithFollow : [...prev, ...usersWithFollow]);
+      } else {
+        setUsers(prev => reset ? usersList : [...prev, ...usersList]);
+      }
+      
       setHasMore(!data.last && items.length > 0);
     } catch (err) {
       console.error('Erreur chargement utilisateurs', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async (userId: number, currentState: boolean) => {
+    if (!currentUser) return;
+    
+    // Optimistic UI Update
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, suivi: !currentState } : u));
+    
+    try {
+      const { data } = await api.post(`/utilisateurs/${userId}/suivre`);
+      // Update with actual response just in case
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, suivi: Boolean(data?.suivi) } : u));
+    } catch (err) {
+      // Revert on error
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, suivi: currentState } : u));
+      alert('Erreur lors de la mise à jour de l\'abonnement.');
     }
   };
 
@@ -140,6 +178,25 @@ export default function UsersListPage() {
     fetchUsers(next);
   };
 
+  const handleToggleSelectUser = (id: number) => {
+    setSelectedUsers(prev => prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedUsers.length === 0) return;
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.length} utilisateur(s) ?`)) return;
+
+    try {
+      await api.delete('/admin/utilisateurs/batch', { data: selectedUsers });
+      setUsers(prev => prev.filter(u => !selectedUsers.includes(u.id)));
+      setSelectedUsers([]);
+      alert('Utilisateurs supprimés avec succès.');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la suppression.');
+    }
+  };
+
   const avatarUrl = (person: any) =>
     person?.photo ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -149,6 +206,10 @@ export default function UsersListPage() {
   return (
     <Wrapper>
       <div className="users-page fade-in">
+        {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMIN') && (
+          <DashboardStats />
+        )}
+
         <header className="page-header glass-card">
           <div className="page-title-row">
             <h1 className="page-title glowing-text">
@@ -187,6 +248,16 @@ export default function UsersListPage() {
               <option value="LOCATAIRE">Locataire</option>
             </select>
           </div>
+          {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMIN') && selectedUsers.length > 0 && (
+            <button
+              className="btn btn-primary"
+              style={{ backgroundColor: 'red', borderColor: 'red' }}
+              onClick={handleDeleteSelected}
+            >
+              <FontAwesomeIcon icon={faTrash} style={{ marginRight: 8 }} />
+              Supprimer ({selectedUsers.length})
+            </button>
+          )}
         </div>
 
         {loading && users.length === 0 && (
@@ -230,6 +301,17 @@ export default function UsersListPage() {
               {/* Cover card background decorative gradient */}
               <div className="user-card-cover" />
               
+              {(currentUser?.role === 'SUPERADMIN' || currentUser?.role === 'ADMIN') && (
+                <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={() => handleToggleSelectUser(user.id)}
+                    style={{ width: 20, height: 20, cursor: 'pointer' }}
+                  />
+                </div>
+              )}
+
               <div className="user-avatar-shell">
                 <img 
                   src={avatarUrl(user)} 
@@ -266,13 +348,23 @@ export default function UsersListPage() {
               
               <div className="user-actions">
                 {currentUser ? (
-                  <Link
-                    to={`/messages/${user.id}`}
-                    className="btn btn-primary btn-message-gradient"
-                  >
-                    <FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} />
-                    Contacter
-                  </Link>
+                  <div className="flex gap-2">
+                    {currentUser.id !== user.id && (
+                      <button
+                        className={`btn ${user.suivi ? 'btn-ghost border border-outline' : 'btn-primary'} flex-1 flex justify-center items-center gap-2`}
+                        onClick={() => handleFollowToggle(user.id, user.suivi || false)}
+                      >
+                        {user.suivi ? 'Abonné' : 'S\'abonner'}
+                      </button>
+                    )}
+                    <Link
+                      to={`/messages/${user.id}`}
+                      className="btn btn-ghost border border-outline flex-1 flex justify-center items-center gap-2"
+                      title="Contacter"
+                    >
+                      <FontAwesomeIcon icon={faEnvelope} />
+                    </Link>
+                  </div>
                 ) : (
                   <Link to="/login" className="btn btn-ghost">
                     <FontAwesomeIcon icon={faEnvelope} style={{ marginRight: 8 }} />
@@ -280,7 +372,7 @@ export default function UsersListPage() {
                   </Link>
                 )}
                 
-                <Link to={`/profil/${user.id}`} className="btn btn-ghost btn-sm mt-2 text-center text-xs justify-center">
+                <Link to={`/profil/${user.id}`} className="btn btn-ghost btn-sm mt-2 text-center text-xs justify-center w-full">
                   Voir le profil complet
                 </Link>
               </div>

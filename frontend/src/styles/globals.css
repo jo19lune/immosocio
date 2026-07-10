@@ -4,48 +4,306 @@
 
 @layer base {
   :root {
+    /* Color Palette */
     --background: 255 255 255;
-    --on-background: 9 9 11;
-    --surface: 250 250 250;
-    --on-surface: 9 9 11;
-    --on-surface-variant: 113 113 122;
-    --outline: 228 228 231;
+    --on-background: 15 23 42;
+    --surface: 255 255 255;
+    --surface-dim: 255 255 255;
+    --surface-bright: 255 255 255;
+    --surface-container-lowest: 255 255 255;
+    --surface-container-low: 248 250 252;
+    --surface-container: 248 250 252;
+    --surface-container-high: 241 245 249;
+    --surface-container-highest: 241 245 249;
+    --surface-variant: 241 245 249;
+    --on-surface: 15 23 42;
+    --on-surface-variant: 100 116 139;
+    --inverse-surface: 15 23 42;
+    --inverse-on-surface: 255 255 255;
+    --outline: 226 232 240;
+    --outline-variant: 203 213 225;
+    --surface-tint: 37 99 235;
+    
     --primary: 37 99 235;
     --on-primary: 255 255 255;
+    --primary-container: 219 234 254;
+    --on-primary-container: 30 58 138;
+    --inverse-primary: 191 219 254;
+    --primary-fixed: 191 219 254;
+    --primary-fixed-dim: 147 197 253;
+    --on-primary-fixed: 30 58 138;
+    --on-primary-fixed-variant: 37 99 235;
+    
+    --secondary: 71 85 105;
+    --on-secondary: 255 255 255;
+    --secondary-container: 241 245 249;
+    --on-secondary-container: 15 23 42;
+    --secondary-fixed: 226 232 240;
+    --secondary-fixed-dim: 203 213 225;
+    --on-secondary-fixed: 15 23 42;
+    --on-secondary-fixed-variant: 71 85 105;
+
+    --tertiary: 71 85 105;
+    --on-tertiary: 255 255 255;
+    --tertiary-container: 241 245 249;
+    --on-tertiary-container: 15 23 42;
+    --tertiary-fixed: 226 232 240;
+    --tertiary-fixed-dim: 203 213 225;
+    --on-tertiary-fixed: 15 23 42;
+    --on-tertiary-fixed-variant: 71 85 105;
+
     --error: 220 38 38;
+    --on-error: 255 255 255;
+    --error-container: 254 226 226;
+    --on-error-container: 153 27 27;
+
+    --radius: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-2xl: 1.5rem;
   }
 
   .dark {
-    --background: 9 9 11;
-    --on-background: 250 250 250;
-    --surface: 24 24 27;
-    --on-surface: 250 250 250;
-    --on-surface-variant: 161 161 170;
-    --outline: 39 39 42;
-    --primary: 59 130 246;
-    --on-primary: 255 255 255;
-    --error: 248 113 113;
+    --surface: 19 19 19;
+    --surface-dim: 19 19 19;
+    --surface-bright: 57 57 57;
+    --surface-container-lowest: 14 14 14;
+    --surface-container-low: 28 27 27;
+    --surface-container: 32 31 31;
+    --surface-container-high: 42 42 42;
+    --surface-container-highest: 53 53 52;
+    --on-surface: 229 226 225;
+    --on-surface-variant: 212 197 171;
+    --inverse-surface: 229 226 225;
+    --inverse-on-surface: 49 48 48;
+    --outline: 156 143 120;
+    --outline-variant: 79 70 50;
+    --surface-tint: 250 189 0;
+    --primary: 255 228 175;
+    --on-primary: 63 46 0;
+    --primary-container: 255 193 7;
+    --on-primary-container: 109 81 0;
+    --inverse-primary: 120 89 0;
+    --secondary: 200 198 200;
+    --on-secondary: 48 48 50;
+    --secondary-container: 71 70 73;
+    --on-secondary-container: 182 180 183;
+    --tertiary: 232 230 232;
+    --on-tertiary: 48 48 50;
+    --tertiary-container: 204 202 204;
+    --on-tertiary-container: 85 85 87;
+    --error: 255 180 171;
+    --on-error: 105 0 5;
+    --error-container: 147 0 10;
+    --on-error-container: 255 218 214;
+    --primary-fixed: 255 223 158;
+    --primary-fixed-dim: 250 189 0;
+    --on-primary-fixed: 38 26 0;
+    --on-primary-fixed-variant: 91 67 0;
+    --secondary-fixed: 228 226 228;
+    --secondary-fixed-dim: 200 198 200;
+    --on-secondary-fixed: 27 27 29;
+    --on-secondary-fixed-variant: 71 70 73;
+    --tertiary-fixed: 228 226 228;
+    --tertiary-fixed-dim: 200 198 200;
+    --on-tertiary-fixed: 27 27 29;
+    --on-tertiary-fixed-variant: 71 70 72;
+    --background: 19 19 19;
+    --on-background: 229 226 225;
+    --surface-variant: 53 53 52;
+  }
+
+  * {
+    @apply border-outline;
   }
 
   body {
-    @apply bg-background text-on-background font-sans antialiased;
+    @apply bg-background text-on-background font-sans antialiased min-h-screen flex flex-col;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-on-surface;
+  }
+
+  h1 { @apply text-h1; }
+  h2 { @apply text-h2; }
+  h3 { @apply text-h3; }
+  h4 { @apply text-body-lg; }
+  h5 { @apply text-body-md; }
+  h6 { @apply text-body-sm; }
+
+  p {
+    @apply text-body-md leading-relaxed;
   }
 }
 
 @layer components {
+  /* Layout & Wrappers */
+  .container-base {
+    @apply max-w-container-max mx-auto px-4 sm:px-6 lg:px-8 w-full;
+  }
+
+  .main-content {
+    @apply flex-grow container-base py-lg md:py-xl;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-surface rounded-xl border border-outline shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md;
+  }
+  .card-header {
+    @apply px-6 py-4 border-b border-outline bg-surface-container/50;
+  }
+  .card-body {
+    @apply p-6;
+  }
+  .card-footer {
+    @apply px-6 py-4 border-t border-outline bg-surface-container/30 flex items-center gap-sm;
+  }
+
+  /* Buttons */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded font-semibold text-sm transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98];
   }
   .btn-primary {
-    @apply bg-primary text-on-primary border-transparent hover:bg-primary/90;
+    @apply bg-primary text-on-primary shadow-sm hover:bg-primary/90 border border-transparent;
+  }
+  .btn-secondary {
+    @apply bg-secondary-container text-on-secondary-container shadow-sm hover:bg-secondary-container/80 border border-transparent;
+  }
+  .btn-outline {
+    @apply bg-transparent text-on-surface border border-outline hover:bg-surface-container hover:text-on-background;
   }
   .btn-ghost {
-    @apply bg-transparent text-on-surface border-outline hover:bg-surface hover:text-on-background;
+    @apply bg-transparent text-on-surface hover:bg-surface-container hover:text-on-background;
   }
-  .card {
-    @apply bg-surface rounded-xl border border-outline shadow-sm overflow-hidden;
+  .btn-danger {
+    @apply bg-error text-on-error shadow-sm hover:bg-error/90 border border-transparent;
   }
-  .form-input {
-    @apply px-3 py-2 border border-outline rounded-md text-sm text-on-surface bg-background transition-colors outline-none w-full focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant;
+  .btn-icon {
+    @apply p-xs rounded-full;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+  .btn-lg {
+    @apply px-6 py-3 text-base rounded-lg;
+  }
+
+  /* Inputs & Forms */
+  .form-group {
+    @apply flex flex-col gap-1.5 mb-4;
+  }
+  .form-label {
+    @apply text-sm font-medium text-on-surface;
+  }
+  .form-input, .form-textarea, .form-select {
+    @apply flex h-11 w-full rounded border border-outline bg-background px-3 py-2 text-sm text-on-surface shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-on-surface-variant focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .form-textarea {
+    @apply min-h-[100px] resize-y py-3;
+  }
+  .form-error {
+    @apply text-xs font-medium text-error mt-1;
+  }
+  .form-hint {
+    @apply text-xs text-on-surface-variant mt-1;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  .badge-primary {
+    @apply bg-primary text-on-primary border border-transparent;
+  }
+  .badge-secondary {
+    @apply bg-secondary text-on-secondary border border-transparent;
+  }
+  .badge-outline {
+    @apply text-on-surface border border-outline;
+  }
+  .badge-success {
+    @apply bg-primary-container text-on-primary-container border border-transparent;
+  }
+  .badge-error {
+    @apply bg-error text-on-error border border-transparent;
+  }
+  .badge-warning {
+    @apply bg-tertiary text-on-tertiary border border-transparent;
+  }
+
+  /* Alerts */
+  .alert {
+    @apply relative w-full rounded-lg border p-md flex gap-sm items-start;
+  }
+  .alert-info {
+    @apply bg-secondary-container border-secondary/20 text-on-secondary-container;
+  }
+  .alert-success {
+    @apply bg-primary-container border-primary/20 text-on-primary-container;
+  }
+  .alert-warning {
+    @apply bg-tertiary-container border-tertiary/20 text-on-tertiary-container;
+  }
+  .alert-error {
+    @apply bg-error-container border-error/20 text-on-error-container;
+  }
+
+  /* Avatars */
+  .avatar {
+    @apply relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-surface-container;
+  }
+  .avatar-img {
+    @apply aspect-square h-full w-full object-cover;
+  }
+  .avatar-fallback {
+    @apply flex h-full w-full items-center justify-center rounded-full bg-surface-variant text-on-surface font-medium;
+  }
+
+  /* Navigation */
+  .nav-link {
+    @apply flex items-center gap-xs px-3 py-2 rounded-md text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors;
+  }
+  .nav-link-active {
+    @apply bg-primary-container text-on-primary-container hover:bg-primary-container/80 hover:text-on-primary-container;
+  }
+
+  /* Utilities */
+  .divider {
+    @apply h-px w-full bg-outline my-md;
+  }
+  .glass-panel {
+    @apply bg-surface/80 backdrop-blur-md border border-outline shadow-sm;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
+  
+  /* Skeletal Loading */
+  .skeleton {
+    @apply animate-pulse rounded-md bg-surface-variant;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-custom::-webkit-scrollbar-track {
+    @apply bg-surface-container-lowest rounded-full;
+  }
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    @apply bg-outline-variant rounded-full hover:bg-outline;
   }
 }
