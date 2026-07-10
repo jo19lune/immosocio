@@ -30,6 +30,7 @@ import java.util.Map;
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@SuppressWarnings("null")
 public class NotificationController {
 
     private final NotificationRepository notificationRepository;
@@ -111,6 +112,21 @@ public class NotificationController {
         Utilisateur user = resolveUtilisateur(userDetails);
         notificationRepository.marquerToutesLues(user);
         return ResponseEntity.ok(Map.of("message", "Toutes les notifications marquées comme lues"));
+    }
+
+    /**
+     * PATCH /api/notifications/marquer-lus-par-route?routeCible=/path
+     * Marque comme lues les notifications d'un utilisateur pour une route spécifique
+     * (ex: auto-read pour chat /messages/123 actif).
+     */
+    @PatchMapping("/marquer-lus-par-route")
+    public ResponseEntity<Map<String, String>> marquerLusParRoute(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String routeCible) {
+
+        Utilisateur user = resolveUtilisateur(userDetails);
+        notificationRepository.marquerLuesParRoute(user, routeCible);
+        return ResponseEntity.ok(Map.of("message", "Notifications de cette route marquées comme lues"));
     }
 
     // ─── Helper privé ─────────────────────────────────────────────────────────

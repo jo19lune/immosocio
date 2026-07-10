@@ -15,6 +15,9 @@
 	<description>Plateforme immobiliere sociale</description>
 	<properties>
 		<java.version>21</java.version>
+		<lombok.version>1.18.46</lombok.version>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
 	</properties>
 	<dependencies>
 
@@ -58,14 +61,15 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>42.7.10</version>
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Lombok — version explicite requise pour Java 21 -->
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.36</version>
+			<version>${lombok.version}</version>
 			<optional>true</optional>
 		</dependency>
 
@@ -119,11 +123,12 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+					<parameters>true</parameters>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.36</version>
+							<version>${lombok.version}</version>
 						</path>
 						<path>
 							<groupId>org.springframework.boot</groupId>

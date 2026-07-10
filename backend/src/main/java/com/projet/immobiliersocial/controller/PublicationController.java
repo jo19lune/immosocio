@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Contrôleur REST pour les publications du fil d'actualité.
@@ -33,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/publications")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class PublicationController {
 
     private final PublicationRepository publicationRepository;
@@ -40,6 +42,7 @@ public class PublicationController {
     private final CommentaireRepository commentaireRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final AnnonceRepository annonceRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationWebSocketService wsService;
 
     // ─── GET /api/publications ────────────────────────────────────────────────
@@ -58,12 +61,14 @@ public class PublicationController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         Pageable pageable = PageRequest.of(page, size);
+        Utilisateur viewer = resolveUtilisateurOrNull(userDetails);
         List<VisibilitePublication> visibilites = (userDetails != null)
                 ? List.of(VisibilitePublication.PUBLIC, VisibilitePublication.MEMBRES)
                 : List.of(VisibilitePublication.PUBLIC);
 
         return ResponseEntity.ok(
             publicationRepository.findByVisibiliteInOrderByDateCreationDesc(visibilites, pageable)
+                    .map(publication -> enrichPublication(publication, viewer))
         );
     }
 
@@ -107,7 +112,40 @@ public class PublicationController {
                 "auteur", auteur.getNom() + " " + auteur.getPrenom()
         ));
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(enrichPublication(saved, auteur));
+    }
+
+    // ─── PUT /api/publications/{id} ──────────────────────────────────────────
+
+    /**
+     * Modifie le contenu d'une publication. Seul l'auteur peut modifier sa publication.
+     *
+     * @param id   identifiant de la publication
+     * @param body {@code { "contenu": "..." }}
+     * @throws ApiException 404 si introuvable, 403 si pas l'auteur
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Publication> modifier(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Publication publication = publicationRepository.findById(id)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Publication introuvable"));
+
+        if (!publication.getAuteur().getEmail().equals(userDetails.getUsername())) {
+            throw new ApiException(HttpStatus.FORBIDDEN,
+                    "Vous n'êtes pas autorisé à modifier cette publication");
+        }
+
+        String contenu = body != null ? body.get("contenu") : null;
+        if (contenu == null || contenu.isBlank()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Le contenu ne peut pas être vide");
+        }
+
+        publication.setContenu(contenu);
+        return ResponseEntity.ok(enrichPublication(publicationRepository.save(publication), resolveUtilisateur(userDetails)));
     }
 
     // ─── DELETE /api/publications/{id} ───────────────────────────────────────
@@ -128,7 +166,8 @@ public class PublicationController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Publication introuvable"));
 
         boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                            || a.getAuthority().equals("ROLE_SUPERADMIN"));
 
         if (!isAdmin && !publication.getAuteur().getEmail().equals(userDetails.getUsername())) {
             throw new ApiException(HttpStatus.FORBIDDEN,
@@ -170,14 +209,30 @@ public class PublicationController {
         long total = likeRepository.countByPublication(pub);
 
         if (liked && !pub.getAuteur().getEmail().equals(userDetails.getUsername())) {
+            Notification notification = Notification.builder()
+                    .destinataire(pub.getAuteur())
+                    .message(user.getNom() + " a aimé votre publication")
+                    .type(TypeNotification.NOUVEAU_LIKE)
+                    .routeCible(buildPublicationRoute(pub))
+                    .build();
+            notification = notificationRepository.save(notification);
+
             wsService.envoyerNotification(pub.getAuteur().getEmail(), Map.of(
                     "type", "NOUVEAU_LIKE",
-                    "message", user.getNom() + " a aimé votre publication",
-                    "publicationId", id
+                    "message", notification.getMessage(),
+                    "id", notification.getId(),
+                    "publicationId", id,
+                    "dateCreation", notification.getDateCreation(),
+                    "routeCible", notification.getRouteCible()
             ));
         }
 
-        return ResponseEntity.ok(Map.of("liked", liked, "total", total));
+        return ResponseEntity.ok(Map.of(
+                "liked", liked,
+                "total", total,
+                "commentCount", commentaireRepository.countByPublication(pub),
+                "publicationId", id
+        ));
     }
 
     // ─── GET /api/publications/{id}/commentaires ──────────────────────────────
@@ -197,7 +252,7 @@ public class PublicationController {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Publication introuvable"));
 
         return ResponseEntity.ok(
-            commentaireRepository.findByPublicationOrderByDateCreationAsc(
+            commentaireRepository.findByPublicationAndParentIsNullOrderByDateCreationAsc(
                 pub, PageRequest.of(page, size))
         );
     }
@@ -238,10 +293,21 @@ public class PublicationController {
         Commentaire saved = commentaireRepository.save(commentaire);
 
         if (!pub.getAuteur().getEmail().equals(userDetails.getUsername())) {
+            Notification notification = Notification.builder()
+                    .destinataire(pub.getAuteur())
+                    .message(auteur.getNom() + " a commenté votre publication")
+                    .type(TypeNotification.NOUVEAU_COMMENTAIRE)
+                    .routeCible(buildPublicationRoute(pub))
+                    .build();
+            notification = notificationRepository.save(notification);
+
             wsService.envoyerNotification(pub.getAuteur().getEmail(), Map.of(
                     "type", "NOUVEAU_COMMENTAIRE",
-                    "message", auteur.getNom() + " a commenté votre publication",
-                    "publicationId", id
+                    "message", notification.getMessage(),
+                    "id", notification.getId(),
+                    "publicationId", id,
+                    "dateCreation", notification.getDateCreation(),
+                    "routeCible", notification.getRouteCible()
             ));
         }
 
@@ -253,5 +319,32 @@ public class PublicationController {
     private Utilisateur resolveUtilisateur(UserDetails userDetails) {
         return utilisateurRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+    }
+
+    private Utilisateur resolveUtilisateurOrNull(UserDetails userDetails) {
+        if (userDetails == null) {
+            return null;
+        }
+        return resolveUtilisateur(userDetails);
+    }
+
+    private Publication enrichPublication(Publication publication, Utilisateur viewer) {
+        publication.setLikeCount(likeRepository.countByPublication(publication));
+        publication.setCommentCount(commentaireRepository.countByPublication(publication));
+        publication.setLiked(viewer != null && likeRepository.existsByUtilisateurAndPublication(viewer, publication));
+
+        if (publication.getAnnonce() != null) {
+            Annonce annonce = publication.getAnnonce();
+            boolean suivi = viewer != null
+                    && annonce.getFollowers().stream().anyMatch(follower -> Objects.equals(follower.getId(), viewer.getId()));
+            annonce.setSuivi(suivi);
+            annonce.setFollowerCount(annonce.getFollowers().size());
+        }
+
+        return publication;
+    }
+
+    private String buildPublicationRoute(Publication publication) {
+        return "/profil/" + publication.getAuteur().getId() + "?publicationId=" + publication.getId();
     }
 }

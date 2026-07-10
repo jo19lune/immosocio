@@ -3,6 +3,7 @@ package com.projet.immobiliersocial.entity;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -28,6 +29,13 @@ public class Reservation {
     @Column(nullable = false)
     @Builder.Default
     private StatutReservation statut = StatutReservation.EN_ATTENTE;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer quantite = 1;
+
+    @Column(nullable = false)
+    private BigDecimal prixTotal;
 
     private String message;
 

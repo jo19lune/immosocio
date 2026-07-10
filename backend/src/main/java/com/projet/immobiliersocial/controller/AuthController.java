@@ -1,6 +1,8 @@
 package com.projet.immobiliersocial.controller;
 
 import com.projet.immobiliersocial.dto.*;
+import com.projet.immobiliersocial.dto.ProfileUpdateRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.projet.immobiliersocial.entity.Role;
 import com.projet.immobiliersocial.entity.Utilisateur;
 import com.projet.immobiliersocial.exception.ApiException;
@@ -42,6 +44,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -78,13 +81,19 @@ public class AuthController {
                     .body(new ErreurSimple("Compte désactivé. Contactez l'assistance."));
         }
 
+        if (!user.isEmailVerifie()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErreurSimple("Veuillez vérifier votre adresse email avant de vous connecter."));
+        }
+
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
         String token = jwtUtils.generateToken(userDetails);
 
         return ResponseEntity.ok(new AuthResponse(
                 token, user.getId(), user.getEmail(),
                 user.getNom(), user.getPrenom(),
-                user.getRole().name(), user.isEmailVerifie()
+                user.getRole().name(), user.getPhoto(),
+                user.getTelephone(), user.isEmailVerifie()
         ));
     }
 
@@ -100,10 +109,10 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        // Empêcher l'auto-attribution du rôle ADMIN
-        if (Role.ADMIN.equals(request.getRole())) {
+        // Empêcher l'auto-attribution des rôles privilégiés
+        if (Role.ADMIN.equals(request.getRole()) || Role.SUPERADMIN.equals(request.getRole())) {
             return ResponseEntity.badRequest()
-                    .body(new ErreurSimple("Le rôle ADMIN ne peut pas être attribué à l'inscription"));
+                    .body(new ErreurSimple("Les rôles ADMIN et SUPERADMIN ne peuvent pas être attribués à l'inscription"));
         }
 
         if (utilisateurRepository.existsByEmail(request.getEmail())) {
@@ -274,6 +283,83 @@ public class AuthController {
         utilisateurRepository.save(user);
 
         return ResponseEntity.ok("Mot de passe modifié avec succès.");
+    }
+
+    // ─── PUT /api/auth/profile — AUTHENTIFIÉ ─────────────────────────────────
+
+    /**
+     * Met à jour le profil de l'utilisateur connecté (nom, prénom, téléphone).
+     * Mise à jour partielle : les champs null sont ignorés.
+     *
+     * @param request champs à mettre à jour
+     * @return les données de profil mises à jour
+     */
+    @PutMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> mettreAJourProfil(
+            @RequestBody ProfileUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        Utilisateur user = utilisateurRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        if (request.getNom() != null && !request.getNom().isBlank()) {
+            user.setNom(request.getNom());
+        }
+        if (request.getPrenom() != null && !request.getPrenom().isBlank()) {
+            user.setPrenom(request.getPrenom());
+        }
+        if (request.getTelephone() != null) {
+            user.setTelephone(request.getTelephone());
+        }
+
+        utilisateurRepository.save(user);
+
+        return ResponseEntity.ok(new AuthResponse(
+                null,
+                user.getId(),
+                user.getEmail(),
+                user.getNom(),
+                user.getPrenom(),
+                user.getRole().name(),
+                user.getPhoto(),
+                user.getTelephone(),
+                user.isEmailVerifie()
+        ));
+    }
+
+    // ─── POST /api/auth/switch-role — AUTHENTIFIÉ ────────────────────────────
+
+    /**
+     * Bascule le rôle de l'utilisateur entre LOCATAIRE et PROPRIETAIRE.
+     *
+     * @return un nouveau token avec le rôle mis à jour
+     */
+    @PostMapping("/switch-role")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> switchRole(@AuthenticationPrincipal UserDetails userDetails) {
+        Utilisateur user = utilisateurRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+
+        if (user.getRole() == Role.LOCATAIRE) {
+            user.setRole(Role.PROPRIETAIRE);
+        } else if (user.getRole() == Role.PROPRIETAIRE) {
+            user.setRole(Role.LOCATAIRE);
+        } else {
+            return ResponseEntity.badRequest().body(new ErreurSimple("Ce rôle ne peut pas être basculé"));
+        }
+
+        utilisateurRepository.save(user);
+
+        UserDetails updatedUserDetails = userDetailsService.loadUserByUsername(user.getEmail());
+        String newToken = jwtUtils.generateToken(updatedUserDetails);
+
+        return ResponseEntity.ok(new AuthResponse(
+                newToken, user.getId(), user.getEmail(),
+                user.getNom(), user.getPrenom(),
+                user.getRole().name(), user.getPhoto(),
+                user.getTelephone(), user.isEmailVerifie()
+        ));
     }
 
     // ─── DTO interne pour les réponses d'erreur simples ───────────────────────

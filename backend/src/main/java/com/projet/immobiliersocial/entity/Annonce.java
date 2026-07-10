@@ -3,6 +3,11 @@ package com.projet.immobiliersocial.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -15,6 +20,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
@@ -31,6 +38,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Annonce {
 
     @Id
@@ -68,6 +76,20 @@ public class Annonce {
     @Builder.Default
     private StatutAnnonce statut = StatutAnnonce.DISPONIBLE;
 
+    @Column(nullable = false, columnDefinition = "integer default 1")
+    @Builder.Default
+    private Integer quantiteDisponible = 1;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "annonce_followers",
+        joinColumns = @JoinColumn(name = "annonce_id"),
+        inverseJoinColumns = @JoinColumn(name = "utilisateur_id")
+    )
+    @Builder.Default
+    @JsonIgnore
+    private Set<Utilisateur> followers = new HashSet<>();
+
     @Column(updatable = false)
     private LocalDateTime dateCreation;
 
@@ -85,8 +107,33 @@ public class Annonce {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proprietaire_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Utilisateur proprietaire;
 
     @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Reservation> reservations;
+
+    @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<LikeAnnonce> likesAnnonce;
+
+    @OneToMany(mappedBy = "annonce", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<CommentaireAnnonce> commentairesAnnonce;
+
+    @jakarta.persistence.Transient
+    private Long likeCount;
+
+    @jakarta.persistence.Transient
+    private Long commentCount;
+
+    @jakarta.persistence.Transient
+    private Boolean liked;
+
+    @jakarta.persistence.Transient
+    private Boolean suivi;
+
+    @jakarta.persistence.Transient
+    private Integer followerCount;
 }

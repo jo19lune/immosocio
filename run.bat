@@ -30,13 +30,13 @@ if not exist "%FRONTEND_DIR%\package.json" (
     pause
     exit /b 1
 )
-where node >nul 2>&1
+where.exe node >nul 2>&1
 if errorlevel 1 (
     echo [ERREUR] Node.js non installe.
     pause
     exit /b 1
 )
-where java >nul 2>&1
+where.exe java >nul 2>&1
 if errorlevel 1 (
     echo [ERREUR] Java non installe.
     pause
@@ -62,7 +62,7 @@ goto :EOF
 :BUILD_BACKEND
 echo [BUILD] Compilation du backend (clean package)...
 pushd "%BACKEND_DIR%"
-call mvnw.cmd clean package
+call mvn clean package
 if errorlevel 1 (
     echo [ERREUR] La compilation a echoue.
     popd
@@ -97,7 +97,7 @@ goto :EOF
 :START_BACKEND
 echo [BACKEND] Demarrage...
 pushd "%BACKEND_DIR%"
-start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && java -jar target\!JAR_NAME!"
+start "%BACKEND_TITLE%" cmd /k "title %BACKEND_TITLE% && mvn spring-boot:run"
 popd
 echo [BACKEND] Lance dans une nouvelle fenetre.
 goto :EOF
@@ -105,26 +105,25 @@ goto :EOF
 :START_FRONTEND
 echo [FRONTEND] Demarrage...
 pushd "%FRONTEND_DIR%"
-start "%FRONTEND_TITLE%" cmd /k "title %FRONTEND_TITLE% && npm run dev"
+start "%FRONTEND_TITLE%" cmd /k "title %FRONTEND_TITLE% && npm run dev -- --host"
 popd
 echo [FRONTEND] Lance dans une nouvelle fenetre.
 goto :EOF
 
 :STOP_BACKEND
 echo [BACKEND] Arret en cours...
-taskkill /FI "WINDOWTITLE eq %BACKEND_TITLE%" /T /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq %BACKEND_TITLE%*" /T /F >nul 2>&1
 if errorlevel 1 ( echo [BACKEND] Aucune fenetre trouvee. ) else ( echo [BACKEND] Fenetre fermee. )
 goto :EOF
 
 :STOP_FRONTEND
 echo [FRONTEND] Arret en cours...
-taskkill /FI "WINDOWTITLE eq %FRONTEND_TITLE%" /T /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq %FRONTEND_TITLE%*" /T /F >nul 2>&1
 if errorlevel 1 ( echo [FRONTEND] Aucune fenetre trouvee. ) else ( echo [FRONTEND] Fenetre fermee. )
 goto :EOF
 
 :START_ALL
 call :INSTALL_FRONTEND
-call :BUILD_BACKEND
 call :START_BACKEND
 timeout /t 5 /nobreak > nul
 call :START_FRONTEND
@@ -146,7 +145,6 @@ goto :EOF
 :RESTART_BACKEND
 call :STOP_BACKEND
 timeout /t 2 /nobreak > nul
-call :BUILD_BACKEND
 call :START_BACKEND
 goto :EOF
 

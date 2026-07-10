@@ -42,6 +42,10 @@ public class AnnonceRequest {
     @DecimalMin(value = "1.0", message = "La superficie doit être au moins 1 m²")
     private Double superficie;
 
+    /** Nombre de pièces/unités disponibles à la réservation. */
+    @Min(value = 1, message = "La quantité disponible doit être au moins 1")
+    private Integer quantiteDisponible = 1;
+
     /** Type de logement : MAISON, APPARTEMENT ou STUDIO. */
     private TypeLogement typeLogement;
 

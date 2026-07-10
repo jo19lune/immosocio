@@ -4,5 +4,6 @@ public enum StatutAnnonce {
     DISPONIBLE,
     RESERVE,
     LOUE,
-    SUSPENDU
+    SUSPENDU,
+    INDISPONIBLE
 }

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/parametres")
 @RequiredArgsConstructor
 @PreAuthorize("isAuthenticated()")
+@SuppressWarnings("null")
 public class ParametresController {
 
     private final UtilisateurRepository utilisateurRepository;

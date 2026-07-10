@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 @Component
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private final UserDetailsService userDetailsService;
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 

@@ -7,5 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CommentaireRepository extends JpaRepository<Commentaire, Long> {
-    Page<Commentaire> findByPublicationOrderByDateCreationAsc(Publication publication, Pageable pageable);
+    Page<Commentaire> findByPublicationAndParentIsNullOrderByDateCreationAsc(Publication publication, Pageable pageable);
+    long countByPublication(Publication publication);
 }
